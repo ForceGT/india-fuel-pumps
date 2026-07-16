@@ -1,0 +1,35 @@
+{
+  "prefix": "teh",
+  "stations": [
+    {
+      "id": "8886a333414742a3",
+      "brand": "IOCL",
+      "outletName": "Renuka Petrol &amp; Diesel Pump",
+      "address": "Ground Floor",
+      "city": "Satara",
+      "citySlug": "satara",
+      "state": "Maharashtra",
+      "pincode": "415001",
+      "lat": 17.6876,
+      "lng": 74.007657,
+      "geohash": "tehss5f",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919822131333",
+      "mapsLink": "https://locator.iocl.com/indianoil-renuka-petrol-diesel-pump-petrol-pump-ajinkya-colony-satara-207687/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-renuka-petrol-diesel-pump-petrol-pump-ajinkya-colony-satara-207687/Home",
+      "outletId": "207687",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T08:33:50.078Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T08:33:50.078Z"
+        }
+      ]
+    }
+  ]
+}

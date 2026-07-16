@@ -1,0 +1,65 @@
+{
+  "prefix": "whg",
+  "stations": [
+    {
+      "id": "0421b2550fa9113f",
+      "brand": "IOCL",
+      "outletName": "Asmina Fuelling Station",
+      "address": "Ground Floor, Paltan Bazar",
+      "city": "Dibrugarh",
+      "citySlug": "dibrugarh",
+      "state": "Assam",
+      "pincode": "786001",
+      "lat": 27.491573,
+      "lng": 94.926903,
+      "geohash": "whgs2he",
+      "hours": "06:00 AM - 10:00 PM",
+      "contact": "+913732302114",
+      "mapsLink": "https://locator.iocl.com/indianoil-asmina-fuelling-station-petrol-pump-jyotinagar-dibrugarh-241239/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-asmina-fuelling-station-petrol-pump-jyotinagar-dibrugarh-241239/Home",
+      "outletId": "241239",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:59:00.384Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:59:00.384Z"
+        }
+      ]
+    },
+    {
+      "id": "ebd6b27e7f555211",
+      "brand": "IOCL",
+      "outletName": "Pannalal Rameswar &amp; Co",
+      "address": "Ground Floor",
+      "city": "Sivasagar",
+      "citySlug": "sivasagar",
+      "state": "Assam",
+      "pincode": "785670",
+      "lat": 27.187458,
+      "lng": 94.914969,
+      "geohash": "whg6xv6",
+      "hours": "06:00 AM - 10:00 PM",
+      "contact": "+919412588324",
+      "mapsLink": "https://locator.iocl.com/indianoil-pannalal-rameswar-co-petrol-pump-moranhat-sivasagar-241276/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-pannalal-rameswar-co-petrol-pump-moranhat-sivasagar-241276/Home",
+      "outletId": "241276",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:59:05.464Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:59:05.464Z"
+        }
+      ]
+    }
+  ]
+}

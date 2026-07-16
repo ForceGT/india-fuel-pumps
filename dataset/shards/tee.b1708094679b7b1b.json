@@ -1,0 +1,35 @@
+{
+  "prefix": "tee",
+  "stations": [
+    {
+      "id": "40f906b09510fe00",
+      "brand": "IOCL",
+      "outletName": "Kiran Petroleum",
+      "address": "Lock No 13012, NH 8, Palghar, Amboli",
+      "city": "Thane",
+      "citySlug": "thane",
+      "state": "Maharashtra",
+      "pincode": "401602",
+      "lat": 20.019432,
+      "lng": 72.924391,
+      "geohash": "teecgkm",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919167777777",
+      "mapsLink": "https://locator.iocl.com/indianoil-petrol-pump-dahanu-road-kiran-petroleum-cng-pump-dahanu-road-thane-191133/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-petrol-pump-dahanu-road-kiran-petroleum-petrol-pump-dahanu-road-thane-191133/Home",
+      "outletId": "191133",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T08:33:52.875Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T08:33:52.875Z"
+        }
+      ]
+    }
+  ]
+}

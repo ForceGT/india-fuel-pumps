@@ -1,0 +1,695 @@
+{
+  "prefix": "ttn",
+  "stations": [
+    {
+      "id": "1114e273419943fb",
+      "brand": "IOCL",
+      "outletName": "Lotus Automobiles",
+      "address": "Khasra No 76/26, Mehrauli Gurgaon Road",
+      "city": "Delhi",
+      "citySlug": "delhi",
+      "state": "Delhi",
+      "pincode": "110030",
+      "lat": 28.504266667,
+      "lng": 77.171683333,
+      "geohash": "ttnfhj4",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919910311899",
+      "mapsLink": "https://locator.iocl.com/indianoil-lotus-automobiles-cng-pump-andheria-mor-new-delhi-102655/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-lotus-automobiles-cng-pump-andheria-mor-new-delhi-102655/Home",
+      "outletId": "102655",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:59:23.128Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:59:23.128Z"
+        }
+      ]
+    },
+    {
+      "id": "142743a7a25a391c",
+      "brand": "IOCL",
+      "outletName": "Welcome Motors",
+      "address": "Ground Floor, District Centre",
+      "city": "Delhi",
+      "citySlug": "delhi",
+      "state": "Delhi",
+      "pincode": "110017",
+      "lat": 28.527966667,
+      "lng": 77.215883333,
+      "geohash": "ttnfm16",
+      "hours": "06:00 AM - 10:00 PM",
+      "contact": "+919810114140",
+      "mapsLink": "https://locator.iocl.com/indianoil-welcome-motors-petrol-pump-saket-new-delhi-102609/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-welcome-motors-petrol-pump-saket-new-delhi-102609/Home",
+      "outletId": "102609",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T07:30:22.934Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T07:30:22.934Z"
+        }
+      ]
+    },
+    {
+      "id": "2c1c5e79e5493e78",
+      "brand": "HPCL",
+      "outletName": "Evergreen Service Station",
+      "address": "Ground Floor, Aurobindo Marg",
+      "city": "Delhi",
+      "citySlug": "delhi",
+      "state": "Delhi",
+      "pincode": "110016",
+      "lat": 28.556821,
+      "lng": 77.206901,
+      "geohash": "ttnfkys",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919810290495",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-evergreen-service-station-compressed-natural-gas-station-green-park-new-delhi-97350/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-evergreen-service-station-compressed-natural-gas-station-green-park-new-delhi-97350/Home",
+      "outletId": "97350",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:26:05.287Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 167.4,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:26:05.287Z"
+        }
+      ]
+    },
+    {
+      "id": "3a403869d2b1a934",
+      "brand": "IOCL",
+      "outletName": "Intimate Service Station",
+      "address": "Lock No 334, Panchshila Park",
+      "city": "Delhi",
+      "citySlug": "delhi",
+      "state": "Delhi",
+      "pincode": "110017",
+      "lat": 28.542792,
+      "lng": 77.220541,
+      "geohash": "ttnfmhn",
+      "hours": "06:00 AM - 11:00 PM",
+      "contact": "+919910488889",
+      "mapsLink": "https://locator.iocl.com/indianoil-intimate-service-station-petrol-pump-soami-nagar-new-delhi-196962/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-intimate-service-station-petrol-pump-soami-nagar-new-delhi-196962/Home",
+      "outletId": "196962",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:59:15.559Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:59:15.559Z"
+        }
+      ]
+    },
+    {
+      "id": "4733ee5db4682afe",
+      "brand": "IOCL",
+      "outletName": "Car Care",
+      "address": "Ground Floor",
+      "city": "Delhi",
+      "citySlug": "delhi",
+      "state": "Delhi",
+      "pincode": "110022",
+      "lat": 28.57078333,
+      "lng": 77.16345,
+      "geohash": "ttnfech",
+      "hours": "12:00 AM - 11:30 PM",
+      "contact": "+919212013010",
+      "mapsLink": "https://locator.iocl.com/indianoil-car-care-petrol-pump-rk-puram-sector-8-new-delhi-102595/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-car-care-petrol-pump-rk-puram-sector-8-new-delhi-102595/Home",
+      "outletId": "102595",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:59:07.994Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:59:07.994Z"
+        }
+      ]
+    },
+    {
+      "id": "65bfa87ecadd4f46",
+      "brand": "IOCL",
+      "outletName": "Dhingra Service Station",
+      "address": "Ground Floor",
+      "city": "Delhi",
+      "citySlug": "delhi",
+      "state": "Delhi",
+      "pincode": "110017",
+      "lat": 28.538016667,
+      "lng": 77.232416667,
+      "geohash": "ttnfm7n",
+      "hours": "06:00 AM - 11:59 PM",
+      "contact": "+919810113249",
+      "mapsLink": "https://locator.iocl.com/indianoil-dhingra-service-station-petrol-pump-lal-bahadur-shastri-marg-new-delhi-102645/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-dhingra-service-station-petrol-pump-lal-bahadur-shastri-marg-new-delhi-102645/Home",
+      "outletId": "102645",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:59:10.517Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:59:10.517Z"
+        }
+      ]
+    },
+    {
+      "id": "669497ccaac87eae",
+      "brand": "HPCL",
+      "outletName": "Usha Speedways",
+      "address": "Ground Floor, NH 19, Delhi Mathura Road",
+      "city": "Delhi",
+      "citySlug": "delhi",
+      "state": "Delhi",
+      "pincode": "110076",
+      "lat": 28.54127223,
+      "lng": 77.28067706,
+      "geohash": "ttnfqef",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+918130940645",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-usha-speedways-compressed-natural-gas-station-sarita-vihar-new-delhi-97361/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-usha-speedways-compressed-natural-gas-station-sarita-vihar-new-delhi-97361/Home",
+      "outletId": "97361",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:26:24.745Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 167.4,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:26:24.745Z"
+        }
+      ]
+    },
+    {
+      "id": "6b4b8e43e0d412c5",
+      "brand": "HPCL",
+      "outletName": "Bedi Motors",
+      "address": "Ground Floor, Lok Kalyan Marg",
+      "city": "Delhi",
+      "citySlug": "delhi",
+      "state": "Delhi",
+      "pincode": "110003",
+      "lat": 28.596291,
+      "lng": 77.204461,
+      "geohash": "ttnfsvf",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919711197159",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-bedi-motors-compressed-natural-gas-station-chanakyapuri-new-delhi-98145/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-bedi-motors-compressed-natural-gas-station-chanakyapuri-new-delhi-98145/Home",
+      "outletId": "98145",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:25:57.634Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 167.4,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:25:57.634Z"
+        }
+      ]
+    },
+    {
+      "id": "6b9385e32734a88d",
+      "brand": "HPCL",
+      "outletName": "Shanti Service Station",
+      "address": "Ground Floor, Mathura Road",
+      "city": "Delhi",
+      "citySlug": "delhi",
+      "state": "Delhi",
+      "pincode": "110076",
+      "lat": 28.520941,
+      "lng": 77.294761,
+      "geohash": "ttnfqbh",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919811041700",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-shanti-service-station-petrol-pump-madanpur-khadar-new-delhi-97358/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-shanti-service-station-petrol-pump-madanpur-khadar-new-delhi-97358/Home",
+      "outletId": "97358",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:26:22.221Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 167.4,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:26:22.221Z"
+        }
+      ]
+    },
+    {
+      "id": "6ef1fb27b59dcfe8",
+      "brand": "HPCL",
+      "outletName": "Batra Car Care",
+      "address": "Ground Floor",
+      "city": "Delhi",
+      "citySlug": "delhi",
+      "state": "Delhi",
+      "pincode": "110003",
+      "lat": 28.60213774,
+      "lng": 77.23007102,
+      "geohash": "ttnftqv",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919899093956",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-batra-car-care-compressed-natural-gas-station-humayun-road-new-delhi-98147/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-batra-car-care-compressed-natural-gas-station-humayun-road-new-delhi-98147/Home",
+      "outletId": "98147",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:25:54.983Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 167.4,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:25:54.983Z"
+        }
+      ]
+    },
+    {
+      "id": "6f2dd1f84ba7a790",
+      "brand": "HPCL",
+      "outletName": "Angra HP Centre",
+      "address": "Ground Floor, Vinay Marg",
+      "city": "Delhi",
+      "citySlug": "delhi",
+      "state": "Delhi",
+      "pincode": "110021",
+      "lat": 28.59091433,
+      "lng": 77.19598105,
+      "geohash": "ttnfssu",
+      "hours": "05:00 AM - 11:00 PM",
+      "contact": "+919953070434",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-angra-hp-centre-compressed-natural-gas-station-chanakyapuri-new-delhi-97365/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-angra-hp-centre-compressed-natural-gas-station-chanakyapuri-new-delhi-97365/Home",
+      "outletId": "97365",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:25:47.120Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 167.4,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:25:47.120Z"
+        }
+      ]
+    },
+    {
+      "id": "8b099a824e16a8d2",
+      "brand": "HPCL",
+      "outletName": "RD Motors",
+      "address": "Ground Floor, Jasola",
+      "city": "Delhi",
+      "citySlug": "delhi",
+      "state": "Delhi",
+      "pincode": "110076",
+      "lat": 28.538711,
+      "lng": 77.291571,
+      "geohash": "ttnfqg6",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919873372224",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-rd-motors-petrol-pump-sarita-vihar-new-delhi-97362/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-rd-motors-petrol-pump-sarita-vihar-new-delhi-97362/Home",
+      "outletId": "97362",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:26:13.716Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 167.4,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:26:13.716Z"
+        }
+      ]
+    },
+    {
+      "id": "91963c35efe2fc6c",
+      "brand": "HPCL",
+      "outletName": "Rajeev S/S",
+      "address": "Ground Floor, Mathura Road",
+      "city": "Delhi",
+      "citySlug": "delhi",
+      "state": "Delhi",
+      "pincode": "110003",
+      "lat": 28.606801,
+      "lng": 77.239891,
+      "geohash": "ttnftxs",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919818255856",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-rajeev-s-s-petrol-pump-sundar-nagar-new-delhi-97352/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-rajeev-s-s-petrol-pump-sundar-nagar-new-delhi-97352/Home",
+      "outletId": "97352",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:26:16.276Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 167.4,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:26:16.276Z"
+        }
+      ]
+    },
+    {
+      "id": "98d1cdb006f1e1a3",
+      "brand": "HPCL",
+      "outletName": "Batra Bros",
+      "address": "Ground Floor, Inner Ring Road, Part 2, NH 48",
+      "city": "Delhi",
+      "citySlug": "delhi",
+      "state": "Delhi",
+      "pincode": "110049",
+      "lat": 28.567401,
+      "lng": 77.224941,
+      "geohash": "ttnft29",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919810424242",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-batra-bros-compressed-natural-gas-station-south-extension-new-delhi-97353/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-batra-bros-compressed-natural-gas-station-south-extension-new-delhi-97353/Home",
+      "outletId": "97353",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:25:52.339Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 167.4,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:25:52.339Z"
+        }
+      ]
+    },
+    {
+      "id": "a03be364624e528b",
+      "brand": "IOCL",
+      "outletName": "Rajkumar Service Station",
+      "address": "Lock No 351, IIT Gate Crossing",
+      "city": "Delhi",
+      "citySlug": "delhi",
+      "state": "Delhi",
+      "pincode": "110016",
+      "lat": 28.544166667,
+      "lng": 77.201666667,
+      "geohash": "ttnfku2",
+      "hours": "05:00 AM - 11:59 PM",
+      "contact": "+919810068685",
+      "mapsLink": "https://locator.iocl.com/indianoil-rajkumar-service-station-petrol-pump-hauz-khas-new-delhi-194939/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-rajkumar-service-station-petrol-pump-hauz-khas-new-delhi-194939/Home",
+      "outletId": "194939",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:59:28.173Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:59:28.173Z"
+        }
+      ]
+    },
+    {
+      "id": "a1b806ec149ca72e",
+      "brand": "IOCL",
+      "outletName": "Qutab Service Station",
+      "address": "Ground Floor, Mehrauli",
+      "city": "Delhi",
+      "citySlug": "delhi",
+      "state": "Delhi",
+      "pincode": "110017",
+      "lat": 28.534616667,
+      "lng": 77.196283333,
+      "geohash": "ttnfkds",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919811021862",
+      "mapsLink": "https://locator.iocl.com/indianoil-qutab-service-station-petrol-pump-adchini-new-delhi-196905/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-qutab-service-station-petrol-pump-adchini-new-delhi-196905/Home",
+      "outletId": "196905",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:59:25.649Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:59:25.649Z"
+        }
+      ]
+    },
+    {
+      "id": "a597ccd0e353b164",
+      "brand": "IOCL",
+      "outletName": "Janta Filling Station",
+      "address": "Khasra No 420, Mehrauli Gurgaon Road",
+      "city": "Gurugram",
+      "citySlug": "gurugram",
+      "state": "Haryana",
+      "pincode": "122001",
+      "lat": 28.482043,
+      "lng": 77.108491,
+      "geohash": "ttnf48u",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919899659638",
+      "mapsLink": "https://locator.iocl.com/indianoil-janta-filling-station-petrol-pump-sikandarpur-gurugram-196282/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-janta-filling-station-petrol-pump-sikandarpur-gurugram-196282/Home",
+      "outletId": "196282",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T07:30:35.626Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T07:30:35.626Z"
+        }
+      ]
+    },
+    {
+      "id": "b8374a1f41a3d41b",
+      "brand": "HPCL",
+      "outletName": "Company Owned Managed by Company Officer, Auto Care (T&amp;E Stn.)",
+      "address": "Niti Marg",
+      "city": "Delhi",
+      "citySlug": "delhi",
+      "state": "Delhi",
+      "pincode": "110021",
+      "lat": 28.59951443,
+      "lng": 77.19578986,
+      "geohash": "ttnfswk",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+918655436754",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-company-owned-managed-by-company-officer-auto-care-t-e-stn-compressed-natural-gas-station-chankaypuri-new-delhi-97356/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-company-owned-managed-by-company-officer-auto-care-t-e-stn-compressed-natural-gas-station-chankaypuri-new-delhi-97356/Home",
+      "outletId": "97356",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:26:02.756Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 167.4,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:26:02.756Z"
+        }
+      ]
+    },
+    {
+      "id": "c4f08230c24cde03",
+      "brand": "HPCL",
+      "outletName": "Safdarjung",
+      "address": "Ground Floor",
+      "city": "Delhi",
+      "citySlug": "delhi",
+      "state": "Delhi",
+      "pincode": "110003",
+      "lat": 28.59139634,
+      "lng": 77.21186378,
+      "geohash": "ttnfsuz",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919899969584",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-safdarjung-petrol-pump-safdarjung-road-new-delhi-98148/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-safdarjung-petrol-pump-safdarjung-road-new-delhi-98148/Home",
+      "outletId": "98148",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:26:18.910Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 167.4,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:26:18.910Z"
+        }
+      ]
+    },
+    {
+      "id": "d23a7a39861253dc",
+      "brand": "HPCL",
+      "outletName": "Bansiwal Service Station",
+      "address": "Ground Floor, San Martin Marg",
+      "city": "Delhi",
+      "citySlug": "delhi",
+      "state": "Delhi",
+      "pincode": "110021",
+      "lat": 28.591761,
+      "lng": 77.175751,
+      "geohash": "ttnfshv",
+      "hours": "05:00 AM - 11:00 PM",
+      "contact": "+919811008780",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-bansiwal-service-station-petrol-pump-chanakyapuri-new-delhi-97363/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-bansiwal-service-station-petrol-pump-chanakyapuri-new-delhi-97363/Home",
+      "outletId": "97363",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:25:49.759Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 167.4,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:25:49.759Z"
+        }
+      ]
+    },
+    {
+      "id": "d47ce7d693d2f344",
+      "brand": "HPCL",
+      "outletName": "M/s Nathu Mal Ahuja &amp; Sons",
+      "address": "Ground Floor, Delhi Mathura Road Road, NH 19, Km Stone 18",
+      "city": "Delhi",
+      "citySlug": "delhi",
+      "state": "Delhi",
+      "pincode": "110044",
+      "lat": 28.4943901,
+      "lng": 77.3037201,
+      "geohash": "ttnfp54",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919810005059",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-nathu-mal-ahuja-sons-petrol-pump-badarpur-new-delhi-391221/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-nathu-mal-ahuja-sons-petrol-pump-badarpur-new-delhi-391221/Home",
+      "outletId": "391221",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:26:08.182Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 167.4,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:26:08.182Z"
+        }
+      ]
+    },
+    {
+      "id": "e2b7b860f8b62d6a",
+      "brand": "HPCL",
+      "outletName": "Panchshila S/S",
+      "address": "Ground Floor, August Kranti Marg",
+      "city": "Delhi",
+      "citySlug": "delhi",
+      "state": "Delhi",
+      "pincode": "110049",
+      "lat": 28.561381,
+      "lng": 77.222771,
+      "geohash": "ttnfmpr",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919971696783",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-panchshila-s-s-compressed-natural-gas-station-andrews-ganj-new-delhi-97357/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-panchshila-s-s-compressed-natural-gas-station-andrews-ganj-new-delhi-97357/Home",
+      "outletId": "97357",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:26:10.785Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 167.4,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:26:10.785Z"
+        }
+      ]
+    },
+    {
+      "id": "fb8a5ac9f7b223f1",
+      "brand": "HPCL",
+      "outletName": "Central S/S",
+      "address": "Ground Floor, Radial Road No 7, Block E",
+      "city": "Delhi",
+      "citySlug": "delhi",
+      "state": "Delhi",
+      "pincode": "110001",
+      "lat": 28.63183814,
+      "lng": 77.22149344,
+      "geohash": "ttnfvhq",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919818020706",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-central-s-s-petrol-pump-connaught-place-new-delhi-97359/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-central-s-s-petrol-pump-connaught-place-new-delhi-97359/Home",
+      "outletId": "97359",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:26:00.206Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 167.4,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:26:00.206Z"
+        }
+      ]
+    }
+  ]
+}

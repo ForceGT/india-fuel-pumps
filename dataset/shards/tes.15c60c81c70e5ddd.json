@@ -1,0 +1,35 @@
+{
+  "prefix": "tes",
+  "stations": [
+    {
+      "id": "e19ffa5d149bf356",
+      "brand": "IOCL",
+      "outletName": "Shree Laxmi Automobiles Bortembha",
+      "address": "Lock No 12019, NH 3, Mumbai Agra Hwy, Igatpuri",
+      "city": "Nashik",
+      "citySlug": "nashik",
+      "state": "Maharashtra",
+      "pincode": "422403",
+      "lat": 19.695854,
+      "lng": 73.595586,
+      "geohash": "tes249w",
+      "hours": "06:00 AM - 10:00 PM",
+      "contact": "+919325775151",
+      "mapsLink": "https://locator.iocl.com/indianoil-petrol-pump-bortembhe-shree-laxmi-automobiles-bortembha-petrol-pump-aswali-nashik-207010/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-petrol-pump-bortembhe-shree-laxmi-automobiles-bortembha-petrol-pump-aswali-nashik-207010/Home",
+      "outletId": "207010",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T08:33:31.850Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T08:33:31.850Z"
+        }
+      ]
+    }
+  ]
+}

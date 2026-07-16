@@ -1,0 +1,35 @@
+{
+  "prefix": "t9x",
+  "stations": [
+    {
+      "id": "79563e1dc49c6750",
+      "brand": "IOCL",
+      "outletName": "Bsr Fuel Station",
+      "address": "Ground Floor, Kappalur, Valayankulam",
+      "city": "Madurai",
+      "citySlug": "madurai",
+      "state": "Tamil Nadu",
+      "pincode": "625005",
+      "lat": 9.834285,
+      "lng": 78.044902,
+      "geohash": "t9xrzyq",
+      "hours": "06:00 AM - 10:00 PM",
+      "contact": "+919442946755",
+      "mapsLink": "https://locator.iocl.com/indianoil-bsr-fuel-station-petrol-pump-harveypatti-madurai-203459/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-bsr-fuel-station-petrol-pump-harveypatti-madurai-203459/Home",
+      "outletId": "203459",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T08:40:57.782Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T08:40:57.782Z"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1055 @@
+{
+  "prefix": "te7",
+  "stations": [
+    {
+      "id": "013aec7e2763d9f0",
+      "brand": "HPCL",
+      "outletName": "M/s Super Service Station, Churchgate",
+      "address": "No 157, Jeevan Bima Marg",
+      "city": "Mumbai",
+      "citySlug": "mumbai",
+      "state": "Maharashtra",
+      "pincode": "400020",
+      "lat": 18.928781,
+      "lng": 72.825521,
+      "geohash": "te7g9jv",
+      "hours": "05:00 AM - 11:00 PM",
+      "contact": "+919594145018",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-super-service-station-churchgate-petrol-pump-churchgate-mumbai-387487/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-super-service-station-churchgate-petrol-pump-churchgate-mumbai-387487/Home",
+      "outletId": "387487",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:27:03.671Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 181.09,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:27:03.671Z"
+        }
+      ]
+    },
+    {
+      "id": "0171fc6b9bbe7f78",
+      "brand": "HPCL",
+      "outletName": "HP Service Center - Chowpaty",
+      "address": "Ground Floor, Dadyseth Marg",
+      "city": "Mumbai",
+      "citySlug": "mumbai",
+      "state": "Maharashtra",
+      "pincode": "400006",
+      "lat": 18.955191,
+      "lng": 72.807451,
+      "geohash": "te7gbf8",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919960170828",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-hp-service-center-chowpaty-petrol-pump-chowpatty-mumbai-387396/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-hp-service-center-chowpaty-petrol-pump-chowpatty-mumbai-387396/Home",
+      "outletId": "387396",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:26:29.995Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 181.09,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:26:29.995Z"
+        }
+      ]
+    },
+    {
+      "id": "08131fb0126dd58c",
+      "brand": "HPCL",
+      "outletName": "M/s Hind Automobiles, Suparibaug",
+      "address": "No 288, Dr Ambedkar Road",
+      "city": "Mumbai",
+      "citySlug": "mumbai",
+      "state": "Maharashtra",
+      "pincode": "400012",
+      "lat": 18.99782522,
+      "lng": 72.83722245,
+      "geohash": "te7u16q",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919967927105",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-hind-automobiles-suparibaug-petrol-pump-parel-mumbai-387520/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-hind-automobiles-suparibaug-petrol-pump-parel-mumbai-387520/Home",
+      "outletId": "387520",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:26:46.779Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 181.08,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:26:46.779Z"
+        }
+      ]
+    },
+    {
+      "id": "1b3819655199dcff",
+      "brand": "HPCL",
+      "outletName": "M/s Hind Automobiles, Parel",
+      "address": "Ground Floor, St Xavier Street",
+      "city": "Mumbai",
+      "citySlug": "mumbai",
+      "state": "Maharashtra",
+      "pincode": "400012",
+      "lat": 19.00604196,
+      "lng": 72.84065464,
+      "geohash": "te7u1eb",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919004295176",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-hind-automobiles-parel-petrol-pump-parel-mumbai-387532/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-hind-automobiles-parel-petrol-pump-parel-mumbai-387532/Home",
+      "outletId": "387532",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:26:44.235Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 181.08,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:26:44.235Z"
+        }
+      ]
+    },
+    {
+      "id": "21235092e497f18a",
+      "brand": "IOCL",
+      "outletName": "Coco Top Gear",
+      "address": "No 100, Desai Road, Bulabhai",
+      "city": "Mumbai",
+      "citySlug": "mumbai",
+      "state": "Maharashtra",
+      "pincode": "400026",
+      "lat": 18.965595,
+      "lng": 72.803461,
+      "geohash": "te7gbst",
+      "hours": "06:00 AM - 10:00 PM",
+      "contact": "+919350836509",
+      "mapsLink": "https://locator.iocl.com/indianoil-petrol-pump-cumballa-hill-coco-top-gear-petrol-pump-cumballa-hill-mumbai-183737/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-petrol-pump-cumballa-hill-coco-top-gear-petrol-pump-cumballa-hill-mumbai-183737/Home",
+      "outletId": "183737",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T08:02:13.539Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T08:02:13.539Z"
+        }
+      ]
+    },
+    {
+      "id": "39f18bca934c2aa2",
+      "brand": "HPCL",
+      "outletName": "HP Service Center, NS Road",
+      "address": "No 45, HP Apartments",
+      "city": "Mumbai",
+      "citySlug": "mumbai",
+      "state": "Maharashtra",
+      "pincode": "400026",
+      "lat": 18.960543,
+      "lng": 72.801106,
+      "geohash": "te7gbes",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919960170828",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-hp-service-center-ns-road-petrol-pump-napean-sea-road-mumbai-387795/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-hp-service-center-ns-road-petrol-pump-napean-sea-road-mumbai-387795/Home",
+      "outletId": "387795",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:26:32.541Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 181.09,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:26:32.541Z"
+        }
+      ]
+    },
+    {
+      "id": "418fe523e832f0cd",
+      "brand": "HPCL",
+      "outletName": "M/s Munde Fuel Station",
+      "address": "Survey No 7/8 &amp; 7/10, Diva Shil Road",
+      "city": "Thane",
+      "citySlug": "thane",
+      "state": "Maharashtra",
+      "pincode": "400612",
+      "lat": 19.159139,
+      "lng": 73.046639,
+      "geohash": "te7uypy",
+      "hours": "05:00 AM - 11:00 PM",
+      "contact": "+918828390797",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-munde-fuel-station-petrol-pump-dawale-thane-388321/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-munde-fuel-station-petrol-pump-dawale-thane-388321/Home",
+      "outletId": "388321",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:58:53.614Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 181.16,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:58:53.614Z"
+        }
+      ]
+    },
+    {
+      "id": "41beb465353148b1",
+      "brand": "HPCL",
+      "outletName": "M/s Broadway Automobiles, Thane",
+      "address": "Ground Floor, Ghodbunder Road",
+      "city": "Thane",
+      "citySlug": "thane",
+      "state": "Maharashtra",
+      "pincode": "400607",
+      "lat": 19.219771,
+      "lng": 72.978141,
+      "geohash": "te7vkdv",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919320273426",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-broadway-automobiles-thane-petrol-pump-thane-west-thane-388270/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-broadway-automobiles-thane-petrol-pump-thane-west-thane-388270/Home",
+      "outletId": "388270",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:27:58.605Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 181.14,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:27:58.605Z"
+        }
+      ]
+    },
+    {
+      "id": "4aec30ffdc7c3a9e",
+      "brand": "HPCL",
+      "outletName": "HP Fuel Center - Sewree",
+      "address": "Ground Floor",
+      "city": "Mumbai",
+      "citySlug": "mumbai",
+      "state": "Maharashtra",
+      "pincode": "400015",
+      "lat": 19.00549884,
+      "lng": 72.85599043,
+      "geohash": "te7u1gu",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919967173337",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-hp-fuel-center-sewree-petrol-pump-sewree-east-mumbai-387393/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-hp-fuel-center-sewree-petrol-pump-sewree-east-mumbai-387393/Home",
+      "outletId": "387393",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:26:27.296Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 181.09,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:26:27.296Z"
+        }
+      ]
+    },
+    {
+      "id": "5432d68250200d43",
+      "brand": "IOCL",
+      "outletName": "Auto Works India",
+      "address": "Juhu Road",
+      "city": "Mumbai",
+      "citySlug": "mumbai",
+      "state": "Maharashtra",
+      "pincode": "400049",
+      "lat": 19.103864,
+      "lng": 72.826903,
+      "geohash": "te7u9jy",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+917737736565",
+      "mapsLink": "https://locator.iocl.com/indianoil-petrol-pump-juhu-auto-works-india-petrol-pump-juhu-mumbai-183544/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-petrol-pump-juhu-auto-works-india-petrol-pump-juhu-mumbai-183544/Home",
+      "outletId": "183544",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T08:02:05.740Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T08:02:05.740Z"
+        }
+      ]
+    },
+    {
+      "id": "5fe94a9c6bc79b3f",
+      "brand": "IOCL",
+      "outletName": "Suraj Sanghi Service Centre",
+      "address": "Ground Floor",
+      "city": "Mumbai",
+      "citySlug": "mumbai",
+      "state": "Maharashtra",
+      "pincode": "400018",
+      "lat": 18.992264,
+      "lng": 72.814397,
+      "geohash": "te7u0cm",
+      "hours": "06:00 AM - 10:00 PM",
+      "contact": "+919821050487",
+      "mapsLink": "https://locator.iocl.com/indianoil-petrol-pump-worli-suraj-sanghi-service-centre-petrol-pump-worli-naka-mumbai-183640/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-petrol-pump-worli-suraj-sanghi-service-centre-petrol-pump-worli-naka-mumbai-183640/Home",
+      "outletId": "183640",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T08:02:23.881Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T08:02:23.881Z"
+        }
+      ]
+    },
+    {
+      "id": "6303560a24481081",
+      "brand": "HPCL",
+      "outletName": "Krishna Shiv Petroleum",
+      "address": "Survey No 115, Badlapur Katai Road",
+      "city": "Thane",
+      "citySlug": "thane",
+      "state": "Maharashtra",
+      "pincode": "421204",
+      "lat": 19.1766031,
+      "lng": 73.1147694,
+      "geohash": "te7vpfb",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919930057678",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-krishna-shiv-petroleum-petrol-pump-khoni-thane-387912/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-krishna-shiv-petroleum-petrol-pump-khoni-thane-387912/Home",
+      "outletId": "387912",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:27:53.496Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 181.16,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:27:53.496Z"
+        }
+      ]
+    },
+    {
+      "id": "7486ff51179cbec3",
+      "brand": "HPCL",
+      "outletName": "M/s High Ride",
+      "address": "Ground Floor, Dr BA Road",
+      "city": "Mumbai",
+      "citySlug": "mumbai",
+      "state": "Maharashtra",
+      "pincode": "400012",
+      "lat": 18.98953986,
+      "lng": 72.83554487,
+      "geohash": "te7u12v",
+      "hours": "05:00 AM - 11:00 PM",
+      "contact": "+912224709797",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-high-ride-petrol-pump-lalbaug-mumbai-387589/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-high-ride-petrol-pump-lalbaug-mumbai-387589/Home",
+      "outletId": "387589",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:26:41.035Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 181.08,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:26:41.035Z"
+        }
+      ]
+    },
+    {
+      "id": "87bdd370617e365a",
+      "brand": "IOCL",
+      "outletName": "COCO BKC",
+      "address": "No C/67, Block G",
+      "city": "Mumbai",
+      "citySlug": "mumbai",
+      "state": "Maharashtra",
+      "pincode": "400051",
+      "lat": 19.060246,
+      "lng": 72.864471,
+      "geohash": "te7u6jf",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+918097343206",
+      "mapsLink": "https://locator.iocl.com/indianoil-petrol-pump-bandra-east-coco-bkc-petrol-pump-bn-bhavan-mumbai-183366/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-petrol-pump-bandra-east-coco-bkc-petrol-pump-bn-bhavan-mumbai-183366/Home",
+      "outletId": "183366",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T08:02:08.255Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T08:02:08.255Z"
+        }
+      ]
+    },
+    {
+      "id": "8cb34634ffa17971",
+      "brand": "HPCL",
+      "outletName": "M/s R S Vatcha And Company, Hughes",
+      "address": "No 32, NS Patkar Marg",
+      "city": "Mumbai",
+      "citySlug": "mumbai",
+      "state": "Maharashtra",
+      "pincode": "400007",
+      "lat": 18.95940985,
+      "lng": 72.80948802,
+      "geohash": "te7gbg6",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919321811423",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-r-s-vatcha-and-company-hughes-petrol-pump-hughes-road-mumbai-387600/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-r-s-vatcha-and-company-hughes-petrol-pump-hughes-road-mumbai-387600/Home",
+      "outletId": "387600",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:26:55.587Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 181.08,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:26:55.587Z"
+        }
+      ]
+    },
+    {
+      "id": "8e8cfd5e60f4bfc5",
+      "brand": "HPCL",
+      "outletName": "M/s Gurukripa Auto Ser Centre, Sanpada",
+      "address": "Plot No 2",
+      "city": "Navi Mumbai",
+      "citySlug": "navi-mumbai",
+      "state": "Maharashtra",
+      "pincode": "400705",
+      "lat": 19.0631601,
+      "lng": 73.0105701,
+      "geohash": "te7umqk",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+918693064001",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-gurukripa-auto-ser-centre-sanpada-petrol-pump-sector-3-sanpada-navi-mumbai-387769/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-gurukripa-auto-ser-centre-sanpada-petrol-pump-sector-3-sanpada-navi-mumbai-387769/Home",
+      "outletId": "387769",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:27:14.024Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 181.16,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:27:14.024Z"
+        }
+      ]
+    },
+    {
+      "id": "905d42f481798c79",
+      "brand": "HPCL",
+      "outletName": "M/s The Nat Ex-Servicemen Co Op",
+      "address": "No 141B, Madam Cama Road",
+      "city": "Mumbai",
+      "citySlug": "mumbai",
+      "state": "Maharashtra",
+      "pincode": "400020",
+      "lat": 18.92675658,
+      "lng": 72.8275049,
+      "geohash": "te7g9jx",
+      "hours": "05:00 AM - 11:00 PM",
+      "contact": "+919870575729",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-the-nat-ex-servicemen-co-op-petrol-pump-mantralayam-mumbai-387464/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-the-nat-ex-servicemen-co-op-petrol-pump-mantralayam-mumbai-387464/Home",
+      "outletId": "387464",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:27:08.770Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 181.09,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:27:08.770Z"
+        }
+      ]
+    },
+    {
+      "id": "9348b09e1be3d0c7",
+      "brand": "IOCL",
+      "outletName": "Chunilal Gupta &amp; Sons",
+      "address": "LB Shashtri Marg",
+      "city": "Mumbai",
+      "citySlug": "mumbai",
+      "state": "Maharashtra",
+      "pincode": "400080",
+      "lat": 19.171735,
+      "lng": 72.941008,
+      "geohash": "te7v5f4",
+      "hours": "06:00 AM - 10:00 PM",
+      "contact": "+918422030314",
+      "mapsLink": "https://locator.iocl.com/indianoil-petrol-pump-mulund-west-chunilal-gupta-sons-petrol-pump-mulund-west-mumbai-183689/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-petrol-pump-mulund-west-chunilal-gupta-sons-petrol-pump-mulund-west-mumbai-183689/Home",
+      "outletId": "183689",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T08:02:10.782Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T08:02:10.782Z"
+        }
+      ]
+    },
+    {
+      "id": "a635b14ea7585f7e",
+      "brand": "HPCL",
+      "outletName": "M/s Hodiwala Bhathena And Co, Churchgate",
+      "address": "No 3J, Tata Road",
+      "city": "Mumbai",
+      "citySlug": "mumbai",
+      "state": "Maharashtra",
+      "pincode": "400020",
+      "lat": 18.93183742,
+      "lng": 72.82730458,
+      "geohash": "te7g9nr",
+      "hours": "05:00 AM - 11:00 PM",
+      "contact": "+919930556821",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-hodiwala-bhathena-and-co-churchgate-petrol-pump-churchgate-mumbai-387508/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-hodiwala-bhathena-and-co-churchgate-petrol-pump-churchgate-mumbai-387508/Home",
+      "outletId": "387508",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:26:49.861Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 181.09,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:26:49.861Z"
+        }
+      ]
+    },
+    {
+      "id": "ac8215a5035f53ef",
+      "brand": "HPCL",
+      "outletName": "M/s Apm Fuel Centre, Vashi",
+      "address": "Plot No 180/2, Vashi, APMC Market",
+      "city": "Navi Mumbai",
+      "citySlug": "navi-mumbai",
+      "state": "Maharashtra",
+      "pincode": "400703",
+      "lat": 19.081395,
+      "lng": 73.007503,
+      "geohash": "te7ut3d",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+917977776239",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-apm-fuel-centre-vashi-petrol-pump-sector-19c-navi-mumbai-387492/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-apm-fuel-centre-vashi-petrol-pump-sector-19c-navi-mumbai-387492/Home",
+      "outletId": "387492",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:27:11.325Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 181.16,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:27:11.325Z"
+        }
+      ]
+    },
+    {
+      "id": "b2d6c0b464decc17",
+      "brand": "HPCL",
+      "outletName": "M/s All Car Services, Clare Road",
+      "address": "Ground Floor, Clare Road",
+      "city": "Mumbai",
+      "citySlug": "mumbai",
+      "state": "Maharashtra",
+      "pincode": "400008",
+      "lat": 18.96927582,
+      "lng": 72.82983889,
+      "geohash": "te7gcm3",
+      "hours": "05:00 AM - 11:00 PM",
+      "contact": "+919892040077",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-all-car-services-clare-road-petrol-pump-byculla-mumbai-388087/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-all-car-services-clare-road-petrol-pump-byculla-mumbai-388087/Home",
+      "outletId": "388087",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:26:35.153Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 181.08,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:26:35.153Z"
+        }
+      ]
+    },
+    {
+      "id": "b3b93cca3304dd96",
+      "brand": "HPCL",
+      "outletName": "M/S Kalash Mobility Services, Chira",
+      "address": "Survey No 44 &amp; 45, Khoni Taloja Road",
+      "city": "Thane",
+      "citySlug": "thane",
+      "state": "Maharashtra",
+      "pincode": "421204",
+      "lat": 19.14789001,
+      "lng": 73.120209,
+      "geohash": "te7uzvu",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+917011706400",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-kalash-mobility-services-chira-petrol-pump-khoni-thane-483224/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-kalash-mobility-services-chira-petrol-pump-khoni-thane-483224/Home",
+      "outletId": "483224",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:27:56.048Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 181.16,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:27:56.048Z"
+        }
+      ]
+    },
+    {
+      "id": "b3d68828b71b1cc7",
+      "brand": "HPCL",
+      "outletName": "Shubham Auto Services, Kopar Khairane",
+      "address": "Plot No 8, Vashi",
+      "city": "Navi Mumbai",
+      "citySlug": "navi-mumbai",
+      "state": "Maharashtra",
+      "pincode": "400709",
+      "lat": 19.106731,
+      "lng": 73.009071,
+      "geohash": "te7utq7",
+      "hours": "05:00 AM - 11:00 PM",
+      "contact": "+919422475999",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-shubham-auto-services-kopar-khairane-petrol-pump-sector-4a-kopar-khairane-navi-mumbai-388111/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-shubham-auto-services-kopar-khairane-petrol-pump-sector-4a-kopar-khairane-navi-mumbai-388111/Home",
+      "outletId": "388111",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:27:19.629Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 181.16,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:27:19.629Z"
+        }
+      ]
+    },
+    {
+      "id": "b59a601ca68ed396",
+      "brand": "HPCL",
+      "outletName": "M/s United Motor Stores, Thane",
+      "address": "No 356, Agra Road",
+      "city": "Thane",
+      "citySlug": "thane",
+      "state": "Maharashtra",
+      "pincode": "400602",
+      "lat": 19.193261,
+      "lng": 72.970421,
+      "geohash": "te7vhqp",
+      "hours": "05:00 AM - 11:00 PM",
+      "contact": "+919820157689",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-united-motor-stores-thane-petrol-pump-naupada-thane-388829/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-united-motor-stores-thane-petrol-pump-naupada-thane-388829/Home",
+      "outletId": "388829",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:58:58.677Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 181.14,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:58:58.677Z"
+        }
+      ]
+    },
+    {
+      "id": "b7fb3be37802243a",
+      "brand": "HPCL",
+      "outletName": "M/s Standard Auto Service, Colaba",
+      "address": "No 126, Colaba Causeway",
+      "city": "Mumbai",
+      "citySlug": "mumbai",
+      "state": "Maharashtra",
+      "pincode": "400005",
+      "lat": 18.9190345,
+      "lng": 72.82892694,
+      "geohash": "te7g9k0",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919820217110",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-standard-auto-service-colaba-petrol-pump-colaba-mumbai-387469/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-standard-auto-service-colaba-petrol-pump-colaba-mumbai-387469/Home",
+      "outletId": "387469",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:27:01.119Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 181.09,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:27:01.119Z"
+        }
+      ]
+    },
+    {
+      "id": "be757f88ef3050c8",
+      "brand": "IOCL",
+      "outletName": "Rabale Fuel Services",
+      "address": "Gut No 85, Talawali",
+      "city": "Thane",
+      "citySlug": "thane",
+      "state": "Maharashtra",
+      "pincode": "400701",
+      "lat": 19.131948,
+      "lng": 73.003746,
+      "geohash": "te7uv4z",
+      "hours": "06:00 AM - 11:59 PM",
+      "contact": "+919860433565",
+      "mapsLink": "https://locator.iocl.com/indianoil-petrol-pump-ghansoli-rabale-fuel-services-cng-pump-ghansoli-thane-191078/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-petrol-pump-ghansoli-rabale-fuel-services-petrol-pump-ghansoli-thane-191078/Home",
+      "outletId": "191078",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T08:33:55.396Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T08:33:55.396Z"
+        }
+      ]
+    },
+    {
+      "id": "bee05fb17aaea74d",
+      "brand": "HPCL",
+      "outletName": "M/s Karfule Private Ltd, Ballard Estate",
+      "address": "Ground Floor, Sprott Road",
+      "city": "Mumbai",
+      "citySlug": "mumbai",
+      "state": "Maharashtra",
+      "pincode": "400001",
+      "lat": 18.93584552,
+      "lng": 72.84066758,
+      "geohash": "te7g9x0",
+      "hours": "05:00 AM - 11:00 PM",
+      "contact": "+919820142470",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-karfule-private-ltd-ballard-estate-compressed-natural-gas-station-ballard-estate-mumbai-387778/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-karfule-private-ltd-ballard-estate-petrol-pump-ballard-estate-mumbai-387778/Home",
+      "outletId": "387778",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:26:52.976Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 181.08,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:26:52.976Z"
+        }
+      ]
+    },
+    {
+      "id": "c3b6bd6447d9ce6c",
+      "brand": "HPCL",
+      "outletName": "M/s Radhakishan Lalchand, Thane",
+      "address": "Ground Floor, LBS Marg",
+      "city": "Thane",
+      "citySlug": "thane",
+      "state": "Maharashtra",
+      "pincode": "400602",
+      "lat": 19.1926901,
+      "lng": 72.9701801,
+      "geohash": "te7vhmz",
+      "hours": "05:00 AM - 11:00 PM",
+      "contact": "+919833630068",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-radhakishan-lalchand-thane-petrol-pump-naupada-thane-387820/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-radhakishan-lalchand-thane-petrol-pump-naupada-thane-387820/Home",
+      "outletId": "387820",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:58:56.149Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 181.14,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:58:56.149Z"
+        }
+      ]
+    },
+    {
+      "id": "d490d88bce8b1362",
+      "brand": "HPCL",
+      "outletName": "M/s Sonal Super Service , Lower Par",
+      "address": "Ground Floor, Sitaram Mill Compound, NM Joshi Marg",
+      "city": "Mumbai",
+      "citySlug": "mumbai",
+      "state": "Maharashtra",
+      "pincode": "400011",
+      "lat": 18.988625,
+      "lng": 72.831255,
+      "geohash": "te7u12f",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+918591194739",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-sonal-super-service-lower-par-petrol-pump-delisle-road-mumbai-387458/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-sonal-super-service-lower-par-petrol-pump-delisle-road-mumbai-387458/Home",
+      "outletId": "387458",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:26:58.124Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 181.09,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:26:58.124Z"
+        }
+      ]
+    },
+    {
+      "id": "dae194a12184ddbc",
+      "brand": "HPCL",
+      "outletName": "M/s Chhagan Mitha, Metro",
+      "address": "No 10A, Mahatma Gandhi Road",
+      "city": "Mumbai",
+      "citySlug": "mumbai",
+      "state": "Maharashtra",
+      "pincode": "400001",
+      "lat": 18.94236763,
+      "lng": 72.82960708,
+      "geohash": "te7gc22",
+      "hours": "05:00 AM - 11:00 PM",
+      "contact": "+918097786784",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-chhagan-mitha-metro-petrol-pump-dhobi-talao-mumbai-387872/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-chhagan-mitha-metro-petrol-pump-dhobi-talao-mumbai-387872/Home",
+      "outletId": "387872",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:26:38.302Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 181.09,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:26:38.302Z"
+        }
+      ]
+    },
+    {
+      "id": "dedbf3995329089d",
+      "brand": "IOCL",
+      "outletName": "Kini&#039;S Causeway",
+      "address": "Bandra Causeway",
+      "city": "Mumbai",
+      "citySlug": "mumbai",
+      "state": "Maharashtra",
+      "pincode": "400050",
+      "lat": 19.051531,
+      "lng": 72.837985,
+      "geohash": "te7u3kp",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919820020517",
+      "mapsLink": "https://locator.iocl.com/indianoil-petrol-pump-bandra-west-kini-s-causeway-petrol-pump-bandra-west-mumbai-184161/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-petrol-pump-bandra-west-kini-s-causeway-petrol-pump-bandra-west-mumbai-184161/Home",
+      "outletId": "184161",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T08:02:21.127Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T08:02:21.127Z"
+        }
+      ]
+    },
+    {
+      "id": "e6045a036d28da1d",
+      "brand": "IOCL",
+      "outletName": "I Carport",
+      "address": "Ioc Dealers Sahar Mumbai",
+      "city": "Mumbai",
+      "citySlug": "mumbai",
+      "state": "Maharashtra",
+      "pincode": "400099",
+      "lat": 19.102837,
+      "lng": 72.873855,
+      "geohash": "te7udm9",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919821054977",
+      "mapsLink": "https://locator.iocl.com/indianoil-petrol-pump-andheri-east-i-carport-petrol-pump-airport-mumbai-183856/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-petrol-pump-andheri-east-i-carport-petrol-pump-airport-mumbai-183856/Home",
+      "outletId": "183856",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T08:02:16.071Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T08:02:16.071Z"
+        }
+      ]
+    },
+    {
+      "id": "ec23a35b6dc32c07",
+      "brand": "IOCL",
+      "outletName": "Joaquim Petroleum",
+      "address": "Sion Trombay Road",
+      "city": "Mumbai",
+      "citySlug": "mumbai",
+      "state": "Maharashtra",
+      "pincode": "400088",
+      "lat": 19.044839,
+      "lng": 72.916371,
+      "geohash": "te7u770",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919821052147",
+      "mapsLink": "https://locator.iocl.com/indianoil-petrol-pump-chembur-joaquim-petroleum-petrol-pump-deonar-mumbai-183563/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-petrol-pump-chembur-joaquim-petroleum-petrol-pump-deonar-mumbai-183563/Home",
+      "outletId": "183563",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T08:02:18.609Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T08:02:18.609Z"
+        }
+      ]
+    },
+    {
+      "id": "f11d3f35c79fe289",
+      "brand": "HPCL",
+      "outletName": "M/s Tardeo Service Stn, Tardeo",
+      "address": "No 75",
+      "city": "Mumbai",
+      "citySlug": "mumbai",
+      "state": "Maharashtra",
+      "pincode": "400034",
+      "lat": 18.974041,
+      "lng": 72.814071,
+      "geohash": "te7gbyj",
+      "hours": "05:00 AM - 11:00 PM",
+      "contact": "+917744844148",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-tardeo-service-stn-tardeo-petrol-pump-tardeo-road-mumbai-387391/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-tardeo-service-stn-tardeo-petrol-pump-tardeo-road-mumbai-387391/Home",
+      "outletId": "387391",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:27:06.252Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 181.08,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:27:06.252Z"
+        }
+      ]
+    },
+    {
+      "id": "fcf3d4e108db7cfd",
+      "brand": "HPCL",
+      "outletName": "M/s Vashi Fuel Centre, Vashi",
+      "address": "Plot No 2/2",
+      "city": "Navi Mumbai",
+      "citySlug": "navi-mumbai",
+      "state": "Maharashtra",
+      "pincode": "400705",
+      "lat": 19.083171,
+      "lng": 73.001151,
+      "geohash": "te7ut1v",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919322408106",
+      "mapsLink": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-vashi-fuel-centre-vashi-petrol-pump-sector-14-vashi-navi-mumbai-388105/Map",
+      "source": "hpcl:petrolpump.hpretail.in",
+      "sourceUrl": "https://petrolpump.hpretail.in/hindustan-petroleum-corporation-limited-m-s-vashi-fuel-centre-vashi-petrol-pump-sector-14-vashi-navi-mumbai-388105/Home",
+      "outletId": "388105",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T06:27:16.571Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "Power 100",
+          "priceInr": 181.16,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T06:27:16.571Z"
+        }
+      ]
+    }
+  ]
+}

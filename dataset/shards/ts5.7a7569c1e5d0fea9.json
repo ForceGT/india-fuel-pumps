@@ -1,0 +1,125 @@
+{
+  "prefix": "ts5",
+  "stations": [
+    {
+      "id": "0f6ae7413c130b99",
+      "brand": "IOCL",
+      "outletName": "Corporate Petroleum",
+      "address": "Jodhpur Ahmedabad Road, Satellite",
+      "city": "Ahmedabad",
+      "citySlug": "ahmedabad",
+      "state": "Gujarat",
+      "pincode": "380015",
+      "lat": 23.0269,
+      "lng": 72.5261,
+      "geohash": "ts5dfrg",
+      "hours": "06:00 AM - 11:00 PM",
+      "contact": "+919824022588",
+      "mapsLink": "https://locator.iocl.com/indianoil-corporate-petroleum-petrol-pump-jodhpur-char-rasta-ahmedabad-184042/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-corporate-petroleum-petrol-pump-jodhpur-char-rasta-ahmedabad-184042/Home",
+      "outletId": "184042",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T07:30:30.593Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T07:30:30.593Z"
+        }
+      ]
+    },
+    {
+      "id": "6d40a8eae6a96a76",
+      "brand": "IOCL",
+      "outletName": "Associated Petroleum Corpn",
+      "address": "Ground Floor, CG Road",
+      "city": "Ahmedabad",
+      "citySlug": "ahmedabad",
+      "state": "Gujarat",
+      "pincode": "380006",
+      "lat": 23.0258,
+      "lng": 72.5568,
+      "geohash": "ts5dgpd",
+      "hours": "06:30 AM - 11:00 PM",
+      "contact": "+919824031468",
+      "mapsLink": "https://locator.iocl.com/indianoil-associated-petroleum-corpn-cng-pump-ellisbridge-ahmedabad-183222/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-associated-petroleum-corpn-cng-pump-ellisbridge-ahmedabad-183222/Home",
+      "outletId": "183222",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T07:30:25.452Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T07:30:25.452Z"
+        }
+      ]
+    },
+    {
+      "id": "797c45f166094a6f",
+      "brand": "IOCL",
+      "outletName": "Sainik Seva Services",
+      "address": "Ground Floor",
+      "city": "Ahmedabad",
+      "citySlug": "ahmedabad",
+      "state": "Gujarat",
+      "pincode": "380015",
+      "lat": 23.0195,
+      "lng": 72.5298,
+      "geohash": "ts5dfqw",
+      "hours": "12:00 AM - 11:30 PM",
+      "contact": "+919925006689",
+      "mapsLink": "https://locator.iocl.com/indianoil-sainik-seva-services-petrol-pump-satellite-road-ahmedabad-183305/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-sainik-seva-services-petrol-pump-satellite-road-ahmedabad-183305/Home",
+      "outletId": "183305",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T07:30:33.114Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T07:30:33.114Z"
+        }
+      ]
+    },
+    {
+      "id": "8c3fa1ee7c50567d",
+      "brand": "IOCL",
+      "outletName": "Bhagwat Petroleum",
+      "address": "SG Highway, Daskori, Gota",
+      "city": "Ahmedabad",
+      "citySlug": "ahmedabad",
+      "state": "Gujarat",
+      "pincode": "380060",
+      "lat": 23.095,
+      "lng": 72.5301,
+      "geohash": "ts5e6kq",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919879529947",
+      "mapsLink": "https://locator.iocl.com/indianoil-bhagwat-petroleum-petrol-pump-ognaj-ahmedabad-183895/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-bhagwat-petroleum-petrol-pump-ognaj-ahmedabad-183895/Home",
+      "outletId": "183895",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T07:30:28.070Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T07:30:28.070Z"
+        }
+      ]
+    }
+  ]
+}

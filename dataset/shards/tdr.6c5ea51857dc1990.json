@@ -1,0 +1,245 @@
+{
+  "prefix": "tdr",
+  "stations": [
+    {
+      "id": "234ffc26411e8644",
+      "brand": "IOCL",
+      "outletName": "SVM Fuel Station",
+      "address": "Survey No 27, Varthur, Hobli",
+      "city": "Bengaluru",
+      "citySlug": "bengaluru",
+      "state": "Karnataka",
+      "pincode": "560103",
+      "lat": 12.9411853,
+      "lng": 77.6957352,
+      "geohash": "tdr385b",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919845734444",
+      "mapsLink": "https://locator.iocl.com/indianoil-svm-fuel-station-cng-pump-kadubeesanahalli-bengaluru-183611/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-svm-fuel-station-cng-pump-kadubeesanahalli-bengaluru-183611/Home",
+      "outletId": "183611",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T07:30:58.478Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T07:30:58.478Z"
+        }
+      ]
+    },
+    {
+      "id": "42421061e8a1594f",
+      "brand": "IOCL",
+      "outletName": "Shree Hari Service Station",
+      "address": "Thindlu Main Road, Kodigehalli, Vidyaranyapura",
+      "city": "Bengaluru",
+      "citySlug": "bengaluru",
+      "state": "Karnataka",
+      "pincode": "560097",
+      "lat": 13.06518,
+      "lng": 77.57096167,
+      "geohash": "tdr4m4m",
+      "hours": "06:00 AM - 10:00 PM",
+      "contact": "+919880017638",
+      "mapsLink": "https://locator.iocl.com/indianoil-shree-hari-service-station-petrol-pump-veerupakshapura-bengaluru-183816/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-shree-hari-service-station-petrol-pump-veerupakshapura-bengaluru-183816/Home",
+      "outletId": "183816",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T07:31:01.001Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T07:31:01.001Z"
+        }
+      ]
+    },
+    {
+      "id": "59b2236b614e7117",
+      "brand": "IOCL",
+      "outletName": "COCO KORAMANGALA",
+      "address": "No 19/A, Block 6",
+      "city": "Bengaluru",
+      "citySlug": "bengaluru",
+      "state": "Karnataka",
+      "pincode": "560034",
+      "lat": 12.939611,
+      "lng": 77.625347,
+      "geohash": "tdr1w7t",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+918884655558",
+      "mapsLink": "https://locator.iocl.com/indianoil-coco-koramangala-petrol-pump-80-feet-road-bengaluru-183452/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-coco-koramangala-petrol-pump-80-feet-road-bengaluru-183452/Home",
+      "outletId": "183452",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T07:30:50.793Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T07:30:50.793Z"
+        }
+      ]
+    },
+    {
+      "id": "5c57cb37164656ec",
+      "brand": "IOCL",
+      "outletName": "C Puttaiah &amp; Sons",
+      "address": "Ground Floor, Sirur Park Road",
+      "city": "Bengaluru",
+      "citySlug": "bengaluru",
+      "state": "Karnataka",
+      "pincode": "560020",
+      "lat": 12.990786,
+      "lng": 77.571836,
+      "geohash": "tdr1vhy",
+      "hours": "12:00 AM - 11:30 PM",
+      "contact": "+919448621868",
+      "mapsLink": "https://locator.iocl.com/indianoil-c-puttaiah-sons-cng-pump-seshadripuram-bengaluru-183691/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-c-puttaiah-sons-cng-pump-seshadripuram-bengaluru-183691/Home",
+      "outletId": "183691",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T07:30:48.263Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T07:30:48.263Z"
+        }
+      ]
+    },
+    {
+      "id": "a28cd375183fdd43",
+      "brand": "IOCL",
+      "outletName": "Sri Ekadantha Fuel Station",
+      "address": "No 23/1, Gottigere",
+      "city": "Bengaluru",
+      "citySlug": "bengaluru",
+      "state": "Karnataka",
+      "pincode": "560083",
+      "lat": 12.860155,
+      "lng": 77.589945,
+      "geohash": "tdr1jt5",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919611666949",
+      "mapsLink": "https://locator.iocl.com/indianoil-sri-ekadantha-fuel-station-petrol-pump-kalena-agrahara-bengaluru-183184/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-sri-ekadantha-fuel-station-petrol-pump-kalena-agrahara-bengaluru-183184/Home",
+      "outletId": "183184",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T07:31:06.297Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T07:31:06.297Z"
+        }
+      ]
+    },
+    {
+      "id": "aaa6a091a6b9d356",
+      "brand": "IOCL",
+      "outletName": "Sowbhagya And Co",
+      "address": "Survey No 38, HSR Layout, Ring Road",
+      "city": "Bengaluru",
+      "citySlug": "bengaluru",
+      "state": "Karnataka",
+      "pincode": "560102",
+      "lat": 12.92146,
+      "lng": 77.64493,
+      "geohash": "tdr1wb7",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+918951275951",
+      "mapsLink": "https://locator.iocl.com/indianoil-sowbhagya-and-co-petrol-pump-sector-4-bengaluru-183980/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-sowbhagya-and-co-petrol-pump-sector-4-bengaluru-183980/Home",
+      "outletId": "183980",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T07:31:03.525Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T07:31:03.525Z"
+        }
+      ]
+    },
+    {
+      "id": "e6461ac7fe540768",
+      "brand": "IOCL",
+      "outletName": "Engrads Gasoline",
+      "address": "Ground Floor, Mysore Road",
+      "city": "Bengaluru",
+      "citySlug": "bengaluru",
+      "state": "Karnataka",
+      "pincode": "560026",
+      "lat": 12.9472,
+      "lng": 77.5337,
+      "geohash": "tdr1skf",
+      "hours": "06:00 AM - 11:00 PM",
+      "contact": "+919448050478",
+      "mapsLink": "https://locator.iocl.com/indianoil-engrads-gasoline-cng-pump-danahalli-bengaluru-183741/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-engrads-gasoline-cng-pump-danahalli-bengaluru-183741/Home",
+      "outletId": "183741",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T07:30:55.949Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T07:30:55.949Z"
+        }
+      ]
+    },
+    {
+      "id": "fb2d47a1fc24b71a",
+      "brand": "IOCL",
+      "outletName": "COCO KR PURAM I",
+      "address": "Whitefield Main Road",
+      "city": "Bengaluru",
+      "citySlug": "bengaluru",
+      "state": "Karnataka",
+      "pincode": "560036",
+      "lat": 12.998925,
+      "lng": 77.68797,
+      "geohash": "tdr1zy6",
+      "hours": "12:00 AM - 11:45 PM",
+      "contact": "+916364714288",
+      "mapsLink": "https://locator.iocl.com/indianoil-coco-kr-puram-i-petrol-pump-kr-puram-bengaluru-367052/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-coco-kr-puram-i-petrol-pump-kr-puram-bengaluru-367052/Home",
+      "outletId": "367052",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T07:30:53.421Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T07:30:53.421Z"
+        }
+      ]
+    }
+  ]
+}

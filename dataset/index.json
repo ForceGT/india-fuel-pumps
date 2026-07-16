@@ -1,0 +1,104 @@
+{
+  "formatVersion": 1,
+  "generatedAt": "2026-07-16T10:04:17.564Z",
+  "datasetVersion": "2026-07-16T10:04:17.564Z",
+  "shardPrefixLength": 3,
+  "grades": [
+    "E0",
+    "E85",
+    "E100"
+  ],
+  "stationCount": 114,
+  "shards": {
+    "t9x": {
+      "count": 1,
+      "hash": "0a6a64d641e88f08",
+      "file": "shards/t9x.0a6a64d641e88f08.json"
+    },
+    "tdm": {
+      "count": 4,
+      "hash": "21e2c71c77ecb14a",
+      "file": "shards/tdm.21e2c71c77ecb14a.json"
+    },
+    "tdn": {
+      "count": 2,
+      "hash": "2e51504e44ec9f2a",
+      "file": "shards/tdn.2e51504e44ec9f2a.json"
+    },
+    "tdr": {
+      "count": 8,
+      "hash": "6c5ea51857dc1990",
+      "file": "shards/tdr.6c5ea51857dc1990.json"
+    },
+    "tdu": {
+      "count": 1,
+      "hash": "7a9acb984a3cbe64",
+      "file": "shards/tdu.7a9acb984a3cbe64.json"
+    },
+    "tdw": {
+      "count": 2,
+      "hash": "57fdf00115364995",
+      "file": "shards/tdw.57fdf00115364995.json"
+    },
+    "te7": {
+      "count": 35,
+      "hash": "1c148f57ac70c448",
+      "file": "shards/te7.1c148f57ac70c448.json"
+    },
+    "tee": {
+      "count": 1,
+      "hash": "b1708094679b7b1b",
+      "file": "shards/tee.b1708094679b7b1b.json"
+    },
+    "teh": {
+      "count": 1,
+      "hash": "862a67a8714d1a11",
+      "file": "shards/teh.862a67a8714d1a11.json"
+    },
+    "tek": {
+      "count": 18,
+      "hash": "6682d3df5d09ce05",
+      "file": "shards/tek.6682d3df5d09ce05.json"
+    },
+    "tes": {
+      "count": 1,
+      "hash": "15c60c81c70e5ddd",
+      "file": "shards/tes.15c60c81c70e5ddd.json"
+    },
+    "tet": {
+      "count": 1,
+      "hash": "bc88566e042959d5",
+      "file": "shards/tet.bc88566e042959d5.json"
+    },
+    "tf2": {
+      "count": 2,
+      "hash": "57c2507e85d78b8b",
+      "file": "shards/tf2.57c2507e85d78b8b.json"
+    },
+    "tf3": {
+      "count": 7,
+      "hash": "4c8bfcb3c1a3d367",
+      "file": "shards/tf3.4c8bfcb3c1a3d367.json"
+    },
+    "ts5": {
+      "count": 4,
+      "hash": "7a7569c1e5d0fea9",
+      "file": "shards/ts5.7a7569c1e5d0fea9.json"
+    },
+    "ttn": {
+      "count": 23,
+      "hash": "8a118573d86ccb20",
+      "file": "shards/ttn.8a118573d86ccb20.json"
+    },
+    "wh9": {
+      "count": 1,
+      "hash": "a2e1d7511d67e649",
+      "file": "shards/wh9.a2e1d7511d67e649.json"
+    },
+    "whg": {
+      "count": 2,
+      "hash": "6cedfebbd621441d",
+      "file": "shards/whg.6cedfebbd621441d.json"
+    }
+  }
+}

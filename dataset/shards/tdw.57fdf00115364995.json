@@ -1,0 +1,65 @@
+{
+  "prefix": "tdw",
+  "stations": [
+    {
+      "id": "657e0630846274b6",
+      "brand": "IOCL",
+      "outletName": "Ramkrishna Filling Station",
+      "address": "Survey No 24A/3",
+      "city": "Bellary",
+      "citySlug": "bellary",
+      "state": "Karnataka",
+      "pincode": "583102",
+      "lat": 15.105567,
+      "lng": 76.898421,
+      "geohash": "tdwtvvg",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919448272442",
+      "mapsLink": "https://locator.iocl.com/indianoil-ramkrishna-filling-station-petrol-pump-mundragi-bellary-197296/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-ramkrishna-filling-station-petrol-pump-mundragi-bellary-197296/Home",
+      "outletId": "197296",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T07:30:40.673Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T07:30:40.673Z"
+        }
+      ]
+    },
+    {
+      "id": "cea43394e4e122ee",
+      "brand": "IOCL",
+      "outletName": "Sri Sai Petroleum",
+      "address": "L No 312, NH 13, Chitradurga Solapur Rd",
+      "city": "Bellary",
+      "citySlug": "bellary",
+      "state": "Karnataka",
+      "pincode": "583222",
+      "lat": 15.163937,
+      "lng": 76.365763,
+      "geohash": "tdwq38x",
+      "hours": "06:00 AM - 10:00 PM",
+      "contact": "+919448284511",
+      "mapsLink": "https://locator.iocl.com/indianoil-sri-sai-petroleum-petrol-pump-hampa-patna-bellary-204831/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-sri-sai-petroleum-petrol-pump-hampa-patna-bellary-204831/Home",
+      "outletId": "204831",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T07:30:43.221Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T07:30:43.221Z"
+        }
+      ]
+    }
+  ]
+}

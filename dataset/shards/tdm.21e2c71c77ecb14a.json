@@ -1,0 +1,125 @@
+{
+  "prefix": "tdm",
+  "stations": [
+    {
+      "id": "963ad8157efb78fd",
+      "brand": "IOCL",
+      "outletName": "Aashirwad Enterprises",
+      "address": "Kulur Ferry Road",
+      "city": "Mangaluru",
+      "citySlug": "mangaluru",
+      "state": "Karnataka",
+      "pincode": "575003",
+      "lat": 12.884406388888,
+      "lng": 74.834122777777,
+      "geohash": "tdm1qcs",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919845080385",
+      "mapsLink": "https://locator.iocl.com/indianoil-aashirwad-enterprises-petrol-pump-mannagudda-mangaluru-197335/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-aashirwad-enterprises-petrol-pump-mannagudda-mangaluru-197335/Home",
+      "outletId": "197335",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T08:01:50.508Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T08:01:50.508Z"
+        }
+      ]
+    },
+    {
+      "id": "a816168d3ad1afba",
+      "brand": "IOCL",
+      "outletName": "Karavali Service Station",
+      "address": "Ground Floor, Alape",
+      "city": "Mangaluru",
+      "citySlug": "mangaluru",
+      "state": "Karnataka",
+      "pincode": "575007",
+      "lat": 12.872599444444,
+      "lng": 74.887334722222,
+      "geohash": "tdm30p7",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919448134123",
+      "mapsLink": "https://locator.iocl.com/indianoil-karavali-service-station-petrol-pump-shanthi-nagar-mangaluru-197262/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-karavali-service-station-petrol-pump-shanthi-nagar-mangaluru-197262/Home",
+      "outletId": "197262",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T08:01:53.028Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T08:01:53.028Z"
+        }
+      ]
+    },
+    {
+      "id": "bc1120d009b29477",
+      "brand": "IOCL",
+      "outletName": "HHFuels - Mangalore",
+      "address": "Ground Floor, Kuthar Padavu, Mangalore",
+      "city": "Dakshina Kannada",
+      "citySlug": "dakshina-kannada",
+      "state": "Karnataka",
+      "pincode": "575017",
+      "lat": 12.818980277777,
+      "lng": 74.878220833333,
+      "geohash": "tdm0zvs",
+      "hours": "06:00 AM - 10:00 PM",
+      "contact": "+919844045878",
+      "mapsLink": "https://locator.iocl.com/indianoil-hhfuels-mangalore-petrol-pump-amblamogaru-dakshina-kannada-204651/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-hhfuels-mangalore-petrol-pump-amblamogaru-dakshina-kannada-204651/Home",
+      "outletId": "204651",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T08:01:45.401Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T08:01:45.401Z"
+        }
+      ]
+    },
+    {
+      "id": "f10b209457d86b6e",
+      "brand": "IOCL",
+      "outletName": "Panambur Service Station",
+      "address": "Ground Floor",
+      "city": "Dakshina Kannada",
+      "citySlug": "dakshina-kannada",
+      "state": "Karnataka",
+      "pincode": "575010",
+      "lat": 12.94275445783,
+      "lng": 74.814690042937,
+      "geohash": "tdm1wkn",
+      "hours": "12:00 AM - 11:59 PM",
+      "contact": "+919845080715",
+      "mapsLink": "https://locator.iocl.com/indianoil-panambur-service-station-petrol-pump-panambur-dakshina-kannada-197276/Map",
+      "source": "iocl:locator.iocl.com",
+      "sourceUrl": "https://locator.iocl.com/indianoil-panambur-service-station-petrol-pump-panambur-dakshina-kannada-197276/Home",
+      "outletId": "197276",
+      "confidence": "high",
+      "lastVerifiedAt": "2026-07-16T08:01:47.934Z",
+      "grades": [
+        {
+          "grade": "E0",
+          "productName": "XP100",
+          "priceInr": 167.35,
+          "available": "unknown",
+          "lastSeenAt": "2026-07-16T08:01:47.934Z"
+        }
+      ]
+    }
+  ]
+}
