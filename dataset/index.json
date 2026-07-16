@@ -1,12 +1,10 @@
 {
   "formatVersion": 1,
-  "generatedAt": "2026-07-16T10:04:17.564Z",
-  "datasetVersion": "2026-07-16T10:04:17.564Z",
+  "generatedAt": "2026-07-16T10:27:16.658Z",
+  "datasetVersion": "2026-07-16T10:27:16.658Z",
   "shardPrefixLength": 3,
   "grades": [
-    "E0",
-    "E85",
-    "E100"
+    "E0"
   ],
   "stationCount": 114,
   "shards": {
