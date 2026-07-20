@@ -9,6 +9,11 @@
  * so the GH Actions publish step can create a tagged GitHub Release with a
  * readable changelog.
  *
+ * Partial-failure aware: brands whose raw JSONL is missing are tracked as
+ * `missingBrands` and flagged in the release notes as "no data this run"
+ * rather than being silently counted as zero — this prevents a single failed
+ * census job from looking like every outlet of that brand disappeared.
+ *
  * No grade filtering — this is an all-pumps, all-products dataset. Grade
  * classification is a downstream consumer's opinion.
  *
@@ -39,6 +44,8 @@ interface CurrentStats {
   totalOutlets: number;
   brands: Record<string, number>;
   shardCount: number;
+  /** Brands whose raw JSONL was missing this run (census failed or was skipped). */
+  missingBrands: string[];
 }
 
 interface ReleaseStats {
@@ -94,7 +101,6 @@ function readPreviousStats(): CurrentStats | null {
   }
 }
 
-/** e.g. "+3" / "-5" / "0" */
 function deltaStr(delta: number): string {
   if (delta > 0) return `+${delta}`;
   if (delta < 0) return `${delta}`;
@@ -104,25 +110,48 @@ function deltaStr(delta: number): string {
 function writeReleaseNotes(stats: ReleaseStats): void {
   const { previous: prev, current: cur } = stats;
   const lines: string[] = [];
-
   const dateLabel = cur.generatedAt.slice(0, 10);
 
+  // ── Warning banner for missing brands ──
+  if (cur.missingBrands.length > 0) {
+    lines.push(
+      `> ⚠️ **Partial dataset** — ${cur.missingBrands.map(b => b.toUpperCase()).join(", ")} did not produce data this run.`,
+      "",
+    );
+    // If the missing brand HAD data in the previous release, call out that
+    // this is a census failure, not a real drop.
+    if (prev) {
+      const missingWithPrior = cur.missingBrands.filter(b => (prev.brands[b] ?? 0) > 0);
+      if (missingWithPrior.length > 0) {
+        const parts = missingWithPrior.map(b => {
+          const priorCount = prev.brands[b]?.toLocaleString() ?? "?";
+          return `**${b.toUpperCase()}**: previous count was ${priorCount} — not dropped, just missing from this run`;
+        });
+        lines.push(`> ${parts.join("  \n> ")}`, "");
+      }
+    }
+  }
+
   if (!prev) {
-    // First-ever publish — baseline snapshot, no diff to show.
+    // ── First-ever publish — baseline snapshot ──
     lines.push(`## Dataset baseline — ${dateLabel}`, "");
     const activeBrands = Object.entries(cur.brands).filter(([, count]) => count > 0).length;
-    lines.push(`**${cur.totalOutlets.toLocaleString()}** outlets across **${activeBrands}** brands, split into **${cur.shardCount}** geohash shards.`, "");
-    lines.push("");
+    lines.push(
+      `**${cur.totalOutlets.toLocaleString()}** outlets across **${activeBrands}** brands, split into **${cur.shardCount}** geohash shards.`,
+      "",
+    );
     lines.push("| Brand | Outlets |");
     lines.push("|-------|--------:|");
     for (const brand of BRANDS) {
       const count = cur.brands[brand] ?? 0;
-      if (count > 0) {
+      if (cur.missingBrands.includes(brand)) {
+        lines.push(`| ${brand.toUpperCase()} | ⚠️ *no data* |`);
+      } else if (count > 0) {
         lines.push(`| ${brand.toUpperCase()} | ${count.toLocaleString()} |`);
       }
     }
   } else {
-    // Subsequent publish — show diff.
+    // ── Subsequent publish — show diff ──
     const totalDelta = cur.totalOutlets - prev.totalOutlets;
     const shardDelta = cur.shardCount - prev.shardCount;
 
@@ -141,12 +170,17 @@ function writeReleaseNotes(stats: ReleaseStats): void {
     // Per-brand breakdown
     lines.push("### Per brand", "");
     const allBrands = new Set([...Object.keys(prev.brands), ...Object.keys(cur.brands)]);
+    for (const brand of cur.missingBrands) allBrands.add(brand);
     const sortedBrands = [...allBrands].sort();
-    if (sortedBrands.length > 0) {
-      lines.push("| Brand | Before | After | Δ |");
-      lines.push("|-------|-------:|------:|--:|");
-      for (const brand of sortedBrands) {
-        const before = prev.brands[brand] ?? 0;
+    lines.push("| Brand | Before | After | Δ |");
+    lines.push("|-------|-------:|------:|--:|");
+    for (const brand of sortedBrands) {
+      const before = prev.brands[brand] ?? 0;
+      if (cur.missingBrands.includes(brand)) {
+        // Brand is absent this run — flag, don't pretend it dropped to 0.
+        const beforeStr = before > 0 ? before.toLocaleString() : "—";
+        lines.push(`| ${brand.toUpperCase()} | ${beforeStr} | ⚠️ *no data* | — |`);
+      } else {
         const after = cur.brands[brand] ?? 0;
         const delta = after - before;
         const icon = delta > 0 ? "📈" : delta < 0 ? "📉" : "—";
@@ -157,11 +191,12 @@ function writeReleaseNotes(stats: ReleaseStats): void {
     }
     lines.push("");
 
-    // Call out which brands contributed to this run
-    const brandsWithChanges = sortedBrands.filter(b => (cur.brands[b] ?? 0) !== (prev.brands[b] ?? 0));
+    // Call out which brands meaningfully changed (excluding missing)
+    const presentBrands = sortedBrands.filter(b => !cur.missingBrands.includes(b));
+    const brandsWithChanges = presentBrands.filter(b => (cur.brands[b] ?? 0) !== (prev.brands[b] ?? 0));
     if (brandsWithChanges.length > 0) {
       lines.push(
-        `### Changed brands`,
+        "### Changed brands",
         "",
         brandsWithChanges.map(b => {
           const before = prev.brands[b] ?? 0;
@@ -200,16 +235,18 @@ function writeReleaseStats(current: CurrentStats): void {
 async function main(): Promise<void> {
   const allOutlets: RawOutletRecord[] = [];
   const brandCounts: Record<string, number> = {};
+  const missingBrands: string[] = [];
 
   for (const brand of BRANDS) {
     const filePath = path.join(OUTPUT_DIR, `${brand}-raw.jsonl`);
     const records = await readRawJsonl(filePath);
-    const deduped = dedupeByStationId(records);
-    brandCounts[brand] = deduped.length;
-    allOutlets.push(...deduped);
     if (records.length === 0) {
+      missingBrands.push(brand);
       console.log(`[build-dataset] ${brand}: file missing — skipped`);
     } else {
+      const deduped = dedupeByStationId(records);
+      brandCounts[brand] = deduped.length;
+      allOutlets.push(...deduped);
       console.log(`[build-dataset] ${brand}: ${records.length} raw records → ${deduped.length} unique outlets`);
     }
   }
@@ -269,6 +306,7 @@ async function main(): Promise<void> {
     totalOutlets,
     brands: brandCounts,
     shardCount: shardEntries.length,
+    missingBrands,
   });
 }
 
