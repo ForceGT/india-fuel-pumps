@@ -199,7 +199,7 @@ jobs:
 
       - name: Run BPCL census
         env:
-          BPCL_CENSUS_CONCURRENCY: '4'
+          BPCL_CENSUS_CONCURRENCY: ${{ inputs.concurrency || '4' }}
           BPCL_CENSUS_LIMIT: ${{ inputs.bpcl_limit }}
           BPCL_CENSUS_MAX_AGE_DAYS: '30'
         run: npm run census:bpcl

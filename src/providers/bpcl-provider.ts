@@ -230,6 +230,28 @@ export function createBpclProvider(config: BpclProviderConfig = {}): Provider {
   const maxDepth = config.maxDepth ?? DEFAULT_MAX_DEPTH;
   const tokenState: TokenState = { token: null, expiresAt: 0 };
 
+  // ── Error logging — log the first few failures of each type so GH Actions
+  //    logs are diagnostic without drowning in 1,129 identical lines. ──
+  const httpFailureCounts: Record<number, number> = {};
+  const MAX_ERROR_LOG = 3;
+
+  function logHttpFailure(kind: string, url: string, status: number, body: unknown): void {
+    const count = httpFailureCounts[status] ?? 0;
+    httpFailureCounts[status] = count + 1;
+    if (count < MAX_ERROR_LOG) {
+      const bodySnippet = body !== null ? JSON.stringify(body).slice(0, 300) : "(not JSON)";
+      console.error(`[bpcl] HTTP ${status} from ${kind} ${url.slice(0, 120)} — body: ${bodySnippet}`);
+    }
+  }
+
+  function logErrorSummary(): void {
+    const entries = Object.entries(httpFailureCounts);
+    if (entries.length === 0) return;
+    const parts = entries.sort(([a], [b]) => Number(b) - Number(a))
+      .map(([status, n]) => `HTTP ${status}×${n}`);
+    console.error(`[bpcl] non-404 httpFailures: ${parts.join(", ")}`);
+  }
+
   async function refreshToken(ctx: ProviderContext): Promise<string> {
     const req = buildTokenRequest();
     const res = await ctx.fetch(req.url, { method: req.method, headers: req.headers, body: req.body });
@@ -315,6 +337,7 @@ export function createBpclProvider(config: BpclProviderConfig = {}): Provider {
             if (res.status === 404 && isNoDataFoundResponse(body)) {
               return { status: "empty", records: [] };
             }
+            logHttpFailure("route", req.url, res.status, body);
             return { status: "httpFailed", detail: `HTTP ${res.status}`, records: [] };
           }
           const json = (await res.json()) as unknown;
@@ -336,6 +359,7 @@ export function createBpclProvider(config: BpclProviderConfig = {}): Provider {
           if (res.status === 404 && isNoDataFoundResponse(body)) {
             return { status: "empty", records: [], saturated: false };
           }
+          logHttpFailure("cell", url, res.status, body);
           return { status: "httpFailed", detail: `HTTP ${res.status}`, records: [] };
         }
         const json = (await res.json()) as unknown;
@@ -361,6 +385,8 @@ export function createBpclProvider(config: BpclProviderConfig = {}): Provider {
           ...(followups.length > 0 ? { followups } : {}),
         };
       } catch (err) {
+        // Connection-level failures (DNS, TCP reset, TLS, timeout) — always log.
+        console.error(`[bpcl] connection error on unit ${unit.id}:`, String(err));
         return { status: "errored", detail: String(err), records: [] };
       }
     },
