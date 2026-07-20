@@ -73,9 +73,9 @@ jobs:
       contains(inputs.brands, 'hpcl')
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: 'npm'
@@ -109,7 +109,7 @@ jobs:
           key: worklog-hpcl-${{ github.run_id }}
 
       - name: Upload HPCL raw output
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: hpcl-raw
           path: output/hpcl-raw.jsonl
@@ -130,9 +130,9 @@ jobs:
       contains(inputs.brands, 'iocl')
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: 'npm'
@@ -161,7 +161,7 @@ jobs:
           key: worklog-iocl-${{ github.run_id }}
 
       - name: Upload IOCL raw output
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: iocl-raw
           path: output/iocl-raw.jsonl
@@ -181,9 +181,9 @@ jobs:
       contains(inputs.brands, 'bpcl')
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: 'npm'
@@ -212,7 +212,7 @@ jobs:
           key: worklog-bpcl-${{ github.run_id }}
 
       - name: Upload BPCL raw output
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: bpcl-raw
           path: output/bpcl-raw.jsonl
@@ -237,9 +237,9 @@ jobs:
       (needs.census-hpcl.result == 'success' || needs.census-iocl.result == 'success' || needs.census-bpcl.result == 'success')
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: 'npm'
@@ -249,7 +249,7 @@ jobs:
       # Download whichever brand artifacts were uploaded (missing ones are
       # silently skipped — single-brand calibration runs only produce one file).
       - name: Download raw outputs
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: output/
           pattern: '*-raw'
