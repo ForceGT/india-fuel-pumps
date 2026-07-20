@@ -21,7 +21,7 @@
 
 set -euo pipefail
 
-CONCURRENCY="${1:-10}"
+CONCURRENCY="${1:-12}"
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
 OUTPUT_DIR="$PROJECT_DIR/output"
 

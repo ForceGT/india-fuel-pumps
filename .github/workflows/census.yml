@@ -131,7 +131,7 @@ jobs:
 
       - name: Run IOCL census
         env:
-          IOCL_CENSUS_CONCURRENCY: ${{ inputs.concurrency || '10' }}
+          IOCL_CENSUS_CONCURRENCY: ${{ inputs.concurrency || '12' }}
           IOCL_CENSUS_LIMIT: ${{ inputs.iocl_limit }}
           IOCL_CENSUS_MAX_AGE_DAYS: '30'
         run: npm run census:iocl
