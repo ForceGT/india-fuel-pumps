@@ -78,7 +78,7 @@ jobs:
 
       - name: Run HPCL census
         env:
-          HPCL_CENSUS_CONCURRENCY: ${{ inputs.concurrency || '10' }}
+          HPCL_CENSUS_CONCURRENCY: ${{ inputs.concurrency || '12' }}
           HPCL_CENSUS_LIMIT: ${{ inputs.hpcl_limit }}
           HPCL_CENSUS_MAX_AGE_DAYS: '30'
 
