@@ -44,6 +44,23 @@ dataset/
 Updates are produced by an automated pipeline (GitHub Actions) that re-checks the official
 public outlet locators and commits the regenerated dataset here.
 
+## Scraper code
+
+`src/` has the crawlers that produce this data — `pnpm census:hpcl` / `census:iocl` /
+`census:bpcl` (see `package.json`). Each is a `Provider` (`src/provider.ts`) run through a
+shared, resumable worker pool (`src/run-provider.ts`): discover every outlet, fetch it
+politely (rate-limited, identifies itself via `USER_AGENT`), and write two append-only JSONL
+files per brand — `output/<brand>-raw.jsonl` (one `RawOutletRecord` per outlet: location,
+contact, **every product + price the source reports, exactly as reported**) and
+`output/<brand>-worklog.jsonl` (crawl-attempt bookkeeping, so a killed run resumes instead of
+restarting).
+
+**No fuel-grade classification happens here, by construction** — `src/types.ts`'s
+`RawOutletRecord` has no concept of "ethanol-free" or any other grade, only raw product names
+and prices. Deciding what counts as E0 (or any other classification) is a downstream
+consumer's job — E0 Finder (see the footer below) is the first one, but any project can
+build its own classification on top of this raw data without needing to re-scrape.
+
 ## Using it (via CDN)
 
 Serve straight from a CDN — do **not** hammer `raw.githubusercontent.com` (rate-limited):
