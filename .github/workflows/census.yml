@@ -1,0 +1,255 @@
+name: Census
+
+# Full national census for HPCL, IOCL, BPCL — runs in parallel, then
+# publishes a geohash-sharded all-pumps dataset (no grade filtering).
+#
+# For IOCL WAF calibration (first run from GH Actions datacenter IPs):
+#   - Actions → Run workflow → brands=iocl, iocl_limit=20, concurrency=5,
+#     publish_dataset=false
+#   - Inspect the census-iocl job log for 403 patterns. If clean, increase
+#     limit and concurrency progressively (max proven: 10 from residential IP).
+#   - See docs/research/iocl-waf-calibration.md (in the E0-Finder repo) for
+#     the full concurrency calibration history.
+#
+# Cadence: monthly on the 1st (full national re-census for all brands).
+# Daily differential (E0 outlets only) is not yet implemented.
+
+on:
+  schedule:
+    - cron: '0 2 1 * *'  # monthly on the 1st at 02:00 UTC
+  workflow_dispatch:
+    inputs:
+      brands:
+        description: 'Brands to census — comma-separated subset of: hpcl,iocl,bpcl'
+        required: false
+        default: 'hpcl,iocl,bpcl'
+      hpcl_limit:
+        description: 'Max HPCL outlets this run (empty = no limit)'
+        required: false
+        default: ''
+      iocl_limit:
+        description: 'Max IOCL outlets this run (empty = no limit). Start small for WAF calibration.'
+        required: false
+        default: ''
+      bpcl_limit:
+        description: 'Max BPCL outlets this run (empty = no limit)'
+        required: false
+        default: ''
+      concurrency:
+        description: 'Concurrent lanes per brand (default 10; use ≤5 for IOCL WAF calibration)'
+        required: false
+        default: '10'
+      publish_dataset:
+        description: 'Commit dataset/ after census? Set false for calibration/dry runs.'
+        required: false
+        default: 'false'
+
+jobs:
+  # ── HPCL ────────────────────────────────────────────────────────────────────
+  census-hpcl:
+    name: Census — HPCL
+    runs-on: ubuntu-latest
+    # HPCL at concurrency 10 ≈ 3.75h (half of 7.5h at concurrency 5,
+    # same scaling observed for IOCL). Set timeout to 6h = GH Actions hard cap.
+    timeout-minutes: 360
+    if: >-
+      github.event_name == 'schedule' ||
+      contains(inputs.brands, 'hpcl')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+
+      # Restore the most recent worklog so this run resumes instead of
+      # restarting from scratch. Cache miss on the first ever run is harmless
+      # (runProvider just starts fresh).
+      - name: Restore HPCL worklog
+        uses: actions/cache/restore@v4
+        with:
+          path: output/hpcl-worklog.jsonl
+          key: worklog-hpcl-${{ github.run_id }}
+          restore-keys: worklog-hpcl-
+
+      - name: Run HPCL census
+        env:
+          HPCL_CENSUS_CONCURRENCY: ${{ inputs.concurrency || '10' }}
+          HPCL_CENSUS_LIMIT: ${{ inputs.hpcl_limit }}
+          HPCL_CENSUS_MAX_AGE_DAYS: '30'
+
+        run: npm run census:hpcl
+
+      # Save the worklog even if the census job failed/was killed so the NEXT
+      # run can resume from where this one left off.
+      - name: Save HPCL worklog
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: output/hpcl-worklog.jsonl
+          key: worklog-hpcl-${{ github.run_id }}
+
+      - name: Upload HPCL raw output
+        uses: actions/upload-artifact@v4
+        with:
+          name: hpcl-raw
+          path: output/hpcl-raw.jsonl
+          retention-days: 2
+          if-no-files-found: warn
+
+  # ── IOCL ────────────────────────────────────────────────────────────────────
+  census-iocl:
+    name: Census — IOCL
+    runs-on: ubuntu-latest
+    # IOCL at concurrency 10 ≈ 3.4h from a residential IP. Datacenter IPs
+    # are an unknown — calibrate before running a full census here.
+    timeout-minutes: 360
+    if: >-
+      github.event_name == 'schedule' ||
+      contains(inputs.brands, 'iocl')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Restore IOCL worklog
+        uses: actions/cache/restore@v4
+        with:
+          path: output/iocl-worklog.jsonl
+          key: worklog-iocl-${{ github.run_id }}
+          restore-keys: worklog-iocl-
+
+      - name: Run IOCL census
+        env:
+          IOCL_CENSUS_CONCURRENCY: ${{ inputs.concurrency || '10' }}
+          IOCL_CENSUS_LIMIT: ${{ inputs.iocl_limit }}
+          IOCL_CENSUS_MAX_AGE_DAYS: '30'
+        run: npm run census:iocl
+
+      - name: Save IOCL worklog
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: output/iocl-worklog.jsonl
+          key: worklog-iocl-${{ github.run_id }}
+
+      - name: Upload IOCL raw output
+        uses: actions/upload-artifact@v4
+        with:
+          name: iocl-raw
+          path: output/iocl-raw.jsonl
+          retention-days: 2
+          if-no-files-found: warn
+
+  # ── BPCL ────────────────────────────────────────────────────────────────────
+  census-bpcl:
+    name: Census — BPCL
+    runs-on: ubuntu-latest
+    # BPCL uses OAuth + a grid/route API — ~25 min at concurrency 4.
+    timeout-minutes: 60
+    if: >-
+      github.event_name == 'schedule' ||
+      contains(inputs.brands, 'bpcl')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Restore BPCL worklog
+        uses: actions/cache/restore@v4
+        with:
+          path: output/bpcl-worklog.jsonl
+          key: worklog-bpcl-${{ github.run_id }}
+          restore-keys: worklog-bpcl-
+
+      - name: Run BPCL census
+        env:
+          BPCL_CENSUS_CONCURRENCY: '4'
+          BPCL_CENSUS_LIMIT: ${{ inputs.bpcl_limit }}
+          BPCL_CENSUS_MAX_AGE_DAYS: '30'
+        run: npm run census:bpcl
+
+      - name: Save BPCL worklog
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: output/bpcl-worklog.jsonl
+          key: worklog-bpcl-${{ github.run_id }}
+
+      - name: Upload BPCL raw output
+        uses: actions/upload-artifact@v4
+        with:
+          name: bpcl-raw
+          path: output/bpcl-raw.jsonl
+          retention-days: 2
+          if-no-files-found: warn
+
+  # ── Publish ─────────────────────────────────────────────────────────────────
+  publish:
+    name: Publish dataset
+    needs: [census-hpcl, census-iocl, census-bpcl]
+    runs-on: ubuntu-latest
+    # Run if every census job either succeeded or was skipped (i.e. not in
+    # `brands`), AND at least one actually succeeded (so we have something to
+    # publish). A failure in any census job blocks the publish step.
+    if: >-
+      always() &&
+      (needs.census-hpcl.result == 'success' || needs.census-hpcl.result == 'skipped') &&
+      (needs.census-iocl.result == 'success' || needs.census-iocl.result == 'skipped') &&
+      (needs.census-bpcl.result == 'success' || needs.census-bpcl.result == 'skipped') &&
+      (needs.census-hpcl.result == 'success' || needs.census-iocl.result == 'success' || needs.census-bpcl.result == 'success')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+
+      # Download whichever brand artifacts were uploaded (missing ones are
+      # silently skipped — single-brand calibration runs only produce one file).
+      - name: Download raw outputs
+        uses: actions/download-artifact@v4
+        with:
+          path: output/
+          pattern: '*-raw'
+          merge-multiple: true
+
+      - name: Build geohash-sharded dataset
+        run: npm run build-dataset
+
+      # Only commit and push when explicitly requested (default: false so
+      # calibration/dry runs never accidentally clobber the live dataset).
+      - name: Commit and push dataset
+        if: >-
+          github.event_name == 'schedule' ||
+          inputs.publish_dataset == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add dataset/
+          if git diff --cached --quiet; then
+            echo "Dataset unchanged — nothing to commit."
+          else
+            git commit -m "chore(dataset): census update $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git push
+          fi

@@ -9,6 +9,7 @@
     "census:hpcl": "tsx src/run-hpcl.ts",
     "census:iocl": "tsx src/run-iocl.ts",
     "census:bpcl": "tsx src/run-bpcl.ts",
+    "build-dataset": "tsx src/build-dataset.ts",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
