@@ -1,0 +1,28 @@
+{
+  "name": "india-fuel-pumps",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Open, machine-readable dataset of Indian fuel pumps — location, contact, brand/type, price. Scrapers here capture everything a source reports (no grade opinion baked in); the private E0-Finder project consumes this data to build the ethanol-free (E0) finder website.",
+  "license": "MIT",
+  "scripts": {
+    "census:hpcl": "tsx src/run-hpcl.ts",
+    "census:iocl": "tsx src/run-iocl.ts",
+    "census:bpcl": "tsx src/run-bpcl.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "node-html-parser": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
