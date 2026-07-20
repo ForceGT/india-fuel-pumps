@@ -43,6 +43,15 @@ function outletIdFromUrl(url: string): string | null {
 export function createIoclProvider(config: IoclProviderConfig): Provider {
   const urlsCachePath = path.join(config.outputDir, "iocl-discovered-urls.json");
 
+  // Error logging — first 3 of each type so GH Actions logs are diagnostic.
+  const errCounts: Record<string, number> = {};
+  function logErr(category: string, detail: string, url: string): void {
+    const key = `${category}:${detail}`;
+    const n = errCounts[key] ?? 0;
+    errCounts[key] = n + 1;
+    if (n < 3) console.error(`[iocl] ${detail} — ${url.slice(0, 120)}`);
+  }
+
   return {
     brand: "IOCL",
     slug: "iocl",
@@ -99,7 +108,10 @@ export function createIoclProvider(config: IoclProviderConfig): Provider {
       const sourceUrl = unit.payload as string;
       try {
         const res = await ctx.fetch(sourceUrl);
-        if (!res.ok) return { status: "httpFailed", detail: `HTTP ${res.status}`, records: [] };
+        if (!res.ok) {
+          logErr("httpFailed", `HTTP ${res.status}`, sourceUrl);
+          return { status: "httpFailed", detail: `HTTP ${res.status}`, records: [] };
+        }
         const html = await res.text();
 
         const metadata = await parseOutletHtml(html, sourceUrl);
@@ -108,6 +120,7 @@ export function createIoclProvider(config: IoclProviderConfig): Provider {
         const outletId = outletIdFromUrl(sourceUrl);
         const masterOutletId = extractMasterOutletId(html);
         if (!masterOutletId || !outletId) {
+          logErr("errored", "noMasterOutletId", sourceUrl);
           return { status: "errored", detail: "noMasterOutletId", records: [] };
         }
 
@@ -117,6 +130,7 @@ export function createIoclProvider(config: IoclProviderConfig): Provider {
           headers: { "x-requested-with": "XMLHttpRequest", Referer: sourceUrl },
         });
         if (!priceRes.ok) {
+          logErr("errored", `priceFailed: HTTP ${priceRes.status}`, sourceUrl);
           return { status: "errored", detail: `priceFailed: HTTP ${priceRes.status}`, records: [] };
         }
         const priceHtml = await priceRes.text();
@@ -125,6 +139,7 @@ export function createIoclProvider(config: IoclProviderConfig): Provider {
         const record = buildRawRecord({ ...metadata, capturedAt }, priceMapToProducts(priceFragment));
         return { status: "ok", records: [record] };
       } catch (err) {
+        console.error(`[iocl] connection error on ${sourceUrl}:`, String(err));
         return { status: "errored", detail: String(err), records: [] };
       }
     },
