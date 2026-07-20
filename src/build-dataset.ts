@@ -25,6 +25,7 @@
 import { createHash } from "node:crypto";
 import { createReadStream, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createInterface } from "node:readline";
+import { createGunzip } from "node:zlib";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { RawOutletRecord } from "./types.js";
@@ -55,10 +56,17 @@ interface ReleaseStats {
 
 // ── JSONL reader ───────────────────────────────────────────────────────────────
 
+/** Read a .jsonl or .jsonl.gz file. Tries the .gz variant first so git-committed compressed files take priority over local uncompressed output. */
 async function readRawJsonl(filePath: string): Promise<RawOutletRecord[]> {
-  if (!existsSync(filePath)) return [];
+  const gzPath = `${filePath}.gz`;
+  const readPath = existsSync(gzPath) ? gzPath : existsSync(filePath) ? filePath : null;
+  if (!readPath) return [];
+
   const records: RawOutletRecord[] = [];
-  const rl = createInterface({ input: createReadStream(filePath), crlfDelay: Infinity });
+  const input = readPath.endsWith(".gz")
+    ? createReadStream(readPath).pipe(createGunzip())
+    : createReadStream(readPath);
+  const rl = createInterface({ input, crlfDelay: Infinity });
   for await (const line of rl) {
     const trimmed = line.trim();
     if (!trimmed) continue;
