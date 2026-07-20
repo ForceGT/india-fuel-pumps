@@ -46,7 +46,7 @@ on:
       publish_dataset:
         description: 'Commit dataset/ after census? Set false for calibration/dry runs.'
         required: false
-        default: 'false'
+        default: 'true'
 
 # Prevent overlapping runs — a schedule-triggered run queues behind an
 # in-progress one instead of running concurrently and racing on the commit.
