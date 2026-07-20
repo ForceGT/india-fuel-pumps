@@ -86,7 +86,7 @@ jobs:
       # restarting from scratch. Cache miss on the first ever run is harmless
       # (runProvider just starts fresh).
       - name: Restore HPCL worklog
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: output/hpcl-worklog.jsonl
           key: worklog-hpcl-${{ github.run_id }}
@@ -103,7 +103,7 @@ jobs:
       # run can resume from where this one left off.
       - name: Save HPCL worklog
         if: always()
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: output/hpcl-worklog.jsonl
           key: worklog-hpcl-${{ github.run_id }}
@@ -140,7 +140,7 @@ jobs:
       - run: npm ci
 
       - name: Restore IOCL worklog
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: output/iocl-worklog.jsonl
           key: worklog-iocl-${{ github.run_id }}
@@ -155,7 +155,7 @@ jobs:
 
       - name: Save IOCL worklog
         if: always()
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: output/iocl-worklog.jsonl
           key: worklog-iocl-${{ github.run_id }}
@@ -191,7 +191,7 @@ jobs:
       - run: npm ci
 
       - name: Restore BPCL worklog
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: output/bpcl-worklog.jsonl
           key: worklog-bpcl-${{ github.run_id }}
@@ -206,7 +206,7 @@ jobs:
 
       - name: Save BPCL worklog
         if: always()
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: output/bpcl-worklog.jsonl
           key: worklog-bpcl-${{ github.run_id }}
