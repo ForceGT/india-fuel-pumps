@@ -1,22 +1,26 @@
 name: Census
 
-# Full national census for HPCL, IOCL, BPCL — runs in parallel, then
-# publishes a geohash-sharded all-pumps dataset (no grade filtering).
+# Three-brand parallel census (HPCL, IOCL, BPCL) → geohash-sharded
+# all-pumps dataset published to dataset/ and committed back to the repo.
 #
-# For IOCL WAF calibration (first run from GH Actions datacenter IPs):
-#   - Actions → Run workflow → brands=iocl, iocl_limit=20, concurrency=5,
-#     publish_dataset=false
-#   - Inspect the census-iocl job log for 403 patterns. If clean, increase
-#     limit and concurrency progressively (max proven: 10 from residential IP).
-#   - See docs/research/iocl-waf-calibration.md (in the E0-Finder repo) for
-#     the full concurrency calibration history.
+# Schedule:
+#   Monthly full re-census    — 1st of the month at 02:07 UTC
+#   Daily recovery pass       — 2nd–31st at 02:57 UTC (resumes failed brands)
 #
-# Cadence: monthly on the 1st (full national re-census for all brands).
-# Daily differential (E0 outlets only) is not yet implemented.
+# Partial-failure tolerant: if a brand fails, the publish job still runs for
+# the brands that succeeded. A GitHub issue is auto-filed for failed brands
+# (with dedup — a second failure adds a comment to the existing issue instead
+# of creating a new one).
+#
+# WAF note: IOCL cap is concurrency 12 (proven safe from both residential
+# and GH Actions datacenter IPs — see docs/research/iocl-waf-calibration.md
+# in the E0-Finder repo for the full calibration history). If IOCL failures
+# persist across multiple runs, drop concurrency to 10 before investigating.
 
 on:
   schedule:
-    - cron: '0 2 1 * *'  # monthly on the 1st at 02:00 UTC
+    - cron: '7 2 1 * *'     # monthly full re-census (1st, 02:07 UTC)
+    - cron: '57 2 2-31 * *'  # daily recovery (2nd–31st, 02:57 UTC)
   workflow_dispatch:
     inputs:
       brands:
@@ -44,13 +48,25 @@ on:
         required: false
         default: 'false'
 
+# Prevent overlapping runs — a schedule-triggered run queues behind an
+# in-progress one instead of running concurrently and racing on the commit.
+concurrency:
+  group: census-${{ github.ref }}
+  cancel-in-progress: false
+
+# Needed for creating issues (alerting) and releases + pushing commits.
+permissions:
+  contents: write
+  issues: write
+
 jobs:
-  # ── HPCL ────────────────────────────────────────────────────────────────────
+  # ════════════════════════════════════════════════════════════════════════════
+  # HPCL
+  # ════════════════════════════════════════════════════════════════════════════
   census-hpcl:
     name: Census — HPCL
     runs-on: ubuntu-latest
-    # HPCL at concurrency 10 ≈ 3.75h (half of 7.5h at concurrency 5,
-    # same scaling observed for IOCL). Set timeout to 6h = GH Actions hard cap.
+    # HPCL at concurrency 12 ≈ 94 min (live-verified). 6h cap for safety.
     timeout-minutes: 360
     if: >-
       github.event_name == 'schedule' ||
@@ -81,7 +97,6 @@ jobs:
           HPCL_CENSUS_CONCURRENCY: ${{ inputs.concurrency || '12' }}
           HPCL_CENSUS_LIMIT: ${{ inputs.hpcl_limit }}
           HPCL_CENSUS_MAX_AGE_DAYS: '30'
-
         run: npm run census:hpcl
 
       # Save the worklog even if the census job failed/was killed so the NEXT
@@ -101,12 +116,14 @@ jobs:
           retention-days: 2
           if-no-files-found: warn
 
-  # ── IOCL ────────────────────────────────────────────────────────────────────
+  # ════════════════════════════════════════════════════════════════════════════
+  # IOCL
+  # ════════════════════════════════════════════════════════════════════════════
   census-iocl:
     name: Census — IOCL
     runs-on: ubuntu-latest
-    # IOCL at concurrency 10 ≈ 3.4h from a residential IP. Datacenter IPs
-    # are an unknown — calibrate before running a full census here.
+    # IOCL at concurrency 12 ≈ 3.5h from a residential IP. Datacenter IPs
+    # calibrated at concurrency 10 with zero blocks → bumped to 12.
     timeout-minutes: 360
     if: >-
       github.event_name == 'schedule' ||
@@ -151,7 +168,9 @@ jobs:
           retention-days: 2
           if-no-files-found: warn
 
-  # ── BPCL ────────────────────────────────────────────────────────────────────
+  # ════════════════════════════════════════════════════════════════════════════
+  # BPCL
+  # ════════════════════════════════════════════════════════════════════════════
   census-bpcl:
     name: Census — BPCL
     runs-on: ubuntu-latest
@@ -200,19 +219,21 @@ jobs:
           retention-days: 2
           if-no-files-found: warn
 
-  # ── Publish ─────────────────────────────────────────────────────────────────
+  # ════════════════════════════════════════════════════════════════════════════
+  # Publish — merges raw outputs, builds geohash-sharded dataset, commits,
+  # and creates a GitHub Release with a human-readable diff.
+  # ════════════════════════════════════════════════════════════════════════════
   publish:
     name: Publish dataset
     needs: [census-hpcl, census-iocl, census-bpcl]
     runs-on: ubuntu-latest
-    # Run if every census job either succeeded or was skipped (i.e. not in
-    # `brands`), AND at least one actually succeeded (so we have something to
-    # publish). A failure in any census job blocks the publish step.
+    # Allow publish even when some census jobs failed — publish what succeeded.
+    # Skip only when NO brand succeeded (nothing to publish).
     if: >-
       always() &&
-      (needs.census-hpcl.result == 'success' || needs.census-hpcl.result == 'skipped') &&
-      (needs.census-iocl.result == 'success' || needs.census-iocl.result == 'skipped') &&
-      (needs.census-bpcl.result == 'success' || needs.census-bpcl.result == 'skipped') &&
+      (needs.census-hpcl.result == 'success' || needs.census-hpcl.result == 'failure') &&
+      (needs.census-iocl.result == 'success' || needs.census-iocl.result == 'failure') &&
+      (needs.census-bpcl.result == 'success' || needs.census-bpcl.result == 'failure') &&
       (needs.census-hpcl.result == 'success' || needs.census-iocl.result == 'success' || needs.census-bpcl.result == 'success')
 
     steps:
@@ -235,21 +256,139 @@ jobs:
           merge-multiple: true
 
       - name: Build geohash-sharded dataset
+        id: build
         run: npm run build-dataset
 
-      # Only commit and push when explicitly requested (default: false so
-      # calibration/dry runs never accidentally clobber the live dataset).
+      # ── Job summary (always visible in the Actions UI) ──
+      - name: Write job summary
+        if: always()
+        run: |
+          {
+            echo "## Census — $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo ""
+            echo "| Brand | Census | Raw lines |"
+            echo "|-------|--------|----------:|"
+            echo "| HPCL  | ${{ needs.census-hpcl.result }} | $(wc -l < output/hpcl-raw.jsonl 2>/dev/null || echo 0) |"
+            echo "| IOCL  | ${{ needs.census-iocl.result }} | $(wc -l < output/iocl-raw.jsonl 2>/dev/null || echo 0) |"
+            echo "| BPCL  | ${{ needs.census-bpcl.result }} | $(wc -l < output/bpcl-raw.jsonl 2>/dev/null || echo 0) |"
+            echo ""
+            if [ -f dataset/index.json ]; then
+              echo "### Published dataset"
+              echo ""
+              TOTAL=$(python3 -c "import json,sys; d=json.load(open('dataset/index.json')); print(d.get('totalOutlets','?'))" 2>/dev/null || echo "?")
+              SHARDS=$(python3 -c "import json,sys; d=json.load(open('dataset/index.json')); print(len(d.get('shards',[])))" 2>/dev/null || echo "?")
+              echo "- **${TOTAL}** outlets — **${SHARDS}** shards"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # ── Commit (schedule or explicit publish_dataset=true) ──
       - name: Commit and push dataset
+        id: commit
         if: >-
           github.event_name == 'schedule' ||
           inputs.publish_dataset == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # output/ is gitignored — force-add the raw JSONL so they persist
+          # across runs and the daily recovery job has a complete baseline.
+          for f in output/hpcl-raw.jsonl output/iocl-raw.jsonl output/bpcl-raw.jsonl; do
+            if [ -f "$f" ]; then git add -f "$f"; fi
+          done
+
           git add dataset/
-          if git diff --cached --quiet; then
+
+          if git diff --cached --quiet && git diff --quiet; then
             echo "Dataset unchanged — nothing to commit."
+            echo "committed=false" >> "$GITHUB_OUTPUT"
           else
             git commit -m "chore(dataset): census update $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             git push
+            echo "committed=true" >> "$GITHUB_OUTPUT"
           fi
+
+      # ── GitHub Release (only when new data was committed) ──
+      - name: Create GitHub Release
+        if: steps.commit.outputs.committed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="dataset-$(date -u +%Y%m%dT%H%M%SZ)"
+          gh release create "$TAG" \
+            --repo "${{ github.repository }}" \
+            --title "Dataset update — $(date -u +%Y-%m-%d)" \
+            --notes-file dataset/release-notes.md \
+            --target "${{ github.sha }}"
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # Alert — files a GitHub issue when any brand fails (one issue per run).
+  # If an open issue already exists for this failure, adds a comment instead
+  # of creating a duplicate.
+  # ════════════════════════════════════════════════════════════════════════════
+  notify:
+    name: Alert on failure
+    needs: [census-hpcl, census-iocl, census-bpcl]
+    runs-on: ubuntu-latest
+    if: >-
+      always() &&
+      (needs.census-hpcl.result == 'failure' ||
+       needs.census-iocl.result == 'failure' ||
+       needs.census-bpcl.result == 'failure')
+    permissions:
+      issues: write
+
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+
+            const failed = [];
+            if ('${{ needs.census-hpcl.result }}' === 'failure') failed.push('HPCL');
+            if ('${{ needs.census-iocl.result }}' === 'failure') failed.push('IOCL');
+            if ('${{ needs.census-bpcl.result }}' === 'failure') failed.push('BPCL');
+
+            const title = `Census failure — ${failed.join(', ')} — ${new Date().toISOString().slice(0, 10)}`;
+
+            // Check for an existing open issue with the same prefix to avoid duplicates.
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'census-failure',
+            });
+            const duplicate = existing.find(i => i.title.startsWith('Census failure —'));
+            if (duplicate) {
+              // Add a comment noting the retry instead of filing a new issue.
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: duplicate.number,
+                body: `Still failing on re-run: [run ${context.runId}](${runUrl})
+
+            **Failed brands:** ${failed.join(', ')}
+
+            The daily recovery job will retry again tomorrow. If this persists beyond 3 consecutive runs, check:
+            - WAF blocks (IOCL — \`locator.iocl.com\`) — back concurrency down to 10
+            - OAuth expiry (BPCL — token refresh may be needed)
+            - DNS / network changes affecting the GH Actions datacenter IP range`,
+              });
+              console.log(`Added comment to existing issue #${duplicate.number}`);
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body: `**Failed brands:** ${failed.join(', ')}
+
+            **Run:** ${runUrl}
+
+            The daily recovery job will retry automatically tomorrow. If failures persist beyond 3 consecutive runs, check:
+            - WAF blocks (IOCL — \`locator.iocl.com\`) — back concurrency down to 10
+            - OAuth expiry (BPCL — token refresh may be needed)
+            - DNS / network changes affecting the GH Actions datacenter IP range`,
+                labels: ['census-failure'],
+              });
+              console.log(`Created issue: ${title}`);
+            }

@@ -4,6 +4,11 @@
  * 3-character geohash prefix, and writes content-hashed shard files to
  * `dataset/shards/` plus a `dataset/index.json` manifest.
  *
+ * Also emits `dataset/release-stats.json` (machine-readable current state)
+ * and `dataset/release-notes.md` (human-readable diff vs the previous run)
+ * so the GH Actions publish step can create a tagged GitHub Release with a
+ * readable changelog.
+ *
  * No grade filtering — this is an all-pumps, all-products dataset. Grade
  * classification is a downstream consumer's opinion.
  *
@@ -13,7 +18,7 @@
  * Run: npm run build-dataset
  */
 import { createHash } from "node:crypto";
-import { createReadStream, existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { createReadStream, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createInterface } from "node:readline";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -26,6 +31,22 @@ const SHARDS_DIR = path.join(DATASET_DIR, "shards");
 const SHARD_PREFIX_LENGTH = 3;
 
 const BRANDS = ["hpcl", "iocl", "bpcl"] as const;
+
+// ── Types ──────────────────────────────────────────────────────────────────────
+
+interface CurrentStats {
+  generatedAt: string;
+  totalOutlets: number;
+  brands: Record<string, number>;
+  shardCount: number;
+}
+
+interface ReleaseStats {
+  previous: CurrentStats | null;
+  current: CurrentStats;
+}
+
+// ── JSONL reader ───────────────────────────────────────────────────────────────
 
 async function readRawJsonl(filePath: string): Promise<RawOutletRecord[]> {
   if (!existsSync(filePath)) return [];
@@ -43,6 +64,8 @@ async function readRawJsonl(filePath: string): Promise<RawOutletRecord[]> {
   return records;
 }
 
+// ── Dedup ──────────────────────────────────────────────────────────────────────
+
 function dedupeByStationId(records: RawOutletRecord[]): RawOutletRecord[] {
   const byId = new Map<string, RawOutletRecord>();
   for (const rec of records) {
@@ -57,6 +80,122 @@ function dedupeByStationId(records: RawOutletRecord[]): RawOutletRecord[] {
 function contentHash(outlets: RawOutletRecord[]): string {
   return createHash("sha256").update(JSON.stringify(outlets)).digest("hex").slice(0, 16);
 }
+
+// ── Release stats ──────────────────────────────────────────────────────────────
+
+function readPreviousStats(): CurrentStats | null {
+  const statsPath = path.join(DATASET_DIR, "release-stats.json");
+  if (!existsSync(statsPath)) return null;
+  try {
+    const prev = JSON.parse(readFileSync(statsPath, "utf-8")) as ReleaseStats;
+    return prev.current ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** e.g. "+3" / "-5" / "0" */
+function deltaStr(delta: number): string {
+  if (delta > 0) return `+${delta}`;
+  if (delta < 0) return `${delta}`;
+  return "0";
+}
+
+function writeReleaseNotes(stats: ReleaseStats): void {
+  const { previous: prev, current: cur } = stats;
+  const lines: string[] = [];
+
+  const dateLabel = cur.generatedAt.slice(0, 10);
+
+  if (!prev) {
+    // First-ever publish — baseline snapshot, no diff to show.
+    lines.push(`## Dataset baseline — ${dateLabel}`, "");
+    const activeBrands = Object.entries(cur.brands).filter(([, count]) => count > 0).length;
+    lines.push(`**${cur.totalOutlets.toLocaleString()}** outlets across **${activeBrands}** brands, split into **${cur.shardCount}** geohash shards.`, "");
+    lines.push("");
+    lines.push("| Brand | Outlets |");
+    lines.push("|-------|--------:|");
+    for (const brand of BRANDS) {
+      const count = cur.brands[brand] ?? 0;
+      if (count > 0) {
+        lines.push(`| ${brand.toUpperCase()} | ${count.toLocaleString()} |`);
+      }
+    }
+  } else {
+    // Subsequent publish — show diff.
+    const totalDelta = cur.totalOutlets - prev.totalOutlets;
+    const shardDelta = cur.shardCount - prev.shardCount;
+
+    lines.push(`## Census update — ${dateLabel}`, "");
+    lines.push("### Summary", "");
+    lines.push("| Metric | Before | After | Δ |");
+    lines.push("|--------|-------:|------:|--:|");
+    lines.push(
+      `| **Total outlets** | ${prev.totalOutlets.toLocaleString()} | ${cur.totalOutlets.toLocaleString()} | **${deltaStr(totalDelta)}** |`,
+    );
+    lines.push(
+      `| **Shards** | ${prev.shardCount} | ${cur.shardCount} | ${deltaStr(shardDelta)} |`,
+    );
+    lines.push("");
+
+    // Per-brand breakdown
+    lines.push("### Per brand", "");
+    const allBrands = new Set([...Object.keys(prev.brands), ...Object.keys(cur.brands)]);
+    const sortedBrands = [...allBrands].sort();
+    if (sortedBrands.length > 0) {
+      lines.push("| Brand | Before | After | Δ |");
+      lines.push("|-------|-------:|------:|--:|");
+      for (const brand of sortedBrands) {
+        const before = prev.brands[brand] ?? 0;
+        const after = cur.brands[brand] ?? 0;
+        const delta = after - before;
+        const icon = delta > 0 ? "📈" : delta < 0 ? "📉" : "—";
+        lines.push(
+          `| ${brand.toUpperCase()} | ${before.toLocaleString()} | ${after.toLocaleString()} | ${deltaStr(delta)} ${icon} |`,
+        );
+      }
+    }
+    lines.push("");
+
+    // Call out which brands contributed to this run
+    const brandsWithChanges = sortedBrands.filter(b => (cur.brands[b] ?? 0) !== (prev.brands[b] ?? 0));
+    if (brandsWithChanges.length > 0) {
+      lines.push(
+        `### Changed brands`,
+        "",
+        brandsWithChanges.map(b => {
+          const before = prev.brands[b] ?? 0;
+          const after = cur.brands[b] ?? 0;
+          const delta = after - before;
+          if (delta > 0) return `- **${b.toUpperCase()}**: ${deltaStr(delta)} outlets (${before.toLocaleString()} → ${after.toLocaleString()})`;
+          return `- **${b.toUpperCase()}**: ${deltaStr(delta)} outlets (${before.toLocaleString()} → ${after.toLocaleString()})`;
+        }).join("\n"),
+        "",
+      );
+    }
+  }
+
+  lines.push(
+    "---",
+    `*Generated: ${cur.generatedAt}*`,
+    "",
+  );
+
+  writeFileSync(path.join(DATASET_DIR, "release-notes.md"), lines.join("\n"), "utf-8");
+  console.log("[build-dataset] wrote dataset/release-notes.md");
+}
+
+function writeReleaseStats(current: CurrentStats): void {
+  const stats: ReleaseStats = {
+    previous: readPreviousStats(),
+    current,
+  };
+  writeFileSync(path.join(DATASET_DIR, "release-stats.json"), JSON.stringify(stats, null, 2), "utf-8");
+  console.log("[build-dataset] wrote dataset/release-stats.json");
+  writeReleaseNotes(stats);
+}
+
+// ── Main ───────────────────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
   const allOutlets: RawOutletRecord[] = [];
@@ -123,6 +262,14 @@ async function main(): Promise<void> {
 
   writeFileSync(path.join(DATASET_DIR, "index.json"), JSON.stringify(index, null, 2));
   console.log(`[build-dataset] wrote ${shardEntries.length} shards → dataset/index.json`);
+
+  // Emit release stats and release notes for the GH Release step
+  writeReleaseStats({
+    generatedAt,
+    totalOutlets,
+    brands: brandCounts,
+    shardCount: shardEntries.length,
+  });
 }
 
 main().catch((err) => {
