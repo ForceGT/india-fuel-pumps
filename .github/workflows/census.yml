@@ -227,7 +227,12 @@ jobs:
 
       - name: Compress BPCL raw output
         if: always()
-        run: gzip -f output/bpcl-raw.jsonl
+        run: |
+          if [ -f output/bpcl-raw.jsonl ]; then
+            gzip -f output/bpcl-raw.jsonl
+          else
+            echo "No new raw output produced (all units already done or census skipped)"
+          fi
 
       - name: Save BPCL worklog
         if: always()
