@@ -1,11 +1,19 @@
-## Dataset baseline — 2026-07-21
+## Census update — 2026-07-21
 
-**91,234** outlets across **3** brands, split into **192** geohash shards.
+### Summary
 
-| Brand | Outlets |
-|-------|--------:|
-| HPCL | 23,939 |
-| IOCL | 39,451 |
-| BPCL | 27,844 |
+| Metric | Before | After | Δ |
+|--------|-------:|------:|--:|
+| **Total outlets** | 91,234 | 91,234 | **0** |
+| **Shards** | 192 | 192 | 0 |
+
+### Per brand
+
+| Brand | Before | After | Δ |
+|-------|-------:|------:|--:|
+| BPCL | 27,844 | 27,844 | 0 — |
+| HPCL | 23,939 | 23,939 | 0 — |
+| IOCL | 39,451 | 39,451 | 0 — |
+
 ---
-*Generated: 2026-07-21T05:43:58.474Z*
+*Generated: 2026-07-21T17:08:34.747Z*
