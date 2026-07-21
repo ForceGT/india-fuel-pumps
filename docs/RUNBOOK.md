@@ -114,7 +114,7 @@ Then trigger the GH Actions publish workflow manually (`workflow_dispatch`) — 
 
 ## Resuming a killed run
 
-By default, every census resumes — it reads the existing worklog and skips units whose latest record is `"ok"` or `"empty"` and was fetched within `maxAgeDays` (default 30).
+By default, every census resumes — it reads the existing worklog and skips units whose latest record is `"ok"` or `"empty"` and was fetched within `maxAgeDays` (default 3).
 
 Just re-run the same command:
 
@@ -179,4 +179,4 @@ https://cdn.jsdelivr.net/gh/ForceGT/india-fuel-pumps@main/dataset/shards/<prefix
 | BPCL all 403 | GH Actions IP blocked | Run locally, commit raw output, re-trigger CI |
 | HPCL "no such sitemap" | Sitemap structure changed | Check `petrolpump.hpretail.in/sitemap.xml` |
 | `build-dataset` exits with 0 outlets | No raw JSONL files exist | Run censuses first |
-| Stale data after resume | Worklog records >30 days old | Set `maxAgeDays` lower or `FRESH=1` |
+| Stale data after resume | Worklog records >3 days old | Set `maxAgeDays` lower or `FRESH=1` |

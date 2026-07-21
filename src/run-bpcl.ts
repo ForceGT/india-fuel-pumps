@@ -29,7 +29,7 @@ const OUTPUT_DIR = path.join(__dirname, "../output");
 
 const limit = process.env.BPCL_CENSUS_LIMIT ? Number(process.env.BPCL_CENSUS_LIMIT) : Infinity;
 const concurrency = Math.max(1, Number(process.env.BPCL_CENSUS_CONCURRENCY ?? 1));
-const maxAgeDays = process.env.BPCL_CENSUS_MAX_AGE_DAYS ? Number(process.env.BPCL_CENSUS_MAX_AGE_DAYS) : 30;
+const maxAgeDays = process.env.BPCL_CENSUS_MAX_AGE_DAYS ? Number(process.env.BPCL_CENSUS_MAX_AGE_DAYS) : 3;
 const maxDepth = process.env.BPCL_CENSUS_MAX_DEPTH ? Number(process.env.BPCL_CENSUS_MAX_DEPTH) : 4;
 const skipRoutes = process.env.BPCL_CENSUS_SKIP_ROUTES === "1";
 const skipGrid = process.env.BPCL_CENSUS_SKIP_GRID === "1";

@@ -21,7 +21,7 @@
  *    this run (smoke-test only).
  *  - HPCL_CENSUS_STATE_ALLOWLIST: comma-separated state slugs to restrict
  *    discovery to, for testing. Omit for the real run (all districts).
- *  - HPCL_CENSUS_MAX_AGE_DAYS: re-check anything older than this (default 30).
+ *  - HPCL_CENSUS_MAX_AGE_DAYS: re-check anything older than this (default 3).
  */
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -37,7 +37,7 @@ const stateAllowList = (process.env.HPCL_CENSUS_STATE_ALLOWLIST ?? "")
   .filter(Boolean);
 const limit = process.env.HPCL_CENSUS_LIMIT ? Number(process.env.HPCL_CENSUS_LIMIT) : Infinity;
 const concurrency = Math.max(1, Number(process.env.HPCL_CENSUS_CONCURRENCY ?? 1));
-const maxAgeDays = process.env.HPCL_CENSUS_MAX_AGE_DAYS ? Number(process.env.HPCL_CENSUS_MAX_AGE_DAYS) : 30;
+const maxAgeDays = process.env.HPCL_CENSUS_MAX_AGE_DAYS ? Number(process.env.HPCL_CENSUS_MAX_AGE_DAYS) : 3;
 
 async function main(): Promise<void> {
   const provider = createHpclProvider({

@@ -26,7 +26,7 @@ const stateAllowList = (process.env.IOCL_CENSUS_STATE_ALLOWLIST ?? "")
   .filter(Boolean);
 const limit = process.env.IOCL_CENSUS_LIMIT ? Number(process.env.IOCL_CENSUS_LIMIT) : Infinity;
 const concurrency = Math.max(1, Number(process.env.IOCL_CENSUS_CONCURRENCY ?? 1));
-const maxAgeDays = process.env.IOCL_CENSUS_MAX_AGE_DAYS ? Number(process.env.IOCL_CENSUS_MAX_AGE_DAYS) : 30;
+const maxAgeDays = process.env.IOCL_CENSUS_MAX_AGE_DAYS ? Number(process.env.IOCL_CENSUS_MAX_AGE_DAYS) : 3;
 
 async function main(): Promise<void> {
   const provider = createIoclProvider({

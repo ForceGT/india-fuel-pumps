@@ -121,10 +121,8 @@ A client that loads all shards at once (~91,000 records, well under 50 MB decomp
 
 ## Update cadence
 
-- **1st of each month:** full national re-census — all three brands re-crawled from scratch.
-- **2nd - 31st:** daily recovery runs — any brand whose last crawl errored or went stale retries; otherwise no-op.
-
-The monthly run produces a GitHub Release with a human-readable diff of changes (new outlets, closed outlets, price changes).
+- **Every 3 days** at 02:07 UTC — stations older than 3 days are re-scraped. Worst-case freshness is ~3 days, well within E0-Finder's 14-day stale threshold.
+- Every run produces a GitHub Release with a human-readable diff of changes (new outlets, closed outlets, price changes).
 
 ---
 
@@ -135,8 +133,8 @@ A single GitHub Actions workflow (`.github/workflows/census.yml`) orchestrates e
 ```
                     ┌──────────────┐
                     │  cron trigger │
-                    │  (monthly +   │
-                    │   daily)      │
+                    │  (every 3     │
+                    │   days)       │
                     └──────┬───────┘
                            │
               ┌────────────┼────────────┐

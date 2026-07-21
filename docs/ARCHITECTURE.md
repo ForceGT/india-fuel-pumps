@@ -6,7 +6,7 @@
                         ┌──────────────────────┐
                         │  cron trigger         │
                         │  GitHub Actions       │
-                        │  (monthly + daily)    │
+                        │  (every 3 days)       │
                         └──────────┬───────────┘
                                    │
                       ┌────────────┼────────────┐
@@ -170,4 +170,4 @@ No changes needed to `types.ts`, `provider.ts`, `run-provider.ts`, or the build-
 | Sharding | Geohash (precision 3, ~156 km cells) | Map-friendly, deterministic, content-hashed |
 | Compression | gzip (`gzip -f` in CI; `.jsonl.gz` files under 50 MB) | Git-friendly, GitHub 50 MB limit compliant |
 | Delivery | jsDelivr CDN (`cdn.jsdelivr.net/gh/ForceGT/...`) | Free, fast, no auth; avoids `raw.githubusercontent.com` rate limits |
-| Orchestration | GitHub Actions (`.github/workflows/census.yml`) | Free monthly compute, cron scheduling |
+| Orchestration | GitHub Actions (`.github/workflows/census.yml`) | Free compute (runs every 3 days), cron scheduling |

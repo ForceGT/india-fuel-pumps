@@ -14,7 +14,7 @@
 3. Force-add to git: `git add -f output/bpcl-raw.jsonl.gz && git push`
 4. Trigger the GH Actions publish workflow -- it picks up the pushed BPCL data alongside HPCL/IOCL's CI outputs.
 
-**Prevention:** None — this is the BPCL API operator's choice, not ours. BPCL is excluded from CI (`brands=bpcl` not passed) and must be run locally. The committed `bpcl-raw.jsonl.gz` is what the daily publish uses until a new local run is pushed.
+**Prevention:** None — this is the BPCL API operator's choice, not ours. BPCL is excluded from CI (`brands=bpcl` not passed) and must be run locally. The committed `bpcl-raw.jsonl.gz` is what the publish step uses until a new local run is pushed.
 
 ---
 
@@ -48,7 +48,7 @@
 
 **The real stale-worklog scenario:** HPCL and IOCL cache their discovery results (sitemap walk) in `output/{slug}-discovered-urls.json`. If the sitemap's district structure changes (new districts added), the per-district cache can lag. The root sitemap index IS fetched fresh every run, so new districts ARE discovered -- only per-district URL resolution is cached. The risk is that within a known district, new outlets might be missed between full cache clearances.
 
-**Resolution:** Use `FRESH=1` at least monthly. The CI monthly run's `maxAgeDays: 30` handles this automatically.
+**Resolution:** Use `FRESH=1` periodically. The CI run's `maxAgeDays: 3` handles this automatically (worklog staleness forces re-crawl every 3 days).
 
 ---
 
@@ -67,7 +67,7 @@
 
 The `index.json` and `shards/` only contain data from the brands that succeeded. Counts for missing brands are omitted (not set to 0).
 
-**Fallout:** The daily recovery run (next day) retries the failed brand automatically.
+**Fallout:** The next scheduled run (every 3 days) retries the failed brand automatically.
 
 ---
 
@@ -143,8 +143,6 @@ Shard files are not compressed server-side -- they are served via jsDelivr which
 
 **Root cause:** HPCL and IOCL cache their sitemap walk results in `output/{slug}-discovered-urls.json`. This cache avoids re-walking the full sitemap tree on every resume (saving ~5 min per run). The root sitemap index URL IS fetched fresh every run, so new districts in the index are discovered. But per-district URL lists are cached, so changes within a known district may be missed until the cache expires.
 
-**Resolution:** Use `FRESH=1` at least monthly (the CI monthly run's `maxAgeDays: 30` handles this via worklog staleness, but the discovery cache is separate). The monthly full re-census clears the discovery cache via `FRESH=1` logic.
+**Resolution:** Use `FRESH=1` periodically (the CI run's `maxAgeDays: 3` handles this via worklog staleness, but the discovery cache is separate). A full re-census clears the discovery cache via `FRESH=1` logic.
 
-**Specifically for the monthly vs daily schedule:**
-- **Monthly run (1st):** `FRESH=1` semantics -- full re-discovery, full re-crawl. All caches cleared.
-- **Daily recovery (2nd-31st):** Normal resume -- uses existing discovery cache and worklog. Only re-processes failed or stale units.
+**Schedule:** every 3 days at 02:07 UTC. Each run resumes from the worklog — units scraped within 3 days are skipped, older/stale units are re-processed.

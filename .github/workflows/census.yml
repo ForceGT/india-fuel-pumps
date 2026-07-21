@@ -4,13 +4,12 @@ name: Census
 # all-pumps dataset published to dataset/ and committed back to the repo.
 #
 # Schedule:
-#   Monthly full re-census    — 1st of the month at 02:07 UTC
-#   Daily recovery pass       — 2nd–31st at 02:57 UTC (resumes failed brands)
+#   Every 3 days at 02:07 UTC — stations older than 3 days are re-scraped,
+#   so freshness never exceeds ~3 days (well within the 14-day stale threshold
+#   used by E0-Finder's frontend).
 #
 # Partial-failure tolerant: if a brand fails, the publish job still runs for
-# the brands that succeeded. A GitHub issue is auto-filed for failed brands
-# (with dedup — a second failure adds a comment to the existing issue instead
-# of creating a new one).
+# the brands that succeeded. A GitHub issue is auto-filed for failed brands.
 #
 # WAF note: IOCL cap is concurrency 12 (proven safe from both residential
 # and GH Actions datacenter IPs — see docs/research/iocl-waf-calibration.md
@@ -19,8 +18,7 @@ name: Census
 
 on:
   schedule:
-    - cron: '7 2 1 * *'     # monthly full re-census (1st, 02:07 UTC)
-    - cron: '57 2 2-31 * *'  # daily recovery (2nd–31st, 02:57 UTC)
+    - cron: '7 2 */3 * *'   # every 3 days at 02:07 UTC
   workflow_dispatch:
     inputs:
       brands:
@@ -96,7 +94,7 @@ jobs:
         env:
           HPCL_CENSUS_CONCURRENCY: ${{ inputs.concurrency || '12' }}
           HPCL_CENSUS_LIMIT: ${{ inputs.hpcl_limit }}
-          HPCL_CENSUS_MAX_AGE_DAYS: '30'
+          HPCL_CENSUS_MAX_AGE_DAYS: '3'
         run: npm run census:hpcl
 
       - name: Compress HPCL raw output
@@ -154,7 +152,7 @@ jobs:
         env:
           IOCL_CENSUS_CONCURRENCY: ${{ inputs.concurrency || '12' }}
           IOCL_CENSUS_LIMIT: ${{ inputs.iocl_limit }}
-          IOCL_CENSUS_MAX_AGE_DAYS: '30'
+          IOCL_CENSUS_MAX_AGE_DAYS: '3'
         run: npm run census:iocl
 
       - name: Compress IOCL raw output
@@ -209,7 +207,7 @@ jobs:
         env:
           BPCL_CENSUS_CONCURRENCY: ${{ inputs.concurrency || '4' }}
           BPCL_CENSUS_LIMIT: ${{ inputs.bpcl_limit }}
-          BPCL_CENSUS_MAX_AGE_DAYS: '30'
+          BPCL_CENSUS_MAX_AGE_DAYS: '3'
         run: npm run census:bpcl
 
       - name: Compress BPCL raw output
@@ -304,7 +302,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           # output/ is gitignored — force-add the raw JSONL so they persist
-          # across runs and the daily recovery job has a complete baseline.
+          # across runs and the next scheduled run has a complete baseline.
           for f in output/hpcl-raw.jsonl.gz output/iocl-raw.jsonl.gz output/bpcl-raw.jsonl.gz; do
             if [ -f "$f" ]; then git add -f "$f"; fi
           done
@@ -381,7 +379,7 @@ jobs:
 
             **Failed brands:** ${failed.join(', ')}
 
-            The daily recovery job will retry again tomorrow. If this persists beyond 3 consecutive runs, check:
+            The next scheduled run (every 3 days) will retry automatically. If this persists beyond 3 consecutive runs, check:
             - WAF blocks (IOCL — \`locator.iocl.com\`) — back concurrency down to 10
             - OAuth expiry (BPCL — token refresh may be needed)
             - DNS / network changes affecting the GH Actions datacenter IP range`,
@@ -396,7 +394,7 @@ jobs:
 
             **Run:** ${runUrl}
 
-            The daily recovery job will retry automatically tomorrow. If failures persist beyond 3 consecutive runs, check:
+            The next scheduled run (every 3 days) will retry automatically. If failures persist across multiple runs, check:
             - WAF blocks (IOCL — \`locator.iocl.com\`) — back concurrency down to 10
             - OAuth expiry (BPCL — token refresh may be needed)
             - DNS / network changes affecting the GH Actions datacenter IP range`,

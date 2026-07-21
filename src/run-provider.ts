@@ -140,7 +140,7 @@ export interface RunProviderOptions {
   concurrency?: number;
   /** Politeness floor per lane, ms. Default 1200 (every scraper in this repo's existing floor). */
   perLaneDelayMs?: number;
-  /** A unit whose last "ok"/"empty" record is older than this many days is treated as NOT done and re-processed. Default 30. */
+  /** A unit whose last "ok"/"empty" record is older than this many days is treated as NOT done and re-processed. Default 3. */
   maxAgeDays?: number;
   /** Stop after processing roughly this many NEW units this run (smoke-test only). Under concurrency this is a soft cap. Default Infinity. */
   limit?: number;
@@ -207,7 +207,7 @@ export async function runProvider(provider: Provider, opts: RunProviderOptions):
     discoverOpts = {},
     concurrency = 1,
     perLaneDelayMs = 1200,
-    maxAgeDays = 30,
+    maxAgeDays = 3,
     limit = Infinity,
     now = () => new Date().toISOString(),
     progressEvery = 25,
