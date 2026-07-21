@@ -465,3 +465,79 @@ jobs:
               });
               console.log(`Created issue: ${title}`);
             }
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # Resolve — when a previously-failed brand succeeds, comment on any open
+  # failure issue for that brand and close it. Runs after publish completes
+  # (success or failure) so it doesn't interfere with the primary pipeline.
+  # ════════════════════════════════════════════════════════════════════════════
+  resolve:
+    name: Resolve recovered brands
+    needs: [census-hpcl, census-iocl, census-bpcl]
+    runs-on: ubuntu-latest
+    if: always()
+    permissions:
+      issues: write
+
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+
+            const succeeded = [];
+            if ('${{ needs.census-hpcl.result }}' === 'success') succeeded.push('HPCL');
+            if ('${{ needs.census-iocl.result }}' === 'success') succeeded.push('IOCL');
+            if ('${{ needs.census-bpcl.result }}' === 'success') succeeded.push('BPCL');
+
+            if (succeeded.length === 0) {
+              console.log('No brands succeeded — nothing to resolve.');
+              return;
+            }
+
+            const { data: openIssues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'census-failure',
+            });
+
+            for (const issue of openIssues) {
+              if (!issue.title.startsWith('Census failure —')) continue;
+
+              // Parse brand names from the title: "Census failure — HPCL, BPCL — 2026-..."
+              const titleBrands = issue.title
+                .replace('Census failure — ', '')
+                .split(' — ')[0]
+                .split(', ')
+                .filter(b => ['HPCL', 'IOCL', 'BPCL'].includes(b));
+
+              const stillFailing = titleBrands.filter(b => !succeeded.includes(b));
+
+              if (stillFailing.length === 0) {
+                // All brands recovered — close the issue.
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  body: `✅ All brands recovered. Census succeeded for ${titleBrands.join(', ')} in [run ${context.runId}](${runUrl}). Closing.`,
+                });
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  state: 'closed',
+                });
+                console.log(`Closed issue #${issue.number} — all brands recovered`);
+              } else if (titleBrands.some(b => succeeded.includes(b))) {
+                // Partial recovery — comment which brands recovered.
+                const recovered = titleBrands.filter(b => succeeded.includes(b));
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  body: `✅ **${recovered.join(', ')}** recovered in [run ${context.runId}](${runUrl}). ${stillFailing.join(', ')} still failing — issue remains open.`,
+                });
+                console.log(`Commented on issue #${issue.number} — partial recovery: ${recovered.join(', ')}`);
+              }
+            }
