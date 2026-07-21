@@ -185,7 +185,7 @@ jobs:
     # location). If TAILSCALE_AUTH_KEY is not set, this job is skipped and the
     # publish step uses the last committed bpcl-raw.jsonl.gz instead.
     # ~25 min at concurrency 10 from a residential IP.
-    timeout-minutes: 60
+    timeout-minutes: 90
     if: >-
       (github.event_name == 'schedule' || contains(inputs.brands, 'bpcl')) &&
       vars.TAILSCALE_EXIT_NODE != ''
