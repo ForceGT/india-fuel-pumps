@@ -102,13 +102,12 @@ Each shard filename embeds a **content hash** (first 16 hex of SHA-256), so a sh
 
 ---
 
-## Using it (via CDN)
+## Using the data
 
-Serve straight from a CDN — do **not** hammer `raw.githubusercontent.com` (rate-limited):
+The `dataset/` directory is committed to this repo. Clone or download directly:
 
 ```
-https://cdn.jsdelivr.net/gh/ForceGT/india-fuel-pumps@main/dataset/index.json
-https://cdn.jsdelivr.net/gh/ForceGT/india-fuel-pumps@main/dataset/shards/<file>
+https://github.com/ForceGT/india-fuel-pumps/tree/main/dataset/
 ```
 
 Consumption pattern:
