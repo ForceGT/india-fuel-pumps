@@ -1,6 +1,6 @@
 {
   "previous": {
-    "generatedAt": "2026-07-21T05:43:58.474Z",
+    "generatedAt": "2026-07-21T17:08:34.747Z",
     "totalOutlets": 91234,
     "brands": {
       "hpcl": 23939,
@@ -11,12 +11,12 @@
     "missingBrands": []
   },
   "current": {
-    "generatedAt": "2026-07-21T17:08:34.747Z",
-    "totalOutlets": 91234,
+    "generatedAt": "2026-07-21T22:19:16.950Z",
+    "totalOutlets": 91250,
     "brands": {
-      "hpcl": 23939,
-      "iocl": 39451,
-      "bpcl": 27844
+      "hpcl": 23954,
+      "iocl": 39446,
+      "bpcl": 27850
     },
     "shardCount": 192,
     "missingBrands": []
