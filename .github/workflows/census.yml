@@ -282,6 +282,32 @@ jobs:
           pattern: '*-raw'
           merge-multiple: true
 
+      # ── Staleness check: for any brand that was skipped or failed, inspect
+      # the last committed raw file. If it's older than STALE_AFTER_DAYS
+      # (matching the scraper's maxAgeDays cadence), flag it so the summary
+      # and release notes carry a visible warning.
+      - name: Check data freshness
+        id: freshness
+        run: |
+          STALE_AFTER_DAYS=3
+          echo "STALE_AFTER_DAYS=$STALE_AFTER_DAYS" >> "$GITHUB_ENV"
+
+          for brand in hpcl iocl bpcl; do
+            FILE="output/${brand}-raw.jsonl.gz"
+            if [ ! -f "$FILE" ]; then
+              echo "${brand}_stale=true" >> "$GITHUB_OUTPUT"
+              echo "${brand}_age=N/A" >> "$GITHUB_OUTPUT"
+              continue
+            fi
+            FILE_AGE_DAYS=$(( ($(date +%s) - $(stat -c %Y "$FILE")) / 86400 ))
+            echo "${brand}_age=${FILE_AGE_DAYS}d" >> "$GITHUB_OUTPUT"
+            if [ "$FILE_AGE_DAYS" -gt "$STALE_AFTER_DAYS" ]; then
+              echo "${brand}_stale=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "${brand}_stale=false" >> "$GITHUB_OUTPUT"
+            fi
+          done
+
       - name: Build geohash-sharded dataset
         id: build
         run: npm run build-dataset
@@ -293,12 +319,23 @@ jobs:
           {
             echo "## Census — $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             echo ""
-            echo "| Brand | Census | Raw lines |"
-            echo "|-------|--------|----------:|"
-            echo "| HPCL  | ${{ needs.census-hpcl.result }} | $(zcat output/hpcl-raw.jsonl.gz 2>/dev/null | wc -l || echo 0) |"
-            echo "| IOCL  | ${{ needs.census-iocl.result }} | $(zcat output/iocl-raw.jsonl.gz 2>/dev/null | wc -l || echo 0) |"
-            echo "| BPCL  | ${{ needs.census-bpcl.result }} | $(zcat output/bpcl-raw.jsonl.gz 2>/dev/null | wc -l || echo 0) |"
+            echo "| Brand | Census | Raw lines | Data age |"
+            echo "|-------|--------|----------:|----------|"
+            echo "| HPCL  | ${{ needs.census-hpcl.result }} | $(zcat output/hpcl-raw.jsonl.gz 2>/dev/null | wc -l || echo 0) | ${{ steps.freshness.outputs.hpcl_age }} |"
+            echo "| IOCL  | ${{ needs.census-iocl.result }} | $(zcat output/iocl-raw.jsonl.gz 2>/dev/null | wc -l || echo 0) | ${{ steps.freshness.outputs.iocl_age }} |"
+            echo "| BPCL  | ${{ needs.census-bpcl.result }} | $(zcat output/bpcl-raw.jsonl.gz 2>/dev/null | wc -l || echo 0) | ${{ steps.freshness.outputs.bpcl_age }} |"
             echo ""
+
+            # Emit staleness warnings
+            STALE=""
+            [ "${{ steps.freshness.outputs.hpcl_stale }}" = "true" ] && STALE="$STALE HPCL"
+            [ "${{ steps.freshness.outputs.iocl_stale }}" = "true" ] && STALE="$STALE IOCL"
+            [ "${{ steps.freshness.outputs.bpcl_stale }}" = "true" ] && STALE="$STALE BPCL"
+            if [ -n "$STALE" ]; then
+              echo "> ⚠️ **Stale data used:**$STALE — the scraper hasn't refreshed these brands within the ${STALE_AFTER_DAYS}-day window. The published dataset uses the last committed raw data. This will age further with each daily E0-Finder deploy until the next successful scrape."
+              echo ""
+            fi
+
             if [ -f dataset/index.json ]; then
               echo "### Published dataset"
               echo ""
