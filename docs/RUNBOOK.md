@@ -113,7 +113,7 @@ Once configured, the BPCL CI job connects via Tailscale and scrapes through the 
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `BPCL_CENSUS_CONCURRENCY` | `4` | Concurrent lanes |
+| `BPCL_CENSUS_CONCURRENCY` | `10` | Concurrent lanes |
 | `BPCL_CENSUS_LIMIT` | (no limit) | Stop after N new units |
 | `BPCL_CENSUS_MAX_AGE_DAYS` | `3` | Staleness threshold |
 | `FRESH` | (unset) | Set to `1` to restart from scratch |

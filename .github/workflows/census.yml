@@ -184,6 +184,7 @@ jobs:
     # We route through a Tailscale exit node (Raspberry Pi at a residential
     # location). If TAILSCALE_AUTH_KEY is not set, this job is skipped and the
     # publish step uses the last committed bpcl-raw.jsonl.gz instead.
+    # ~25 min at concurrency 10 from a residential IP.
     timeout-minutes: 60
     if: >-
       (github.event_name == 'schedule' || contains(inputs.brands, 'bpcl')) &&
@@ -219,7 +220,7 @@ jobs:
 
       - name: Run BPCL census
         env:
-          BPCL_CENSUS_CONCURRENCY: ${{ inputs.concurrency || '4' }}
+          BPCL_CENSUS_CONCURRENCY: ${{ inputs.concurrency || '10' }}
           BPCL_CENSUS_LIMIT: ${{ inputs.bpcl_limit }}
           BPCL_CENSUS_MAX_AGE_DAYS: '3'
         run: npm run census:bpcl
