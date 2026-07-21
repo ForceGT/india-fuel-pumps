@@ -188,7 +188,7 @@ jobs:
     timeout-minutes: 60
     if: >-
       (github.event_name == 'schedule' || contains(inputs.brands, 'bpcl')) &&
-      secrets.TAILSCALE_EXIT_NODE != ''
+      vars.TAILSCALE_EXIT_NODE != ''
 
     steps:
       - uses: actions/checkout@v7
@@ -204,12 +204,12 @@ jobs:
         uses: tailscale/github-action@v3
         with:
           authkey: ${{ secrets.TAILSCALE_AUTH_KEY }}
-          args: --exit-node=${{ secrets.TAILSCALE_EXIT_NODE }} --exit-node-allow-lan-access=false
+          args: --exit-node=${{ vars.TAILSCALE_EXIT_NODE }} --exit-node-allow-lan-access=false
 
       - name: Verify exit node (traffic now routes through residential IP)
         run: |
           echo "Tailscale connected. Public IP: $(curl -s https://api.ipify.org)"
-          echo "Exit node: ${{ secrets.TAILSCALE_EXIT_NODE }}"
+          echo "Exit node: ${{ vars.TAILSCALE_EXIT_NODE }}"
 
       - name: Restore BPCL worklog
         uses: actions/cache/restore@v6
