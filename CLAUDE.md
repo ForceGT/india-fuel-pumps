@@ -30,8 +30,8 @@ is a downstream consumer's job (e.g. the private E0-Finder project at
 
 5. **IOCL `locator.iocl.com` is WAF-sensitive.** Concurrency 10 is proven safe
    from both residential and GH Actions IPs; 12 is bumped but unverified above
-   a single run; 15/20/30 all tripped pattern-based blocks. See
-   `docs/research/iocl-waf-calibration.md` in the E0-Finder repo before raising it.
+   a single run; 15/20/30 all tripped pattern-based blocks. Do not raise
+   concurrency above 10 without recalibrating.
 
 6. **Partial failures are expected and handled.** The publish job runs even if some
    brands fail (at least one must succeed). Missing brands are flagged in release
