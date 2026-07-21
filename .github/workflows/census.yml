@@ -180,11 +180,14 @@ jobs:
   census-bpcl:
     name: Census — BPCL
     runs-on: ubuntu-latest
-    # BPCL uses OAuth + a grid/route API — ~25 min at concurrency 4.
+    # BPCL requires a residential IP — api.cep.bpcl.in blocks datacenter IPs.
+    # We route through a Tailscale exit node (Raspberry Pi at a residential
+    # location). If TAILSCALE_AUTH_KEY is not set, this job is skipped and the
+    # publish step uses the last committed bpcl-raw.jsonl.gz instead.
     timeout-minutes: 60
     if: >-
-      github.event_name == 'schedule' ||
-      contains(inputs.brands, 'bpcl')
+      (github.event_name == 'schedule' || contains(inputs.brands, 'bpcl')) &&
+      vars.TAILSCALE_EXIT_NODE != ''
 
     steps:
       - uses: actions/checkout@v7
@@ -195,6 +198,17 @@ jobs:
           cache: 'npm'
 
       - run: npm ci
+
+      - name: Connect to Tailscale (residential IP via exit node)
+        uses: tailscale/github-action@v3
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTH_KEY }}
+          args: --exit-node=${{ vars.TAILSCALE_EXIT_NODE }} --exit-node-allow-lan-access=false
+
+      - name: Verify exit node (traffic now routes through residential IP)
+        run: |
+          echo "Tailscale connected. Public IP: $(curl -s https://api.ipify.org)"
+          echo "Exit node: ${{ vars.TAILSCALE_EXIT_NODE }}"
 
       - name: Restore BPCL worklog
         uses: actions/cache/restore@v6
@@ -237,13 +251,15 @@ jobs:
     name: Publish dataset
     needs: [census-hpcl, census-iocl, census-bpcl]
     runs-on: ubuntu-latest
-    # Allow publish even when some census jobs failed — publish what succeeded.
-    # Skip only when NO brand succeeded (nothing to publish).
+    # Allow publish even when some census jobs failed or are skipped (BPCL may
+    # be skipped when Tailscale isn't configured yet — the publish job uses the
+    # last committed bpcl-raw.jsonl.gz instead). Skip only when NO brand
+    # succeeded.
     if: >-
       always() &&
       (needs.census-hpcl.result == 'success' || needs.census-hpcl.result == 'failure') &&
       (needs.census-iocl.result == 'success' || needs.census-iocl.result == 'failure') &&
-      (needs.census-bpcl.result == 'success' || needs.census-bpcl.result == 'failure') &&
+      (needs.census-bpcl.result == 'success' || needs.census-bpcl.result == 'failure' || needs.census-bpcl.result == 'skipped') &&
       (needs.census-hpcl.result == 'success' || needs.census-iocl.result == 'success' || needs.census-bpcl.result == 'success')
 
     steps:

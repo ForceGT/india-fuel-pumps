@@ -8,13 +8,19 @@
 
 **Diagnosis:** The GH Actions log shows `[bpcl] HTTP 403` on every unit (the first 3 are logged with full URL + body, then the logging cap kicks in). The provider summary line reads `ok=0 records=0` because all units are `httpFailed`.
 
-**Resolution:**
-1. Run BPCL from a residential IP: `npm run census:bpcl` on your local machine.
-2. Compress the raw output: `gzip -f output/bpcl-raw.jsonl`
-3. Force-add to git: `git add -f output/bpcl-raw.jsonl.gz && git push`
-4. Trigger the GH Actions publish workflow -- it picks up the pushed BPCL data alongside HPCL/IOCL's CI outputs.
+**Resolution:** The CI workflow now routes BPCL traffic through a Tailscale exit node (Raspberry Pi on a residential IP). Setup:
+1. RPi: install Tailscale, configure as exit node (`tailscale up --advertise-exit-node`)
+2. GitHub: add `TAILSCALE_AUTH_KEY` secret and `TAILSCALE_EXIT_NODE` variable
+3. CI connects via `tailscale/github-action@v3`, routes through the exit node
 
-**Prevention:** None — this is the BPCL API operator's choice, not ours. BPCL is excluded from CI (`brands=bpcl` not passed) and must be run locally. The committed `bpcl-raw.jsonl.gz` is what the publish step uses until a new local run is pushed.
+**Manual fallback** (if Tailscale is down):
+```bash
+npm run census:bpcl        # Run from your local machine
+gzip -f output/bpcl-raw.jsonl
+git add -f output/bpcl-raw.jsonl.gz && git push
+```
+
+**Prevention:** Tailscale exit node provides a stable residential IP. If the exit node is unreachable, the BPCL CI job is skipped and the publish step uses the last committed `bpcl-raw.jsonl.gz`.
 
 ---
 

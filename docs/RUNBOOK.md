@@ -47,26 +47,44 @@ BPCL_CENSUS_LIMIT=5 npm run census:bpcl
 
 ## BPCL — GH Actions IP block workaround
 
-The BPCL API (`api.cep.bpcl.in`) occasionally returns 403 from GitHub Actions datacenter IPs. When this happens:
+The BPCL API (`api.cep.bpcl.in`) blocks datacenter IPs. BPCL census in CI routes through a Tailscale exit node (Raspberry Pi at a residential location).
 
-**Diagnose:** Look for `"status":"httpFailed"` entries in `output/bpcl-worklog.jsonl` with `detail` mentioning 403. A full-block scenario shows all work units failing with 403.
+**Prerequisites:**
+- A Raspberry Pi running Tailscale, configured as an exit node
+- `TAILSCALE_AUTH_KEY` (GitHub secret — an ephemeral or tagged auth key)
+- `TAILSCALE_EXIT_NODE` (GitHub variable — the RPi's Tailscale hostname)
 
-**Workaround:** Run BPCL from a residential/mobile IP:
+**How it works:** The BPCL CI job connects to Tailscale, routes all traffic through the RPi exit node, and scrapes from a residential IP. If the secrets aren't configured, the BPCL job is skipped and the publish step uses the last committed `bpcl-raw.jsonl.gz`.
 
+**Manual fallback** (if Tailscale is down):
 ```bash
-# On your local machine (not GH Actions)
-git clone … && cd india-fuel-pumps && npm install
-npm run census:bpcl
-
-# Compress and commit the raw output the publish job expects
+npm run census:bpcl        # Run from your local machine
 gzip -f output/bpcl-raw.jsonl
-git add -f output/bpcl-raw.jsonl.gz
-git push
+git add -f output/bpcl-raw.jsonl.gz && git push
 ```
 
-Then trigger the GH Actions publish workflow manually (`workflow_dispatch`) — it will find the pushed BPCL output alongside HPCL/IOCL's CI-generated outputs and build the complete dataset.
+**Root cause:** The BPCL API has geo-IP/cloud-provider-IP-range filtering. A residential IP always works.
 
-**Root cause:** The BPCL API likely has geo-IP or cloud-provider-IP-range filtering, not an explicit block of this project. It works intermittently from GH Actions. A residential IP always works.
+### Tailscale exit node setup (one-time)
+
+**On the Raspberry Pi** (residential location):
+```bash
+# Install Tailscale
+curl -fsSL https://tailscale.com/install.sh | sh
+
+# Advertise as exit node
+sudo tailscale up --advertise-exit-node
+
+# Approve the exit node in the Tailscale admin console (admin.tailscale.com)
+# Then verify: tailscale status | grep "exit node"
+```
+
+**On GitHub** (repo settings):
+1. Generate an auth key at [admin.tailscale.com](https://admin.tailscale.com) → Settings → Keys → Generate auth key (ephemeral or tagged)
+2. Add `TAILSCALE_AUTH_KEY` as a repository secret
+3. Add `TAILSCALE_EXIT_NODE` as a repository variable (the RPi's Tailscale hostname, e.g. `raspberrypi`)
+
+Once configured, the BPCL CI job connects via Tailscale and scrapes through the residential IP. If either value is missing, the BPCL job is skipped and the publish step uses the last committed `bpcl-raw.jsonl.gz`.
 
 ---
 
@@ -78,7 +96,7 @@ Then trigger the GH Actions publish workflow manually (`workflow_dispatch`) — 
 |----------|---------|---------|
 | `HPCL_CENSUS_CONCURRENCY` | `12` | Concurrent lanes |
 | `HPCL_CENSUS_LIMIT` | (no limit) | Stop after N new units (smoke tests) |
-| `HPCL_CENSUS_MAX_AGE_DAYS` | `30` | Staleness threshold for resume |
+| `HPCL_CENSUS_MAX_AGE_DAYS` | `3` | Staleness threshold for resume |
 | `HPCL_CENSUS_STATE_ALLOWLIST` | (all) | Comma-separated states to scope crawl |
 | `FRESH` | (unset) | Set to `1` to delete cache + worklog and restart from scratch |
 
@@ -88,7 +106,7 @@ Then trigger the GH Actions publish workflow manually (`workflow_dispatch`) — 
 |----------|---------|---------|
 | `IOCL_CENSUS_CONCURRENCY` | `12` | Concurrent lanes (max safe = 12 from CI, 10 from residential) |
 | `IOCL_CENSUS_LIMIT` | (no limit) | Stop after N new units |
-| `IOCL_CENSUS_MAX_AGE_DAYS` | `30` | Staleness threshold |
+| `IOCL_CENSUS_MAX_AGE_DAYS` | `3` | Staleness threshold |
 | `FRESH` | (unset) | Set to `1` to restart from scratch |
 
 ### BPCL
@@ -97,7 +115,7 @@ Then trigger the GH Actions publish workflow manually (`workflow_dispatch`) — 
 |----------|---------|---------|
 | `BPCL_CENSUS_CONCURRENCY` | `4` | Concurrent lanes |
 | `BPCL_CENSUS_LIMIT` | (no limit) | Stop after N new units |
-| `BPCL_CENSUS_MAX_AGE_DAYS` | `30` | Staleness threshold |
+| `BPCL_CENSUS_MAX_AGE_DAYS` | `3` | Staleness threshold |
 | `FRESH` | (unset) | Set to `1` to restart from scratch |
 
 ---

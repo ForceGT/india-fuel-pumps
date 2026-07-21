@@ -16,8 +16,11 @@ is a downstream consumer's job (e.g. the private E0-Finder project at
    captures everything; classification belongs downstream.
 
 2. **BPCL must be run from a residential IP.** `api.cep.bpcl.in` returns HTTP 403
-   from GH Actions datacenter IPs. The compressed raw JSONL is committed to git so
-   CI can still build the dataset. -- BPCL takes ~3 min locally at concurrency 10.
+   from GH Actions datacenter IPs. The CI workflow routes BPCL traffic through a
+   Tailscale exit node (Raspberry Pi at a residential location). Requires
+   `TAILSCALE_AUTH_KEY` (GitHub secret) and `TAILSCALE_EXIT_NODE` (GitHub
+   variable). Without these, BPCL is skipped and the publish step uses the last
+   committed `bpcl-raw.jsonl.gz`. — BPCL takes ~25 min at concurrency 4.
 
 3. **Raw JSONL files are gzip-compressed before commit** (92 MB -> 13 MB).
    `build-dataset.ts` reads `.jsonl.gz` first, falls back to `.jsonl`. CI jobs gzip
@@ -75,7 +78,7 @@ dataset/                  Geohash-sharded output (index.json + shards/)
 ```bash
 npm run census:hpcl       # Full HPCL national census
 npm run census:iocl       # Full IOCL national census
-npm run census:bpcl       # Full BPCL national census (residential IP only)
+npm run census:bpcl       # Full BPCL national census (residential IP via Tailscale exit node)
 npm run build-dataset     # Assemble raw JSONL -> sharded dataset + release notes
 npm run test              # Vitest suite
 npm run typecheck         # tsc --noEmit
