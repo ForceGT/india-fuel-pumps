@@ -225,6 +225,10 @@ jobs:
           BPCL_CENSUS_MAX_AGE_DAYS: '3'
         run: npm run census:bpcl
 
+      - name: Disconnect Tailscale (artifact upload goes direct, not through RPi)
+        if: always()
+        run: sudo tailscale down
+
       - name: Compress BPCL raw output
         if: always()
         run: |
