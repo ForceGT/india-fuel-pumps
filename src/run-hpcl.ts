@@ -22,6 +22,7 @@
  *  - HPCL_CENSUS_STATE_ALLOWLIST: comma-separated state slugs to restrict
  *    discovery to, for testing. Omit for the real run (all districts).
  *  - HPCL_CENSUS_MAX_AGE_DAYS: re-check anything older than this (default 3).
+ *  - HPCL_CENSUS_STALE_AFTER_DAYS: drop baseline records not refreshed within this many days, so closed/removed stations age out (default 14).
  */
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -38,6 +39,7 @@ const stateAllowList = (process.env.HPCL_CENSUS_STATE_ALLOWLIST ?? "")
 const limit = process.env.HPCL_CENSUS_LIMIT ? Number(process.env.HPCL_CENSUS_LIMIT) : Infinity;
 const concurrency = Math.max(1, Number(process.env.HPCL_CENSUS_CONCURRENCY ?? 1));
 const maxAgeDays = process.env.HPCL_CENSUS_MAX_AGE_DAYS ? Number(process.env.HPCL_CENSUS_MAX_AGE_DAYS) : 3;
+const staleAfterDays = process.env.HPCL_CENSUS_STALE_AFTER_DAYS ? Number(process.env.HPCL_CENSUS_STALE_AFTER_DAYS) : 14;
 
 async function main(): Promise<void> {
   const provider = createHpclProvider({
@@ -50,6 +52,7 @@ async function main(): Promise<void> {
     outputDir: OUTPUT_DIR,
     concurrency,
     maxAgeDays,
+    staleAfterDays,
     limit,
   });
 

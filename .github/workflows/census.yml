@@ -92,12 +92,14 @@ jobs:
 
       # The census ACCUMULATES onto the committed baseline: checkout provides
       # output/hpcl-raw.jsonl.gz, runProvider seeds from it, so partial runs no
-      # longer collapse the published dataset.
+      # longer collapse the published dataset. Baseline records not refreshed
+      # within STALE_AFTER_DAYS are pruned, so closed/removed stations age out.
       - name: Run HPCL census
         env:
           HPCL_CENSUS_CONCURRENCY: ${{ inputs.concurrency || '12' }}
           HPCL_CENSUS_LIMIT: ${{ inputs.hpcl_limit }}
           HPCL_CENSUS_MAX_AGE_DAYS: '3'
+          HPCL_CENSUS_STALE_AFTER_DAYS: '14'
         run: npm run census:hpcl
 
       - name: Compress HPCL raw output
@@ -158,12 +160,14 @@ jobs:
 
       # The census ACCUMULATES onto the committed baseline: checkout provides
       # output/iocl-raw.jsonl.gz, runProvider seeds from it, so partial runs no
-      # longer collapse the published dataset.
+      # longer collapse the published dataset. Baseline records not refreshed
+      # within STALE_AFTER_DAYS are pruned, so closed/removed stations age out.
       - name: Run IOCL census
         env:
           IOCL_CENSUS_CONCURRENCY: ${{ inputs.concurrency || '12' }}
           IOCL_CENSUS_LIMIT: ${{ inputs.iocl_limit }}
           IOCL_CENSUS_MAX_AGE_DAYS: '3'
+          IOCL_CENSUS_STALE_AFTER_DAYS: '14'
         run: npm run census:iocl
 
       - name: Compress IOCL raw output
@@ -236,12 +240,14 @@ jobs:
 
       # The census ACCUMULATES onto the committed baseline: checkout provides
       # output/bpcl-raw.jsonl.gz, runProvider seeds from it, so partial runs no
-      # longer collapse the published dataset.
+      # longer collapse the published dataset. Baseline records not refreshed
+      # within STALE_AFTER_DAYS are pruned, so closed/removed stations age out.
       - name: Run BPCL census
         env:
           BPCL_CENSUS_CONCURRENCY: ${{ inputs.concurrency || '10' }}
           BPCL_CENSUS_LIMIT: ${{ inputs.bpcl_limit }}
           BPCL_CENSUS_MAX_AGE_DAYS: '3'
+          BPCL_CENSUS_STALE_AFTER_DAYS: '14'
         run: npm run census:bpcl
 
       - name: Disconnect Tailscale (artifact upload goes direct, not through RPi)
