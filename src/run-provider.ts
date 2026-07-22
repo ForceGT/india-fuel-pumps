@@ -144,6 +144,8 @@ export interface RunProviderOptions {
   perLaneDelayMs?: number;
   /** A unit whose last "ok"/"empty" record is older than this many days is treated as NOT done and re-processed. Default 3. */
   maxAgeDays?: number;
+  /** Baseline records whose `capturedAt` is older than this many days are PRUNED at seed time (dropped from the accumulated raw), so closed/removed stations age out instead of lingering forever. Must be safely larger than `maxAgeDays` so that live stations — refreshed every `maxAgeDays` — are never pruned. Default 14. */
+  staleAfterDays?: number;
   /** Stop after processing roughly this many NEW units this run (smoke-test only). Under concurrency this is a soft cap. Default Infinity. */
   limit?: number;
   /** Injectable for tests. Defaults to the real clock. */
@@ -258,12 +260,14 @@ export async function runProvider(provider: Provider, opts: RunProviderOptions):
     concurrency = 1,
     perLaneDelayMs = 1200,
     maxAgeDays = 3,
+    staleAfterDays = 14,
     limit = Infinity,
     now = () => new Date().toISOString(),
     progressEvery = 25,
     fetchImpl = fetchWithBackoff,
   } = opts;
   const maxAgeMs = maxAgeDays * 24 * 60 * 60 * 1000;
+  const staleMs = staleAfterDays * 24 * 60 * 60 * 1000;
 
   await mkdir(outputDir, { recursive: true });
   const rawPath = path.join(outputDir, `${provider.slug}-raw.jsonl`);
@@ -277,7 +281,8 @@ export async function runProvider(provider: Provider, opts: RunProviderOptions):
   const allUnits: WorkUnit[] = [];
   for await (const unit of provider.discover(discoverOpts)) allUnits.push(unit);
 
-  const alreadyDone = await loadAlreadyDone(workLogPath, maxAgeMs, Date.parse(now()));
+  const nowMs = Date.parse(now());
+  const alreadyDone = await loadAlreadyDone(workLogPath, maxAgeMs, nowMs);
   const queue = allUnits.filter((u) => !alreadyDone.has(u.id));
 
   // ── SEED baseline records from prior runs into the raw file ──
@@ -286,12 +291,25 @@ export async function runProvider(provider: Provider, opts: RunProviderOptions):
   // rawPath, since the baseline source might BE rawPath (uncompressed).
   // Seeding is separate from processing — these records are NOT counted in
   // the run's recordsWritten/okCount/processedThisRun counters.
+  // Baseline records older than staleAfterDays are pruned so closed/removed
+  // stations don't linger forever — a station is "confirmed alive" by its
+  // capturedAt being fresh; closed stations stop getting fresh captures and
+  // age out instead. Be conservative: only prune when capturedAt is valid AND
+  // provably stale; if unparseable, keep it to avoid regressions.
   const baselineRecords = await readBaselineRawJsonl(rawPath);
   const dedupedBaseline = dedupeByStationId(baselineRecords);
-  if (dedupedBaseline.length > 0) {
-    const baselineContent = dedupedBaseline.map((r) => JSON.stringify(r)).join("\n") + "\n";
+  const freshBaseline = dedupedBaseline.filter((r) => {
+    const t = Date.parse(r.capturedAt);
+    return !Number.isFinite(t) || nowMs - t <= staleMs;
+  });
+  const prunedCount = dedupedBaseline.length - freshBaseline.length;
+  if (freshBaseline.length > 0) {
+    const baselineContent = freshBaseline.map((r) => JSON.stringify(r)).join("\n") + "\n";
     await writeFile(rawPath, baselineContent, "utf-8");
-    console.log(`[${provider.slug}-provider] seeded ${dedupedBaseline.length} baseline records`);
+    console.log(`[${provider.slug}-provider] seeded ${freshBaseline.length} baseline records`);
+  }
+  if (prunedCount > 0) {
+    console.log(`[${provider.slug}-provider] pruned ${prunedCount} stale baseline records (not seen in ${staleAfterDays}d)`);
   }
 
   console.log(
