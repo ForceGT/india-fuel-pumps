@@ -16,8 +16,8 @@
  *
  * Env vars:
  *  - BPCL_CENSUS_CONCURRENCY, BPCL_CENSUS_LIMIT, BPCL_CENSUS_MAX_AGE_DAYS,
- *    BPCL_CENSUS_MAX_DEPTH, BPCL_CENSUS_BOUNDS, BPCL_CENSUS_SKIP_ROUTES,
- *    BPCL_CENSUS_SKIP_GRID.
+ *    BPCL_CENSUS_STALE_AFTER_DAYS, BPCL_CENSUS_MAX_DEPTH, BPCL_CENSUS_BOUNDS,
+ *    BPCL_CENSUS_SKIP_ROUTES, BPCL_CENSUS_SKIP_GRID.
  */
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -30,6 +30,7 @@ const OUTPUT_DIR = path.join(__dirname, "../output");
 const limit = process.env.BPCL_CENSUS_LIMIT ? Number(process.env.BPCL_CENSUS_LIMIT) : Infinity;
 const concurrency = Math.max(1, Number(process.env.BPCL_CENSUS_CONCURRENCY ?? 1));
 const maxAgeDays = process.env.BPCL_CENSUS_MAX_AGE_DAYS ? Number(process.env.BPCL_CENSUS_MAX_AGE_DAYS) : 3;
+const staleAfterDays = process.env.BPCL_CENSUS_STALE_AFTER_DAYS ? Number(process.env.BPCL_CENSUS_STALE_AFTER_DAYS) : 14;
 const maxDepth = process.env.BPCL_CENSUS_MAX_DEPTH ? Number(process.env.BPCL_CENSUS_MAX_DEPTH) : 4;
 const skipRoutes = process.env.BPCL_CENSUS_SKIP_ROUTES === "1";
 const skipGrid = process.env.BPCL_CENSUS_SKIP_GRID === "1";
@@ -52,6 +53,7 @@ async function main(): Promise<void> {
     outputDir: OUTPUT_DIR,
     concurrency,
     maxAgeDays,
+    staleAfterDays,
     limit,
   });
 

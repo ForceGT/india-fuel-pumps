@@ -443,4 +443,83 @@ describe("runProvider (integration)", () => {
     const u2Timestamps = u2Records.map((r) => r.capturedAt).sort();
     expect(u2Timestamps).toEqual(["2026-07-17T00:00:00.000Z", "2026-07-18T00:00:00.000Z"]);
   });
+
+  it("prunes baseline records older than staleAfterDays so closed/removed stations age out", async () => {
+    tmpDir = mkdtempSync(path.join(tmpdir(), "run-provider-test-"));
+
+    // Create a fake provider that discovers nothing, so processing writes no
+    // records and the test isolates the seed/prune step.
+    const provider: Provider = {
+      brand: "FAKE",
+      slug: "fake-prune",
+      async *discover() {
+        // yield nothing
+      },
+      async process() {
+        return { status: "ok", records: [] };
+      },
+    };
+
+    // Pre-write a baseline raw file with two records:
+    // - "old-gone" with capturedAt ~40 days before now (should be pruned)
+    // - "recent" with capturedAt ~1 day before now (should be kept)
+    const oldGoneRecord: RawOutletRecord = {
+      schemaVersion: 1,
+      brand: "HPCL",
+      outletId: "old-gone",
+      stationId: "old-gone",
+      sourceUrl: null,
+      capturedAt: "2026-06-08T12:00:00.000Z", // ~40 days before 2026-07-18
+      name: "Station Old Gone",
+      address: null,
+      city: null,
+      state: null,
+      pincode: null,
+      lat: 0,
+      lng: 0,
+      geohash: "x",
+      hours: null,
+      contact: null,
+      mapsLink: null,
+      products: [],
+    };
+    const recentRecord: RawOutletRecord = {
+      schemaVersion: 1,
+      brand: "HPCL",
+      outletId: "recent",
+      stationId: "recent",
+      sourceUrl: null,
+      capturedAt: "2026-07-17T12:00:00.000Z", // ~1 day before 2026-07-18
+      name: "Station Recent",
+      address: null,
+      city: null,
+      state: null,
+      pincode: null,
+      lat: 0,
+      lng: 0,
+      geohash: "y",
+      hours: null,
+      contact: null,
+      mapsLink: null,
+      products: [],
+    };
+    const rawPath = path.join(tmpDir, `${provider.slug}-raw.jsonl`);
+    writeFileSync(rawPath, [oldGoneRecord, recentRecord].map((r) => JSON.stringify(r)).join("\n") + "\n", "utf-8");
+
+    // Run with default staleAfterDays=14 and fixed now time
+    const result = await runProvider(provider, {
+      outputDir: tmpDir,
+      now: () => "2026-07-18T12:00:00.000Z",
+    });
+    expect(result.processedThisRun).toBe(0); // no units to process
+    expect(result.recordsWritten).toBe(0); // no new records
+    expect(existsSync(rawPath)).toBe(true);
+
+    // Parse the resulting raw file: should contain ONLY "recent" — "old-gone" was pruned
+    const rawContent = await readFile(rawPath, "utf-8");
+    const records = rawContent.trim().split("\n").map((l) => JSON.parse(l) as RawOutletRecord);
+    const stationIds = records.map((r) => r.stationId).sort();
+    expect(stationIds).toEqual(["recent"]);
+    expect(records[0]!.name).toBe("Station Recent");
+  });
 });
