@@ -11,14 +11,14 @@
     "missingBrands": []
   },
   "current": {
-    "generatedAt": "2026-07-22T05:31:02.073Z",
-    "totalOutlets": 27860,
+    "generatedAt": "2026-07-22T06:55:12.215Z",
+    "totalOutlets": 91250,
     "brands": {
-      "hpcl": 1,
-      "iocl": 9,
+      "hpcl": 23954,
+      "iocl": 39446,
       "bpcl": 27850
     },
-    "shardCount": 179,
+    "shardCount": 192,
     "missingBrands": []
   }
 }
