@@ -29,9 +29,11 @@
  * env vars, and call `runProvider(provider, opts)`.
  */
 import { mkdir, appendFile, readFile, writeFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
+import { createReadStream, existsSync } from "node:fs";
+import { createGunzip } from "node:zlib";
+import { createInterface } from "node:readline";
 import path from "node:path";
-import type { WorkLogRecord } from "./types.js";
+import type { RawOutletRecord, WorkLogRecord } from "./types.js";
 import { fetchWithBackoff, sleep } from "./http.js";
 import type { Provider, ProviderContext, WorkUnit } from "./provider.js";
 
@@ -196,6 +198,54 @@ async function loadAlreadyDone(workLogPath: string, maxAgeMs: number, nowMs: num
 }
 
 /**
+ * Load baseline `RawOutletRecord[]` from the raw path, streaming to handle
+ * large files (~90 MB uncompressed for BPCL) without blowing memory. Tries
+ * `{rawPath}.gz` first (git-committed compressed files take priority), then
+ * falls back to uncompressed `{rawPath}` if it exists, else returns `[]`.
+ * Skips blank/malformed lines with try/catch, mirroring `build-dataset.ts`'s
+ * identical `readRawJsonl` logic.
+ */
+async function readBaselineRawJsonl(rawPath: string): Promise<RawOutletRecord[]> {
+  const gzPath = `${rawPath}.gz`;
+  const readPath = existsSync(gzPath) ? gzPath : existsSync(rawPath) ? rawPath : null;
+  if (!readPath) return [];
+
+  const records: RawOutletRecord[] = [];
+  const input = readPath.endsWith(".gz")
+    ? createReadStream(readPath).pipe(createGunzip())
+    : createReadStream(readPath);
+  const rl = createInterface({ input, crlfDelay: Infinity });
+  for await (const line of rl) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    try {
+      records.push(JSON.parse(trimmed) as RawOutletRecord);
+    } catch {
+      // Skip malformed/torn lines (e.g. from kill -9 mid-write).
+    }
+  }
+  return records;
+}
+
+/**
+ * Dedupe a `RawOutletRecord[]` by `stationId`, keeping, per unique stationId,
+ * the record with the greatest `capturedAt` (string compare, same rule as
+ * `build-dataset.ts`'s `dedupeByStationId`). This ensures baseline records
+ * from prior runs are preserved in order, with only the freshest capture
+ * per station.
+ */
+function dedupeByStationId(records: RawOutletRecord[]): RawOutletRecord[] {
+  const byId = new Map<string, RawOutletRecord>();
+  for (const rec of records) {
+    const existing = byId.get(rec.stationId);
+    if (!existing || rec.capturedAt > existing.capturedAt) {
+      byId.set(rec.stationId, rec);
+    }
+  }
+  return [...byId.values()];
+}
+
+/**
  * Run one `Provider` end-to-end: discover -> filter already-done -> process
  * via a concurrent dynamic queue -> write `{slug}-raw.jsonl` /
  * `{slug}-worklog.jsonl` (+ a `{slug}-progress.txt`). Safe to re-run: only
@@ -229,6 +279,21 @@ export async function runProvider(provider: Provider, opts: RunProviderOptions):
 
   const alreadyDone = await loadAlreadyDone(workLogPath, maxAgeMs, Date.parse(now()));
   const queue = allUnits.filter((u) => !alreadyDone.has(u.id));
+
+  // ── SEED baseline records from prior runs into the raw file ──
+  // This ensures resumable runs ACCUMULATE onto prior data instead of
+  // replacing it. We load the baseline fully into memory BEFORE writing
+  // rawPath, since the baseline source might BE rawPath (uncompressed).
+  // Seeding is separate from processing — these records are NOT counted in
+  // the run's recordsWritten/okCount/processedThisRun counters.
+  const baselineRecords = await readBaselineRawJsonl(rawPath);
+  const dedupedBaseline = dedupeByStationId(baselineRecords);
+  if (dedupedBaseline.length > 0) {
+    const baselineContent = dedupedBaseline.map((r) => JSON.stringify(r)).join("\n") + "\n";
+    await writeFile(rawPath, baselineContent, "utf-8");
+    console.log(`[${provider.slug}-provider] seeded ${dedupedBaseline.length} baseline records`);
+  }
+
   console.log(
     `[${provider.slug}-provider] ${allUnits.length} total units, ${alreadyDone.size} already done, ${queue.length} pending — concurrency=${concurrency}`,
   );
