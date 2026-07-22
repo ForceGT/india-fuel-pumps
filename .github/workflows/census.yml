@@ -90,6 +90,9 @@ jobs:
           key: worklog-hpcl-${{ github.run_id }}
           restore-keys: worklog-hpcl-
 
+      # The census ACCUMULATES onto the committed baseline: checkout provides
+      # output/hpcl-raw.jsonl.gz, runProvider seeds from it, so partial runs no
+      # longer collapse the published dataset.
       - name: Run HPCL census
         env:
           HPCL_CENSUS_CONCURRENCY: ${{ inputs.concurrency || '12' }}
@@ -99,7 +102,12 @@ jobs:
 
       - name: Compress HPCL raw output
         if: always()
-        run: gzip -f output/hpcl-raw.jsonl
+        run: |
+          if [ -f output/hpcl-raw.jsonl ]; then
+            gzip -f output/hpcl-raw.jsonl
+          else
+            echo "No new raw output produced (all units already done or census skipped)"
+          fi
 
       # Save the worklog even if the census job failed/was killed so the NEXT
       # run can resume from where this one left off.
@@ -148,6 +156,9 @@ jobs:
           key: worklog-iocl-${{ github.run_id }}
           restore-keys: worklog-iocl-
 
+      # The census ACCUMULATES onto the committed baseline: checkout provides
+      # output/iocl-raw.jsonl.gz, runProvider seeds from it, so partial runs no
+      # longer collapse the published dataset.
       - name: Run IOCL census
         env:
           IOCL_CENSUS_CONCURRENCY: ${{ inputs.concurrency || '12' }}
@@ -157,7 +168,12 @@ jobs:
 
       - name: Compress IOCL raw output
         if: always()
-        run: gzip -f output/iocl-raw.jsonl
+        run: |
+          if [ -f output/iocl-raw.jsonl ]; then
+            gzip -f output/iocl-raw.jsonl
+          else
+            echo "No new raw output produced (all units already done or census skipped)"
+          fi
 
       - name: Save IOCL worklog
         if: always()
@@ -218,6 +234,9 @@ jobs:
           key: worklog-bpcl-${{ github.run_id }}
           restore-keys: worklog-bpcl-
 
+      # The census ACCUMULATES onto the committed baseline: checkout provides
+      # output/bpcl-raw.jsonl.gz, runProvider seeds from it, so partial runs no
+      # longer collapse the published dataset.
       - name: Run BPCL census
         env:
           BPCL_CENSUS_CONCURRENCY: ${{ inputs.concurrency || '10' }}
@@ -320,6 +339,57 @@ jobs:
       - name: Build geohash-sharded dataset
         id: build
         run: npm run build-dataset
+
+      # Guard against dataset collapse: if a resumed/partial run scraped fewer
+      # outlets than the previous baseline for a brand, fail the publish to
+      # prevent silently rolling back the published dataset.
+      - name: Guard against dataset collapse
+        if: >-
+          github.event_name == 'schedule' ||
+          inputs.publish_dataset == 'true'
+        run: |
+          python3 << 'EOF'
+          import json
+          import sys
+
+          try:
+              with open('dataset/release-stats.json') as f:
+                  stats = json.load(f)
+          except FileNotFoundError:
+              print("release-stats.json not found — skipping collapse guard")
+              sys.exit(0)
+          except json.JSONDecodeError:
+              print("release-stats.json is invalid JSON — skipping collapse guard")
+              sys.exit(0)
+
+          previous = stats.get('previous')
+          if previous is None:
+              print("no previous baseline — skipping collapse guard")
+              sys.exit(0)
+
+          current = stats.get('current', {})
+          prev_brands = previous.get('brands', {})
+          curr_brands = current.get('brands', {})
+
+          collapsed = []
+          for brand in ['hpcl', 'iocl', 'bpcl']:
+              prev_count = prev_brands.get(brand, 0)
+              curr_count = curr_brands.get(brand, 0)
+              if prev_count > 1000 and curr_count < prev_count * 0.5:
+                  collapsed.append(f"{brand}: {prev_count} -> {curr_count}")
+
+          if collapsed:
+              print("COLLAPSE DETECTED:")
+              for item in collapsed:
+                  print(f"  {item}")
+              print()
+              print("This looks like a resume/scrape failure. The run is being failed")
+              print("to protect the published dataset. Check the census logs above.")
+              sys.exit(1)
+          else:
+              print("collapse guard passed")
+              sys.exit(0)
+          EOF
 
       # ── Job summary (always visible in the Actions UI) ──
       - name: Write job summary

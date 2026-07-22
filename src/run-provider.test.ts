@@ -17,13 +17,14 @@
  * output files) since this end-to-end wiring didn't exist as a single unit
  * before.
  */
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import type { Provider, ProcessResult, WorkUnit } from "./provider.js";
+import type { RawOutletRecord } from "./types.js";
 import { computeDoneWorkUnitIds, runDynamicQueue, runProvider } from "./run-provider.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -341,5 +342,105 @@ describe("runProvider (integration)", () => {
     const workLogContent = await readFile(result.workLogPath, "utf-8");
     const ids = workLogContent.trim().split("\n").map((l) => JSON.parse(l).workUnitId);
     expect(ids.sort()).toEqual(["child", "parent"]);
+  });
+
+  it("accumulates baseline records from prior runs and dedupes by stationId keeping the newest capturedAt", async () => {
+    tmpDir = mkdtempSync(path.join(tmpdir(), "run-provider-test-"));
+
+    // Create a fake provider that discovers only "u2" and emits a newer record for it.
+    const newU2Record: RawOutletRecord = {
+      schemaVersion: 1,
+      brand: "HPCL",
+      outletId: "u2",
+      stationId: "u2",
+      sourceUrl: null,
+      capturedAt: "2026-07-18T00:00:00.000Z", // newer
+      name: "Station u2 (new)",
+      address: null,
+      city: null,
+      state: null,
+      pincode: null,
+      lat: 0,
+      lng: 0,
+      geohash: "x",
+      hours: null,
+      contact: null,
+      mapsLink: null,
+      products: [],
+    };
+    const provider = makeFakeProvider([{ id: "u2", payload: "u2" }], () => ({
+      status: "ok",
+      records: [newU2Record],
+    }));
+
+    // Pre-write a baseline raw file (using the provider's slug) with two records:
+    // one for stationId "u1" (preserved from baseline), and one for stationId "u2"
+    // with an old timestamp (should be deduped and replaced by the newer one).
+    const oldU2Record: RawOutletRecord = {
+      schemaVersion: 1,
+      brand: "HPCL",
+      outletId: "u2",
+      stationId: "u2",
+      sourceUrl: null,
+      capturedAt: "2026-07-17T00:00:00.000Z", // older
+      name: "Station u2 (old)",
+      address: null,
+      city: null,
+      state: null,
+      pincode: null,
+      lat: 0,
+      lng: 0,
+      geohash: "x",
+      hours: null,
+      contact: null,
+      mapsLink: null,
+      products: [],
+    };
+    const u1BaselineRecord: RawOutletRecord = {
+      schemaVersion: 1,
+      brand: "HPCL",
+      outletId: "u1",
+      stationId: "u1",
+      sourceUrl: null,
+      capturedAt: "2026-07-17T00:00:00.000Z",
+      name: "Station u1",
+      address: null,
+      city: null,
+      state: null,
+      pincode: null,
+      lat: 0,
+      lng: 0,
+      geohash: "y",
+      hours: null,
+      contact: null,
+      mapsLink: null,
+      products: [],
+    };
+    const rawPath = path.join(tmpDir, `${provider.slug}-raw.jsonl`);
+    writeFileSync(rawPath, [u1BaselineRecord, oldU2Record].map((r) => JSON.stringify(r)).join("\n") + "\n", "utf-8");
+
+    const result = await runProvider(provider, { outputDir: tmpDir, now: () => "2026-07-18T00:00:00.000Z" });
+    expect(result.processedThisRun).toBe(1); // only u2 was processed
+    expect(result.recordsWritten).toBe(1); // only the new u2 record from processing
+    expect(existsSync(rawPath)).toBe(true);
+
+    // Parse the resulting raw file: should contain u1 (from baseline) and TWO
+    // u2 records (one old from baseline, one new from processing) — raw files
+    // contain all records, deduplication happens later in build-dataset.ts.
+    const rawContent = await readFile(rawPath, "utf-8");
+    const records = rawContent.trim().split("\n").map((l) => JSON.parse(l) as RawOutletRecord);
+    const uniqueStationIds = [...new Set(records.map((r) => r.stationId))].sort();
+    expect(uniqueStationIds).toEqual(["u1", "u2"]);
+
+    // Verify u1 is present (preserved from baseline).
+    const u1Records = records.filter((r) => r.stationId === "u1");
+    expect(u1Records).toHaveLength(1);
+    expect(u1Records[0]!.name).toBe("Station u1");
+
+    // Verify u2 has both old (from baseline) and new (from processing) records.
+    const u2Records = records.filter((r) => r.stationId === "u2");
+    expect(u2Records).toHaveLength(2);
+    const u2Timestamps = u2Records.map((r) => r.capturedAt).sort();
+    expect(u2Timestamps).toEqual(["2026-07-17T00:00:00.000Z", "2026-07-18T00:00:00.000Z"]);
   });
 });
