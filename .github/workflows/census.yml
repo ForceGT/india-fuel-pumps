@@ -4,9 +4,12 @@ name: Census
 # all-pumps dataset published to dataset/ and committed back to the repo.
 #
 # Schedule:
-#   Every 3 days at 02:07 UTC — stations older than 3 days are re-scraped,
-#   so freshness never exceeds ~3 days (well within the 14-day stale threshold
-#   used by E0-Finder's frontend).
+#   Daily at 02:07 UTC. Each run only re-scrapes units older than
+#   MAX_AGE_DAYS (3) — see runProvider's resumability gate — so a daily
+#   cadence is cheap (most units are skipped as already-fresh) yet keeps
+#   freshness well within the 14-day stale threshold used by E0-Finder's
+#   frontend, and recovers from a failed run the next day instead of
+#   waiting for the next multi-day slot.
 #
 # Partial-failure tolerant: if a brand fails, the publish job still runs for
 # the brands that succeeded. A GitHub issue is auto-filed for failed brands.
@@ -18,7 +21,7 @@ name: Census
 
 on:
   schedule:
-    - cron: '7 2 */3 * *'   # every 3 days at 02:07 UTC
+    - cron: '7 2 * * *'   # daily at 02:07 UTC
   workflow_dispatch:
     inputs:
       brands:
