@@ -1,6 +1,6 @@
 name: Census
 
-# Five-brand parallel census (HPCL, IOCL, BPCL, Jio-bp, Nayara) → geohash-sharded
+# Six-brand parallel census (HPCL, IOCL, BPCL, Jio-bp, Nayara, Shell) → geohash-sharded
 # all-pumps dataset published to dataset/ and committed back to the repo.
 #
 # Schedule:
@@ -25,9 +25,9 @@ on:
   workflow_dispatch:
     inputs:
       brands:
-        description: 'Brands to census — comma-separated subset of: hpcl,iocl,bpcl,jiobp,nayara'
+        description: 'Brands to census — comma-separated subset of: hpcl,iocl,bpcl,jiobp,nayara,shell'
         required: false
-        default: 'hpcl,iocl,bpcl,jiobp,nayara'
+        default: 'hpcl,iocl,bpcl,jiobp,nayara,shell'
       hpcl_limit:
         description: 'Max HPCL outlets this run (empty = no limit)'
         required: false
@@ -46,6 +46,10 @@ on:
         default: ''
       nayara_limit:
         description: 'Max Nayara units this run (empty = no limit)'
+        required: false
+        default: ''
+      shell_limit:
+        description: 'Max Shell outlets this run (empty = no limit)'
         required: false
         default: ''
       concurrency:
@@ -424,12 +428,80 @@ jobs:
           if-no-files-found: warn
 
   # ════════════════════════════════════════════════════════════════════════════
+  # Shell
+  # ════════════════════════════════════════════════════════════════════════════
+  census-shell:
+    name: Census — Shell
+    runs-on: ubuntu-latest
+    # Shell's whole national census is ~342 outlets — a bbox-walk discovery
+    # (dozens of requests) plus one detail request per outlet (see
+    # docs/shell-api.md). No rate limiting observed. The 60min cap is
+    # generous headroom, not an expectation.
+    timeout-minutes: 60
+    if: >-
+      github.event_name == 'schedule' ||
+      contains(inputs.brands, 'shell')
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Restore Shell worklog
+        uses: actions/cache/restore@v6
+        with:
+          path: output/shell-worklog.jsonl
+          key: worklog-shell-${{ github.run_id }}
+          restore-keys: worklog-shell-
+
+      # The census ACCUMULATES onto the committed baseline: checkout provides
+      # output/shell-raw.jsonl.gz, runProvider seeds from it, so partial runs no
+      # longer collapse the published dataset. Baseline records not refreshed
+      # within STALE_AFTER_DAYS are pruned, so closed/removed stations age out.
+      - name: Run Shell census
+        env:
+          SHELL_CENSUS_CONCURRENCY: ${{ inputs.concurrency || '5' }}
+          SHELL_CENSUS_LIMIT: ${{ inputs.shell_limit }}
+          SHELL_CENSUS_MAX_AGE_DAYS: '3'
+          SHELL_CENSUS_STALE_AFTER_DAYS: '14'
+        run: npm run census:shell
+
+      - name: Compress Shell raw output
+        if: always()
+        run: |
+          if [ -f output/shell-raw.jsonl ]; then
+            gzip -f output/shell-raw.jsonl
+          else
+            echo "No new raw output produced (all units already done or census skipped)"
+          fi
+
+      - name: Save Shell worklog
+        if: always()
+        uses: actions/cache/save@v6
+        with:
+          path: output/shell-worklog.jsonl
+          key: worklog-shell-${{ github.run_id }}
+
+      - name: Upload Shell raw output
+        uses: actions/upload-artifact@v7
+        with:
+          name: shell-raw
+          path: output/shell-raw.jsonl.gz
+          retention-days: 2
+          if-no-files-found: warn
+
+  # ════════════════════════════════════════════════════════════════════════════
   # Publish — merges raw outputs, builds geohash-sharded dataset, commits,
   # and creates a GitHub Release with a human-readable diff.
   # ════════════════════════════════════════════════════════════════════════════
   publish:
     name: Publish dataset
-    needs: [census-hpcl, census-iocl, census-bpcl, census-jiobp, census-nayara]
+    needs: [census-hpcl, census-iocl, census-bpcl, census-jiobp, census-nayara, census-shell]
     runs-on: ubuntu-latest
     # Allow publish even when some census jobs failed or are skipped (BPCL may
     # be skipped when Tailscale isn't configured yet — the publish job uses the
@@ -442,7 +514,8 @@ jobs:
       (needs.census-bpcl.result == 'success' || needs.census-bpcl.result == 'failure' || needs.census-bpcl.result == 'skipped') &&
       (needs.census-jiobp.result == 'success' || needs.census-jiobp.result == 'failure' || needs.census-jiobp.result == 'skipped') &&
       (needs.census-nayara.result == 'success' || needs.census-nayara.result == 'failure' || needs.census-nayara.result == 'skipped') &&
-      (needs.census-hpcl.result == 'success' || needs.census-iocl.result == 'success' || needs.census-bpcl.result == 'success' || needs.census-jiobp.result == 'success' || needs.census-nayara.result == 'success')
+      (needs.census-shell.result == 'success' || needs.census-shell.result == 'failure' || needs.census-shell.result == 'skipped') &&
+      (needs.census-hpcl.result == 'success' || needs.census-iocl.result == 'success' || needs.census-bpcl.result == 'success' || needs.census-jiobp.result == 'success' || needs.census-nayara.result == 'success' || needs.census-shell.result == 'success')
 
     steps:
       - uses: actions/checkout@v7
@@ -473,7 +546,7 @@ jobs:
           STALE_AFTER_DAYS=3
           echo "STALE_AFTER_DAYS=$STALE_AFTER_DAYS" >> "$GITHUB_ENV"
 
-          for brand in hpcl iocl bpcl jiobp nayara; do
+          for brand in hpcl iocl bpcl jiobp nayara shell; do
             FILE="output/${brand}-raw.jsonl.gz"
             if [ ! -f "$FILE" ]; then
               echo "${brand}_stale=true" >> "$GITHUB_OUTPUT"
@@ -525,7 +598,7 @@ jobs:
           curr_brands = current.get('brands', {})
 
           collapsed = []
-          for brand in ['hpcl', 'iocl', 'bpcl', 'jiobp', 'nayara']:
+          for brand in ['hpcl', 'iocl', 'bpcl', 'jiobp', 'nayara', 'shell']:
               prev_count = prev_brands.get(brand, 0)
               curr_count = curr_brands.get(brand, 0)
               if prev_count > 1000 and curr_count < prev_count * 0.5:
@@ -558,6 +631,7 @@ jobs:
             echo "| BPCL  | ${{ needs.census-bpcl.result }} | $(zcat output/bpcl-raw.jsonl.gz 2>/dev/null | wc -l || echo 0) | ${{ steps.freshness.outputs.bpcl_age }} |"
             echo "| Jio-bp | ${{ needs.census-jiobp.result }} | $(zcat output/jiobp-raw.jsonl.gz 2>/dev/null | wc -l || echo 0) | ${{ steps.freshness.outputs.jiobp_age }} |"
             echo "| Nayara | ${{ needs.census-nayara.result }} | $(zcat output/nayara-raw.jsonl.gz 2>/dev/null | wc -l || echo 0) | ${{ steps.freshness.outputs.nayara_age }} |"
+            echo "| Shell | ${{ needs.census-shell.result }} | $(zcat output/shell-raw.jsonl.gz 2>/dev/null | wc -l || echo 0) | ${{ steps.freshness.outputs.shell_age }} |"
             echo ""
 
             # Emit staleness warnings
@@ -567,6 +641,7 @@ jobs:
             [ "${{ steps.freshness.outputs.bpcl_stale }}" = "true" ] && STALE="$STALE BPCL"
             [ "${{ steps.freshness.outputs.jiobp_stale }}" = "true" ] && STALE="$STALE Jio-bp"
             [ "${{ steps.freshness.outputs.nayara_stale }}" = "true" ] && STALE="$STALE Nayara"
+            [ "${{ steps.freshness.outputs.shell_stale }}" = "true" ] && STALE="$STALE Shell"
             if [ -n "$STALE" ]; then
               echo "> ⚠️ **Stale data used:**$STALE — the scraper hasn't refreshed these brands within the ${STALE_AFTER_DAYS}-day window. The published dataset uses the last committed raw data. This will age further with each daily E0-Finder deploy until the next successful scrape."
               echo ""
@@ -593,7 +668,7 @@ jobs:
 
           # output/ is gitignored — force-add the raw JSONL so they persist
           # across runs and the next scheduled run has a complete baseline.
-          for f in output/hpcl-raw.jsonl.gz output/iocl-raw.jsonl.gz output/bpcl-raw.jsonl.gz output/jiobp-raw.jsonl.gz output/nayara-raw.jsonl.gz; do
+          for f in output/hpcl-raw.jsonl.gz output/iocl-raw.jsonl.gz output/bpcl-raw.jsonl.gz output/jiobp-raw.jsonl.gz output/nayara-raw.jsonl.gz output/shell-raw.jsonl.gz; do
             if [ -f "$f" ]; then git add -f "$f"; fi
           done
 
@@ -628,7 +703,7 @@ jobs:
   # ════════════════════════════════════════════════════════════════════════════
   notify:
     name: Alert on failure
-    needs: [census-hpcl, census-iocl, census-bpcl, census-jiobp, census-nayara]
+    needs: [census-hpcl, census-iocl, census-bpcl, census-jiobp, census-nayara, census-shell]
     runs-on: ubuntu-latest
     if: >-
       always() &&
@@ -636,7 +711,8 @@ jobs:
        needs.census-iocl.result == 'failure' ||
        needs.census-bpcl.result == 'failure' ||
        needs.census-jiobp.result == 'failure' ||
-       needs.census-nayara.result == 'failure')
+       needs.census-nayara.result == 'failure' ||
+       needs.census-shell.result == 'failure')
     permissions:
       issues: write
 
@@ -652,6 +728,7 @@ jobs:
             if ('${{ needs.census-bpcl.result }}' === 'failure') failed.push('BPCL');
             if ('${{ needs.census-jiobp.result }}' === 'failure') failed.push('Jio-bp');
             if ('${{ needs.census-nayara.result }}' === 'failure') failed.push('Nayara');
+            if ('${{ needs.census-shell.result }}' === 'failure') failed.push('Shell');
 
             const title = `Census failure — ${failed.join(', ')} — ${new Date().toISOString().slice(0, 10)}`;
 
@@ -704,7 +781,7 @@ jobs:
   # ════════════════════════════════════════════════════════════════════════════
   resolve:
     name: Resolve recovered brands
-    needs: [census-hpcl, census-iocl, census-bpcl, census-jiobp, census-nayara]
+    needs: [census-hpcl, census-iocl, census-bpcl, census-jiobp, census-nayara, census-shell]
     runs-on: ubuntu-latest
     if: always()
     permissions:
@@ -722,6 +799,7 @@ jobs:
             if ('${{ needs.census-bpcl.result }}' === 'success') succeeded.push('BPCL');
             if ('${{ needs.census-jiobp.result }}' === 'success') succeeded.push('Jio-bp');
             if ('${{ needs.census-nayara.result }}' === 'success') succeeded.push('Nayara');
+            if ('${{ needs.census-shell.result }}' === 'success') succeeded.push('Shell');
 
             if (succeeded.length === 0) {
               console.log('No brands succeeded — nothing to resolve.');
@@ -743,7 +821,7 @@ jobs:
                 .replace('Census failure — ', '')
                 .split(' — ')[0]
                 .split(', ')
-                .filter(b => ['HPCL', 'IOCL', 'BPCL', 'Jio-bp', 'Nayara'].includes(b));
+                .filter(b => ['HPCL', 'IOCL', 'BPCL', 'Jio-bp', 'Nayara', 'Shell'].includes(b));
 
               const stillFailing = titleBrands.filter(b => !succeeded.includes(b));
 
