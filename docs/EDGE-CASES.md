@@ -73,7 +73,7 @@ git add -f output/bpcl-raw.jsonl.gz && git push
 
 The `index.json` and `shards/` only contain data from the brands that succeeded. Counts for missing brands are omitted (not set to 0).
 
-**Fallout:** The next scheduled run (every 3 days) retries the failed brand automatically.
+**Fallout:** The next scheduled run (daily) retries the failed brand automatically.
 
 ---
 
@@ -143,6 +143,32 @@ Shard files are not compressed server-side -- they are served via jsDelivr which
 
 ---
 
+## Jio-bp: discover() fails silently if the index call fails
+
+**Symptom:** A Jio-bp census run reports `0 total units, 0 already done, 0 pending` and finishes instantly with `ok=0 records=0` — no errors thrown, no crash, but also no data.
+
+**Root cause:** Unlike HPCL/IOCL/BPCL, Jio-bp's `discover()` depends on a SINGLE upstream call (`FetchROMaster`, the national station index) before it can yield any work units at all. If that one call fails — network error, non-OK HTTP status, or a response shape `parseROMasterResponse` can't recognize — `discover()` logs the failure and returns with zero units yielded, rather than throwing. `runProvider` then sees an empty unit list and reports a normal-looking "done" run with everything at zero.
+
+**Diagnosis:** Check the job log for `[jiobp-provider] discover: ROMaster fetch failed HTTP {status}` or `discover: ROMaster fetch threw: {error}`. If discovery succeeded, the log instead shows `[jiobp-provider] discovered {N} stations from ROMaster index` (N should be in the low thousands).
+
+**Resolution:** Re-run — this is almost always transient (a single failed request, not a per-outlet failure that resumability could partially recover from). If it persists, the ROMaster response shape may have changed upstream; check `docs/jiobp-api.md`'s Operation 1 reference against a fresh capture.
+
+**Contrast with other brands:** HPCL/IOCL/BPCL discovery failures are per-unit (one outlet's page 404s) and don't block the rest of the census. Jio-bp's discovery is a single point of failure by design — the whole national index comes back in one API call, so there's no partial-discovery state to resume from; either the index call succeeds and the full census proceeds, or it fails and the run produces nothing.
+
+---
+
+## Jio-bp: price is the LATEST dated entry, not the first array entry
+
+**Symptom:** A station's `products[].priceInr` doesn't match the first `PriceDetails` entry in the raw API response.
+
+**Root cause:** `HistoryFuelProducts[].PriceDetails` is a dated price *history*, not a single current price — and it is not guaranteed to be in any particular order. The parser (`latestProductPrice` in `src/parsers/jiobp.ts`) picks the entry with the greatest `PriceDate` (format `"dd-MM-yyyy HH:mm:ss"`, parsed manually — `Date.parse` would misread day/month on this format). A product can legitimately show a `PriceDate` weeks old if that product's price hasn't changed recently (e.g. Diesel/CNG updating less often than Petrol).
+
+**Also:** `ProductPrice` is a space-padded string (`"     111.28"`) — trimmed and parsed to a number. If unparseable, non-numeric, or non-positive, `priceInr` is `null` but the product name is still kept (same "keep the card, null the price" convention as HPCL/IOCL).
+
+**Prevention:** Don't index into `PriceDetails[0]` when reading this dataset's raw source, and don't assume every product in `products[]` has a recent price — check `capturedAt` (when we scraped it) rather than assuming freshness from price presence alone.
+
+---
+
 ## Discovery URL cache staleness (HPCL/IOCL)
 
 **Symptom:** A new pump opened weeks ago but still isn't in the dataset.
@@ -151,4 +177,4 @@ Shard files are not compressed server-side -- they are served via jsDelivr which
 
 **Resolution:** Use `FRESH=1` periodically (the CI run's `maxAgeDays: 3` handles this via worklog staleness, but the discovery cache is separate). A full re-census clears the discovery cache via `FRESH=1` logic.
 
-**Schedule:** every 3 days at 02:07 UTC. Each run resumes from the worklog — units scraped within 3 days are skipped, older/stale units are re-processed.
+**Schedule:** daily at 02:07 UTC. Each run resumes from the worklog — units scraped within `maxAgeDays` (3 days) are skipped, older/stale units are re-processed.

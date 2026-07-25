@@ -1,5 +1,5 @@
 /**
- * Reads `output/{hpcl,iocl,bpcl}-raw.jsonl`, dedupes each brand's records by
+ * Reads `output/{hpcl,iocl,bpcl,jiobp}-raw.jsonl`, dedupes each brand's records by
  * `stationId` (latest `capturedAt` wins), merges all brands, groups by
  * 3-character geohash prefix, and writes content-hashed shard files to
  * `dataset/shards/` plus a `dataset/index.json` manifest.
@@ -36,7 +36,7 @@ const DATASET_DIR = path.join(__dirname, "../dataset");
 const SHARDS_DIR = path.join(DATASET_DIR, "shards");
 const SHARD_PREFIX_LENGTH = 3;
 
-const BRANDS = ["hpcl", "iocl", "bpcl"] as const;
+const BRANDS = ["hpcl", "iocl", "bpcl", "jiobp"] as const;
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
