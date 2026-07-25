@@ -20,6 +20,7 @@
  * No grade opinion anywhere here — HistoryFuelProducts' ProductName is
  * captured verbatim per parseFindFuelStationResponse.
  */
+import { createHash } from "node:crypto";
 import { geohashEncode } from "../geo.js";
 import { makeStationId } from "../id.js";
 import { buildRawRecord, type OutletMetadata } from "../lib/raw-record.js";
@@ -82,7 +83,8 @@ export function createJiobpProvider(config: JiobpProviderConfig = {}): Provider 
         const stateByCode: Record<string, string | null> = {};
         for (const e of batch) stateByCode[e.fuelStationCode] = e.state;
         const payload: JiobpUnitPayload = { codes, stateByCode };
-        yield { id: `batch-${codes[0]}`, payload };
+        const batchHash = createHash("sha1").update(codes.slice().sort().join(",")).digest("hex").slice(0, 12);
+        yield { id: `batch-${batchHash}`, payload };
       }
     },
 
@@ -103,11 +105,11 @@ export function createJiobpProvider(config: JiobpProviderConfig = {}): Provider 
         const isSuccessResponse = findFuelStation?.["ResponseFlag"] === "S";
         const stations = parseFindFuelStationResponse(json);
         if (stations.length === 0) {
-          if (!isSuccessResponse) {
-            logErr("parsedNull", `non-success ResponseFlag for unit ${unit.id}`);
-            return { status: "parsedNull", detail: "API response was not ResponseFlag S (or FuelStations array was absent/empty)", records: [] };
-          }
-          return { status: "empty", records: [] };
+          const detail = isSuccessResponse
+            ? "FindFuelStation returned zero stations for a batch of known-valid codes from our own ROMaster index — unexpected, retrying rather than treating as permanently empty"
+            : "API response was not ResponseFlag S — retrying rather than treating as permanently empty";
+          logErr("parsedNull", `${isSuccessResponse ? "unexpected empty result" : "non-success ResponseFlag"} for unit ${unit.id}`);
+          return { status: "parsedNull", detail, records: [] };
         }
 
         const now = ctx.now();

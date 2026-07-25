@@ -125,8 +125,12 @@ export interface JiobpStationDetail {
  * `PriceDetails` is a dated history per product; the CURRENT price is the
  * entry with the latest `PriceDate` (format "dd-MM-yyyy HH:mm:ss" — NOT
  * ISO, do not use `Date.parse` directly on it, it will misread day/month).
- * Returns null if there are no entries or none have a parseable positive
- * price. Never throws.
+ * If no entry has a parseable `PriceDate`, falls back to the array's first
+ * entry (an arbitrary but defensible choice — better than dropping a
+ * genuinely present price to null just because its date didn't parse).
+ * Returns null only if `priceDetails` is empty/not an array, or the
+ * selected entry's `ProductPrice` is missing/unparseable/non-positive.
+ * Never throws.
  */
 function latestProductPrice(priceDetails: unknown): number | null {
   if (!Array.isArray(priceDetails) || priceDetails.length === 0) return null;

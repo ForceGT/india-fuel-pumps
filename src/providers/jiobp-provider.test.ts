@@ -166,7 +166,7 @@ describe("createJiobpProvider().process", () => {
     expect(result.records[0]!.state).toBe(null);
   });
 
-  it("empty: FindFuelStation returns zero stations", async () => {
+  it("parsedNull: FindFuelStation returns zero stations even with ResponseFlag S (never permanently empty for a batch of known-valid codes)", async () => {
     const provider = createJiobpProvider();
     const unit: WorkUnit = {
       id: "batch-0",
@@ -194,7 +194,7 @@ describe("createJiobpProvider().process", () => {
 
     const result = await provider.process(unit, ctx);
 
-    expect(result.status).toBe("empty");
+    expect(result.status).toBe("parsedNull");
     expect(result.records).toEqual([]);
   });
 
@@ -386,6 +386,50 @@ describe("createJiobpProvider().discover", () => {
     expect(units[0]!.id.length).toBeGreaterThan(0);
     expect(typeof units[1]!.id).toBe("string");
     expect(units[1]!.id.length).toBeGreaterThan(0);
+  });
+
+  it("batch id is derived from the FULL set of codes in the batch, not just the first one (so index drift across runs can't produce a same-id-different-content collision)", async () => {
+    const mockROMasterResponseA = {
+      CustomerResponse: {
+        MasterData: {
+          FetchROMaster: {
+            ROMasterData: [
+              { FuelStationCode: "A1", Lattitude: "1", Longitude: "1", State: "S1" },
+              { FuelStationCode: "A2", Lattitude: "2", Longitude: "2", State: "S2" },
+            ],
+          },
+        },
+      },
+    };
+    // Same leading code "A1", but a DIFFERENT second code — simulates index drift
+    // where a batch's first code stays the same but its other members change.
+    const mockROMasterResponseB = {
+      CustomerResponse: {
+        MasterData: {
+          FetchROMaster: {
+            ROMasterData: [
+              { FuelStationCode: "A1", Lattitude: "1", Longitude: "1", State: "S1" },
+              { FuelStationCode: "Z9", Lattitude: "9", Longitude: "9", State: "S9" },
+            ],
+          },
+        },
+      },
+    };
+
+    const fetchA = (async () => ({ ok: true, status: 200, json: async () => mockROMasterResponseA })) as unknown as typeof fetch;
+    const fetchB = (async () => ({ ok: true, status: 200, json: async () => mockROMasterResponseB })) as unknown as typeof fetch;
+
+    const providerA = createJiobpProvider({ batchSize: 2, fetchImpl: fetchA });
+    const providerB = createJiobpProvider({ batchSize: 2, fetchImpl: fetchB });
+
+    const unitsA: WorkUnit[] = [];
+    for await (const unit of providerA.discover({})) unitsA.push(unit);
+    const unitsB: WorkUnit[] = [];
+    for await (const unit of providerB.discover({})) unitsB.push(unit);
+
+    // Same first code (A1) in both batches, but different second code (A2 vs Z9) —
+    // the batch id must differ, proving it's not derived from the first code alone.
+    expect(unitsA[0]!.id).not.toBe(unitsB[0]!.id);
   });
 
   it("discover() throws if the ROMaster fetch fails (so a broken discovery call fails the job loudly instead of silently scraping nothing)", async () => {

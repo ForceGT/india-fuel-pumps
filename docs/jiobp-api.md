@@ -43,7 +43,7 @@ Identity is carried **inside the body**, not in headers:
 
 | Field          | Example                                  | Notes |
 |----------------|------------------------------------------|-------|
-| `MobileNumber` | `9028833886`                             | The logged-in mobile number. |
+| `MobileNumber` | `9000000000`                             | The logged-in mobile number (any well-formed 10-digit number — see below; scraper uses a synthetic placeholder). |
 | `TokenNumber`  | `9a5848e6-8d58-7177-3da6-fb46fa8f7f4c`   | Session UUID minted at login. Rotates per response. |
 | `IMEINo`       | `AE3A.240806.043`                        | Device build id (any stable string). |
 
@@ -69,7 +69,7 @@ coordinates + state. This is the discovery/index call.
   "CustomerRequest": {
     "ROMaster": {
       "IMEINo": "AE3A.240806.043",
-      "MobileNumber": "9028833886",
+      "MobileNumber": "9000000000",
       "TokenNumber": "9a5848e6-8d58-7177-3da6-fb46fa8f7f4c"
     }
   }
