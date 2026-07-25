@@ -1,6 +1,6 @@
 name: Census
 
-# Three-brand parallel census (HPCL, IOCL, BPCL) → geohash-sharded
+# Five-brand parallel census (HPCL, IOCL, BPCL, Jio-bp, Nayara) → geohash-sharded
 # all-pumps dataset published to dataset/ and committed back to the repo.
 #
 # Schedule:
@@ -25,9 +25,9 @@ on:
   workflow_dispatch:
     inputs:
       brands:
-        description: 'Brands to census — comma-separated subset of: hpcl,iocl,bpcl'
+        description: 'Brands to census — comma-separated subset of: hpcl,iocl,bpcl,jiobp,nayara'
         required: false
-        default: 'hpcl,iocl,bpcl'
+        default: 'hpcl,iocl,bpcl,jiobp,nayara'
       hpcl_limit:
         description: 'Max HPCL outlets this run (empty = no limit)'
         required: false
@@ -38,6 +38,14 @@ on:
         default: ''
       bpcl_limit:
         description: 'Max BPCL outlets this run (empty = no limit)'
+        required: false
+        default: ''
+      jiobp_limit:
+        description: 'Max Jio-bp batches this run (empty = no limit)'
+        required: false
+        default: ''
+      nayara_limit:
+        description: 'Max Nayara units this run (empty = no limit)'
         required: false
         default: ''
       concurrency:
@@ -282,12 +290,146 @@ jobs:
           if-no-files-found: warn
 
   # ════════════════════════════════════════════════════════════════════════════
+  # Jio-bp
+  # ════════════════════════════════════════════════════════════════════════════
+  census-jiobp:
+    name: Census — Jio-bp
+    runs-on: ubuntu-latest
+    # Jio-bp's whole national census is only ~dozens of batched requests
+    # (≈2294 stations / batchSize), so this finishes in minutes even at low
+    # concurrency — the 60min cap is generous headroom, not an expectation.
+    timeout-minutes: 60
+    if: >-
+      github.event_name == 'schedule' ||
+      contains(inputs.brands, 'jiobp')
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Restore Jio-bp worklog
+        uses: actions/cache/restore@v6
+        with:
+          path: output/jiobp-worklog.jsonl
+          key: worklog-jiobp-${{ github.run_id }}
+          restore-keys: worklog-jiobp-
+
+      # The census ACCUMULATES onto the committed baseline: checkout provides
+      # output/jiobp-raw.jsonl.gz, runProvider seeds from it, so partial runs no
+      # longer collapse the published dataset. Baseline records not refreshed
+      # within STALE_AFTER_DAYS are pruned, so closed/removed stations age out.
+      - name: Run Jio-bp census
+        env:
+          JIOBP_CENSUS_CONCURRENCY: ${{ inputs.concurrency || '2' }}
+          JIOBP_CENSUS_LIMIT: ${{ inputs.jiobp_limit }}
+          JIOBP_CENSUS_MAX_AGE_DAYS: '3'
+          JIOBP_CENSUS_STALE_AFTER_DAYS: '14'
+        run: npm run census:jiobp
+
+      - name: Compress Jio-bp raw output
+        if: always()
+        run: |
+          if [ -f output/jiobp-raw.jsonl ]; then
+            gzip -f output/jiobp-raw.jsonl
+          else
+            echo "No new raw output produced (all units already done or census skipped)"
+          fi
+
+      - name: Save Jio-bp worklog
+        if: always()
+        uses: actions/cache/save@v6
+        with:
+          path: output/jiobp-worklog.jsonl
+          key: worklog-jiobp-${{ github.run_id }}
+
+      - name: Upload Jio-bp raw output
+        uses: actions/upload-artifact@v7
+        with:
+          name: jiobp-raw
+          path: output/jiobp-raw.jsonl.gz
+          retention-days: 2
+          if-no-files-found: warn
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # Nayara
+  # ════════════════════════════════════════════════════════════════════════════
+  census-nayara:
+    name: Census — Nayara
+    runs-on: ubuntu-latest
+    # Nayara's whole national census is only ~2 large-radius requests (see
+    # docs/nayara-api.md), so this finishes in minutes — the 60min cap is
+    # generous headroom, not an expectation.
+    timeout-minutes: 60
+    if: >-
+      github.event_name == 'schedule' ||
+      contains(inputs.brands, 'nayara')
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Restore Nayara worklog
+        uses: actions/cache/restore@v6
+        with:
+          path: output/nayara-worklog.jsonl
+          key: worklog-nayara-${{ github.run_id }}
+          restore-keys: worklog-nayara-
+
+      # The census ACCUMULATES onto the committed baseline: checkout provides
+      # output/nayara-raw.jsonl.gz, runProvider seeds from it, so partial runs no
+      # longer collapse the published dataset. Baseline records not refreshed
+      # within STALE_AFTER_DAYS are pruned, so closed/removed stations age out.
+      - name: Run Nayara census
+        env:
+          NAYARA_CENSUS_CONCURRENCY: ${{ inputs.concurrency || '1' }}
+          NAYARA_CENSUS_LIMIT: ${{ inputs.nayara_limit }}
+          NAYARA_CENSUS_MAX_AGE_DAYS: '3'
+          NAYARA_CENSUS_STALE_AFTER_DAYS: '14'
+        run: npm run census:nayara
+
+      - name: Compress Nayara raw output
+        if: always()
+        run: |
+          if [ -f output/nayara-raw.jsonl ]; then
+            gzip -f output/nayara-raw.jsonl
+          else
+            echo "No new raw output produced (all units already done or census skipped)"
+          fi
+
+      - name: Save Nayara worklog
+        if: always()
+        uses: actions/cache/save@v6
+        with:
+          path: output/nayara-worklog.jsonl
+          key: worklog-nayara-${{ github.run_id }}
+
+      - name: Upload Nayara raw output
+        uses: actions/upload-artifact@v7
+        with:
+          name: nayara-raw
+          path: output/nayara-raw.jsonl.gz
+          retention-days: 2
+          if-no-files-found: warn
+
+  # ════════════════════════════════════════════════════════════════════════════
   # Publish — merges raw outputs, builds geohash-sharded dataset, commits,
   # and creates a GitHub Release with a human-readable diff.
   # ════════════════════════════════════════════════════════════════════════════
   publish:
     name: Publish dataset
-    needs: [census-hpcl, census-iocl, census-bpcl]
+    needs: [census-hpcl, census-iocl, census-bpcl, census-jiobp, census-nayara]
     runs-on: ubuntu-latest
     # Allow publish even when some census jobs failed or are skipped (BPCL may
     # be skipped when Tailscale isn't configured yet — the publish job uses the
@@ -298,7 +440,9 @@ jobs:
       (needs.census-hpcl.result == 'success' || needs.census-hpcl.result == 'failure' || needs.census-hpcl.result == 'skipped') &&
       (needs.census-iocl.result == 'success' || needs.census-iocl.result == 'failure' || needs.census-iocl.result == 'skipped') &&
       (needs.census-bpcl.result == 'success' || needs.census-bpcl.result == 'failure' || needs.census-bpcl.result == 'skipped') &&
-      (needs.census-hpcl.result == 'success' || needs.census-iocl.result == 'success' || needs.census-bpcl.result == 'success')
+      (needs.census-jiobp.result == 'success' || needs.census-jiobp.result == 'failure' || needs.census-jiobp.result == 'skipped') &&
+      (needs.census-nayara.result == 'success' || needs.census-nayara.result == 'failure' || needs.census-nayara.result == 'skipped') &&
+      (needs.census-hpcl.result == 'success' || needs.census-iocl.result == 'success' || needs.census-bpcl.result == 'success' || needs.census-jiobp.result == 'success' || needs.census-nayara.result == 'success')
 
     steps:
       - uses: actions/checkout@v7
@@ -329,7 +473,7 @@ jobs:
           STALE_AFTER_DAYS=3
           echo "STALE_AFTER_DAYS=$STALE_AFTER_DAYS" >> "$GITHUB_ENV"
 
-          for brand in hpcl iocl bpcl; do
+          for brand in hpcl iocl bpcl jiobp nayara; do
             FILE="output/${brand}-raw.jsonl.gz"
             if [ ! -f "$FILE" ]; then
               echo "${brand}_stale=true" >> "$GITHUB_OUTPUT"
@@ -381,7 +525,7 @@ jobs:
           curr_brands = current.get('brands', {})
 
           collapsed = []
-          for brand in ['hpcl', 'iocl', 'bpcl']:
+          for brand in ['hpcl', 'iocl', 'bpcl', 'jiobp', 'nayara']:
               prev_count = prev_brands.get(brand, 0)
               curr_count = curr_brands.get(brand, 0)
               if prev_count > 1000 and curr_count < prev_count * 0.5:
@@ -412,6 +556,8 @@ jobs:
             echo "| HPCL  | ${{ needs.census-hpcl.result }} | $(zcat output/hpcl-raw.jsonl.gz 2>/dev/null | wc -l || echo 0) | ${{ steps.freshness.outputs.hpcl_age }} |"
             echo "| IOCL  | ${{ needs.census-iocl.result }} | $(zcat output/iocl-raw.jsonl.gz 2>/dev/null | wc -l || echo 0) | ${{ steps.freshness.outputs.iocl_age }} |"
             echo "| BPCL  | ${{ needs.census-bpcl.result }} | $(zcat output/bpcl-raw.jsonl.gz 2>/dev/null | wc -l || echo 0) | ${{ steps.freshness.outputs.bpcl_age }} |"
+            echo "| Jio-bp | ${{ needs.census-jiobp.result }} | $(zcat output/jiobp-raw.jsonl.gz 2>/dev/null | wc -l || echo 0) | ${{ steps.freshness.outputs.jiobp_age }} |"
+            echo "| Nayara | ${{ needs.census-nayara.result }} | $(zcat output/nayara-raw.jsonl.gz 2>/dev/null | wc -l || echo 0) | ${{ steps.freshness.outputs.nayara_age }} |"
             echo ""
 
             # Emit staleness warnings
@@ -419,6 +565,8 @@ jobs:
             [ "${{ steps.freshness.outputs.hpcl_stale }}" = "true" ] && STALE="$STALE HPCL"
             [ "${{ steps.freshness.outputs.iocl_stale }}" = "true" ] && STALE="$STALE IOCL"
             [ "${{ steps.freshness.outputs.bpcl_stale }}" = "true" ] && STALE="$STALE BPCL"
+            [ "${{ steps.freshness.outputs.jiobp_stale }}" = "true" ] && STALE="$STALE Jio-bp"
+            [ "${{ steps.freshness.outputs.nayara_stale }}" = "true" ] && STALE="$STALE Nayara"
             if [ -n "$STALE" ]; then
               echo "> ⚠️ **Stale data used:**$STALE — the scraper hasn't refreshed these brands within the ${STALE_AFTER_DAYS}-day window. The published dataset uses the last committed raw data. This will age further with each daily E0-Finder deploy until the next successful scrape."
               echo ""
@@ -445,7 +593,7 @@ jobs:
 
           # output/ is gitignored — force-add the raw JSONL so they persist
           # across runs and the next scheduled run has a complete baseline.
-          for f in output/hpcl-raw.jsonl.gz output/iocl-raw.jsonl.gz output/bpcl-raw.jsonl.gz; do
+          for f in output/hpcl-raw.jsonl.gz output/iocl-raw.jsonl.gz output/bpcl-raw.jsonl.gz output/jiobp-raw.jsonl.gz output/nayara-raw.jsonl.gz; do
             if [ -f "$f" ]; then git add -f "$f"; fi
           done
 
@@ -480,13 +628,15 @@ jobs:
   # ════════════════════════════════════════════════════════════════════════════
   notify:
     name: Alert on failure
-    needs: [census-hpcl, census-iocl, census-bpcl]
+    needs: [census-hpcl, census-iocl, census-bpcl, census-jiobp, census-nayara]
     runs-on: ubuntu-latest
     if: >-
       always() &&
       (needs.census-hpcl.result == 'failure' ||
        needs.census-iocl.result == 'failure' ||
-       needs.census-bpcl.result == 'failure')
+       needs.census-bpcl.result == 'failure' ||
+       needs.census-jiobp.result == 'failure' ||
+       needs.census-nayara.result == 'failure')
     permissions:
       issues: write
 
@@ -500,6 +650,8 @@ jobs:
             if ('${{ needs.census-hpcl.result }}' === 'failure') failed.push('HPCL');
             if ('${{ needs.census-iocl.result }}' === 'failure') failed.push('IOCL');
             if ('${{ needs.census-bpcl.result }}' === 'failure') failed.push('BPCL');
+            if ('${{ needs.census-jiobp.result }}' === 'failure') failed.push('Jio-bp');
+            if ('${{ needs.census-nayara.result }}' === 'failure') failed.push('Nayara');
 
             const title = `Census failure — ${failed.join(', ')} — ${new Date().toISOString().slice(0, 10)}`;
 
@@ -552,7 +704,7 @@ jobs:
   # ════════════════════════════════════════════════════════════════════════════
   resolve:
     name: Resolve recovered brands
-    needs: [census-hpcl, census-iocl, census-bpcl]
+    needs: [census-hpcl, census-iocl, census-bpcl, census-jiobp, census-nayara]
     runs-on: ubuntu-latest
     if: always()
     permissions:
@@ -568,6 +720,8 @@ jobs:
             if ('${{ needs.census-hpcl.result }}' === 'success') succeeded.push('HPCL');
             if ('${{ needs.census-iocl.result }}' === 'success') succeeded.push('IOCL');
             if ('${{ needs.census-bpcl.result }}' === 'success') succeeded.push('BPCL');
+            if ('${{ needs.census-jiobp.result }}' === 'success') succeeded.push('Jio-bp');
+            if ('${{ needs.census-nayara.result }}' === 'success') succeeded.push('Nayara');
 
             if (succeeded.length === 0) {
               console.log('No brands succeeded — nothing to resolve.');
@@ -589,7 +743,7 @@ jobs:
                 .replace('Census failure — ', '')
                 .split(' — ')[0]
                 .split(', ')
-                .filter(b => ['HPCL', 'IOCL', 'BPCL'].includes(b));
+                .filter(b => ['HPCL', 'IOCL', 'BPCL', 'Jio-bp', 'Nayara'].includes(b));
 
               const stillFailing = titleBrands.filter(b => !succeeded.includes(b));
 

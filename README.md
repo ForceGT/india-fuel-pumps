@@ -1,6 +1,6 @@
 # India Fuel Pumps — Open Dataset
 
-An open, machine-readable dataset of **every fuel pump across India's three largest public-sector oil marketing companies**: HPCL, IndianOil (IOCL), and BPCL. **~91,000+ outlets**, each with location, contact, hours, and **every fuel product and price the source reports, captured exactly as-is** — no grade classification, no filtering, no assumptions.
+An open, machine-readable dataset of **every fuel pump across India's public-sector oil marketing companies**: HPCL, IndianOil (IOCL), BPCL, Jio-bp, and Nayara. **~91,000+ outlets**, each with location, contact, hours, and **every fuel product and price the source reports, captured exactly as-is** — no grade classification, no filtering, no assumptions.
 
 > This is the raw material. Deciding what counts as "E0" or any other classification is a downstream consumer's job — see [E0 Finder](#related-projects) at the bottom.
 
@@ -15,8 +15,10 @@ An open, machine-readable dataset of **every fuel pump across India's three larg
 | **HPCL** | ~23,950 | `petrolpump.hpretail.in` |
 | **IOCL (IndianOil)** | ~39,496 | `locator.iocl.com` |
 | **BPCL** | ~27,842 | api.cep.bpcl.in (same backend as the "BharatGas" app) |
+| **Jio-bp** | ~2,294 | `netmanager.ril.com` (private app backend; see [docs/jiobp-api.md](docs/jiobp-api.md)) |
+| **Nayara** | ~9,050 | nayaraenergy.com "Petrol Pump Near Me" locator |
 
-Every record carries a **`capturedAt` timestamp** (when our crawler last saw it from the source), so you always know how fresh a given row is. Coverage expanded via full national censuses; new brands (Jio-bp, Nayara, Shell) are additive.
+Every record carries a **`capturedAt` timestamp** (when our crawler last saw it from the source), so you always know how fresh a given row is. Coverage expanded via full national censuses; further brands (Shell) are additive.
 
 ---
 
@@ -26,8 +28,8 @@ The dataset is intentionally **grade-agnostic** — no `grades`, no `confidence`
 
 ```ts
 interface RawOutletRecord {
-  brand: "hpcl" | "iocl" | "bpcl";
-  outletId: string;           // the source's own outlet ID
+  brand: "HPCL" | "IOCL" | "BPCL" | "JioBP" | "Nayara" | "Shell";
+  outletId: string;           // the source's own outlet ID (Jio-bp: its FuelStationCode, e.g. "MHC117")
   stationId: string;          // stable dedup key across brands
   sourceUrl: string;          // canonical source page
   capturedAt: string;         // ISO-8601 timestamp of this crawl
@@ -80,6 +82,8 @@ interface ShardIndex {
     hpcl: number;
     iocl: number;
     bpcl: number;
+    jiobp: number;
+    nayara: number;
   };
   shards: Array<{
     prefix: string;               // 3-char geohash prefix
@@ -121,7 +125,7 @@ A client that loads all shards at once (~91,000 records, well under 50 MB decomp
 
 ## Update cadence
 
-- **Every 3 days** at 02:07 UTC — stations older than 3 days are re-scraped. Worst-case freshness is ~3 days, well within E0-Finder's 14-day stale threshold.
+- **Daily** at 02:07 UTC — stations not re-checked within `MAX_AGE_DAYS` (3 days) are re-scraped; most units are skipped as already-fresh, so the daily cadence is cheap. Worst-case freshness is well within E0-Finder's 14-day stale threshold, and a failed run recovers the very next day instead of waiting out a multi-day slot.
 - Every run produces a GitHub Release with a human-readable diff of changes (new outlets, closed outlets, price changes).
 
 ---
@@ -131,34 +135,35 @@ A client that loads all shards at once (~91,000 records, well under 50 MB decomp
 A single GitHub Actions workflow (`.github/workflows/census.yml`) orchestrates everything:
 
 ```
-                    ┌──────────────┐
-                    │  cron trigger │
-                    │  (every 3     │
-                    │   days)       │
-                    └──────┬───────┘
-                           │
-              ┌────────────┼────────────┐
-              ▼            ▼            ▼
-        ┌──────────┐ ┌──────────┐ ┌──────────┐
-        │  HPCL    │ │  IOCL    │ │  BPCL    │
-        │  census  │ │  census  │ │  census  │
-        │ (CI)     │ │ (CI)     │ │ (local)  │
-        └────┬─────┘ └────┬─────┘ └────┬─────┘
-             │            │            │
-             └────────────┼────────────┘
-                          ▼
-                  ┌───────────────┐
-                  │  Merge →      │
-                  │  Build shards │
-                  │  → Commit     │
-                  │  dataset/     │
-                  │  → GitHub     │
-                  │  Release      │
-                  └───────────────┘
+                       ┌──────────────┐
+                       │  cron trigger │
+                       │  (daily,      │
+                       │   02:07 UTC)  │
+                       └──────┬───────┘
+                              │
+        ┌─────────────┬───────────────┬───────────────┬──────────────┐
+        ▼             ▼               ▼               ▼              ▼
+  ┌──────────┐ ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐
+  │  HPCL    │ │  IOCL    │   │  BPCL    │   │  Jio-bp  │   │  Nayara  │
+  │  census  │ │  census  │   │  census  │   │  census  │   │  census  │
+  │ (CI)     │ │ (CI)     │   │ (CI, via │   │ (CI)     │   │ (CI)     │
+  │          │ │          │   │Tailscale)│   │          │   │          │
+  └────┬─────┘ └────┬─────┘   └────┬─────┘   └────┬─────┘   └────┬─────┘
+       │            │              │              │              │
+       └────────────┼──────────────┴──────────────┴──────────────┘
+                    ▼
+            ┌───────────────┐
+            │  Merge →      │
+            │  Build shards │
+            │  → Commit     │
+            │  dataset/     │
+            │  → GitHub     │
+            │  Release      │
+            └───────────────┘
 ```
 
-- HPCL and IOCL run in CI — their sources accept GitHub Actions IPs.
-- BPCL runs locally because `api.cep.bpcl.in` returns HTTP 403 from GitHub Actions datacenter IPs. The BPCL raw output is committed to the repo so CI publish runs can still merge all three brands.
+- HPCL, IOCL, Jio-bp, and Nayara run directly in CI — their sources accept GitHub Actions IPs.
+- BPCL also runs in CI, but routed through a Tailscale exit node (a residential-IP Raspberry Pi) — `api.cep.bpcl.in` returns HTTP 403 from GitHub Actions datacenter IPs directly. If the exit node isn't configured, the BPCL job is skipped and the publish step uses the last committed `bpcl-raw.jsonl.gz` instead.
 - **Partial-failure tolerant:** if one brand's census fails, the others are not blocked — the publish step merges whatever brands succeeded.
 - **Resumable:** each brand's crawl writes an append-only worklog (success/failure per work unit). A killed or interrupted run resumes from where it left off by restoring the worklog from GitHub Actions cache.
 
@@ -173,20 +178,25 @@ src/
   provider.ts             # Provider interface + worklog abstraction
   run-provider.ts         # shared resumable worker pool
   types.ts                # RawOutletRecord, WorkLogRecord types
+  http.ts                 # rate-limited, self-identifying HTTP with backoff + retry
+  geo.ts                  # geohash encoding
+  run-hpcl.ts             # CLI entrypoint
+  run-iocl.ts             # CLI entrypoint
+  run-bpcl.ts             # CLI entrypoint
+  run-jiobp.ts            # CLI entrypoint
+  run-nayara.ts           # CLI entrypoint
   providers/
     hpcl-provider.ts      # HPCL: sitemap discovery → per-outlet page → price XHR
     iocl-provider.ts      # IOCL: fixed-outlet-list → per-outlet page → price XHR
     bpcl-provider.ts      # BPCL: app-API reverse-engineered endpoint → per-outlet detail
-    run-hpcl.ts           # CLI entrypoint
-    run-iocl.ts           # CLI entrypoint
-    run-bpcl.ts           # CLI entrypoint
+    jiobp-provider.ts     # Jio-bp: national index call → batched per-outlet detail call
+    nayara-provider.ts    # Nayara: session+CSRF bootstrap → large-radius locator API calls
   parsers/
     hpcl.ts               # HPCL outlet-page HTML parser
     iocl.ts               # IOCL outlet-page HTML parser (same locator platform as HPCL)
     bpcl.ts               # BPCL JSON-API response parser
-  lib/
-    http.ts               # rate-limited, self-identifying HTTP with backoff + retry
-    geo.ts                # geohash encoding
+    jiobp.ts              # Jio-bp JSON-API request builders + response parser
+    nayara.ts             # Nayara JSON-API response parser (products as flat keys)
 ```
 
 Key design features:
@@ -203,6 +213,8 @@ npm install
 npm run census:hpcl    # full HPCL national census
 npm run census:iocl    # full IOCL national census
 npm run census:bpcl    # full BPCL national census (must be run locally — see above)
+npm run census:jiobp   # full Jio-bp national census
+npm run census:nayara  # full Nayara national census
 npm run build-dataset  # regenerate dataset/ from the output JSONL files
 ```
 
@@ -212,6 +224,7 @@ npm run build-dataset  # regenerate dataset/ from the output JSONL files
 
 - Data is derived from **public** official oil-company outlet locators (no login, no scraping of gated or personal data). Contact numbers are the pumps' listed business numbers.
 - The BPCL endpoint (api.cep.bpcl.in) was reverse-engineered from static bytecode analysis of the legitimate "BharatGas" Android app — no emulator, no RASP bypass, no authentication credentials.
+- The Jio-bp endpoint (`netmanager.ril.com`) was reverse-engineered from the "MyJio-bp" Android app (SSL-pinning disabled in an emulator, traffic captured via a local mitmproxy — see [docs/jiobp-api.md](docs/jiobp-api.md) for the full repro). Unlike the public HPCL/IOCL/BPCL locators, this is a **private customer-app backend** — the underlying data (station locations, publicly-posted fuel prices) is not sensitive, but scraping it is a different posture than a public store-locator. No login/OTP/valid session is required or used; the synthetic identity fields sent are never validated by the server.
 - **License: [MIT](./LICENSE)** — use it freely for anything, commercial or not; just keep the copyright and license notice. No warranty (see the disclaimer above).
 
 ---
@@ -219,7 +232,7 @@ npm run build-dataset  # regenerate dataset/ from the output JSONL files
 ## Contributing
 
 - **Corrections:** if a pump is wrong, closed, or the data is stale, open an issue.
-- **New brands:** Jio-bp, Nayara Shell, and other marketers are welcome as new `Provider` implementations — see `src/provider.ts` for the interface.
+- **New brands:** Shell and other marketers are welcome as new `Provider` implementations — see `src/provider.ts` for the interface (`src/providers/nayara-provider.ts` and `src/providers/jiobp-provider.ts` are recent examples to model from).
 - **Crowdsourced availability signals** (a "was it available?" feedback mechanism) are planned but not yet built.
 
 ---
