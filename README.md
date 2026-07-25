@@ -1,6 +1,6 @@
 # India Fuel Pumps — Open Dataset
 
-An open, machine-readable dataset of **every fuel pump across India's public-sector oil marketing companies**: HPCL, IndianOil (IOCL), BPCL, Jio-bp, and Nayara. **~91,000+ outlets**, each with location, contact, hours, and **every fuel product and price the source reports, captured exactly as-is** — no grade classification, no filtering, no assumptions.
+An open, machine-readable dataset of **every fuel pump across India's public-sector oil marketing companies, plus Shell**: HPCL, IndianOil (IOCL), BPCL, Jio-bp, Nayara, and Shell. **~103,000+ outlets**, each with location, contact, hours, and **every fuel product and price the source reports, captured exactly as-is** — no grade classification, no filtering, no assumptions.
 
 > This is the raw material. Deciding what counts as "E0" or any other classification is a downstream consumer's job — see [E0 Finder](#related-projects) at the bottom.
 
@@ -17,8 +17,11 @@ An open, machine-readable dataset of **every fuel pump across India's public-sec
 | **BPCL** | ~27,842 | api.cep.bpcl.in (same backend as the "BharatGas" app) |
 | **Jio-bp** | ~2,294 | `netmanager.ril.com` (private app backend; see [docs/jiobp-api.md](docs/jiobp-api.md)) |
 | **Nayara** | ~9,050 | nayaraenergy.com "Petrol Pump Near Me" locator |
+| **Shell** | ~332 | shellretaillocator.geoapp.me (third-party locator widget embedded on shell.in; see [docs/shell-api.md](docs/shell-api.md)) |
 
-Every record carries a **`capturedAt` timestamp** (when our crawler last saw it from the source), so you always know how fresh a given row is. Coverage expanded via full national censuses; further brands (Shell) are additive.
+Every record carries a **`capturedAt` timestamp** (when our crawler last saw it from the source), so you always know how fresh a given row is. Coverage expanded via full national censuses across all six brands.
+
+Shell also separately publishes an **indicative city-level price table** (22 major cities, not per-outlet) — deliberately kept out of this dataset since it's a city-average estimate, not a fact about any specific outlet. See [docs/shell-api.md](docs/shell-api.md) for what it is and why.
 
 ---
 
@@ -84,6 +87,7 @@ interface ShardIndex {
     bpcl: number;
     jiobp: number;
     nayara: number;
+    shell: number;
   };
   shards: Array<{
     prefix: string;               // 3-char geohash prefix
@@ -119,7 +123,7 @@ Consumption pattern:
 2. Parallel-fetch the shards whose prefixes intersect your area of interest (bounding box / city / current location).
 3. Merge the returned `RawOutletRecord[]` arrays in memory and apply your own classification / search / map rendering.
 
-A client that loads all shards at once (~91,000 records, well under 50 MB decompressed) is also fine for a national map — the shard structure is designed to enable per-viewport streaming but does not require it.
+A client that loads all shards at once (~103,000 records, well under 50 MB decompressed) is also fine for a national map — the shard structure is designed to enable per-viewport streaming but does not require it.
 
 ---
 
@@ -141,28 +145,28 @@ A single GitHub Actions workflow (`.github/workflows/census.yml`) orchestrates e
                        │   02:07 UTC)  │
                        └──────┬───────┘
                               │
-        ┌─────────────┬───────────────┬───────────────┬──────────────┐
-        ▼             ▼               ▼               ▼              ▼
-  ┌──────────┐ ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐
-  │  HPCL    │ │  IOCL    │   │  BPCL    │   │  Jio-bp  │   │  Nayara  │
-  │  census  │ │  census  │   │  census  │   │  census  │   │  census  │
-  │ (CI)     │ │ (CI)     │   │ (CI, via │   │ (CI)     │   │ (CI)     │
-  │          │ │          │   │Tailscale)│   │          │   │          │
-  └────┬─────┘ └────┬─────┘   └────┬─────┘   └────┬─────┘   └────┬─────┘
-       │            │              │              │              │
-       └────────────┼──────────────┴──────────────┴──────────────┘
-                    ▼
-            ┌───────────────┐
-            │  Merge →      │
-            │  Build shards │
-            │  → Commit     │
-            │  dataset/     │
-            │  → GitHub     │
-            │  Release      │
-            └───────────────┘
+       ┌────────────┬────────────┬────────────┬────────────┬────────────┐
+       ▼            ▼            ▼            ▼            ▼            ▼
+  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐
+  │  HPCL    │ │  IOCL    │ │  BPCL    │ │  Jio-bp  │ │  Nayara  │ │  Shell   │
+  │  census  │ │  census  │ │  census  │ │  census  │ │  census  │ │  census  │
+  │ (CI)     │ │ (CI)     │ │ (CI, via │ │ (CI)     │ │ (CI)     │ │ (CI)     │
+  │          │ │          │ │Tailscale)│ │          │ │          │ │          │
+  └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘
+       │            │            │            │            │            │
+       └────────────┴────────────┴────────────┴────────────┴────────────┘
+                                       ▼
+                                     ┌───────────────┐
+                                     │  Merge →      │
+                                     │  Build shards │
+                                     │  → Commit     │
+                                     │  dataset/     │
+                                     │  → GitHub     │
+                                     │  Release      │
+                                     └───────────────┘
 ```
 
-- HPCL, IOCL, Jio-bp, and Nayara run directly in CI — their sources accept GitHub Actions IPs.
+- HPCL, IOCL, Jio-bp, Nayara, and Shell run directly in CI — their sources accept GitHub Actions IPs.
 - BPCL also runs in CI, but routed through a Tailscale exit node (a residential-IP Raspberry Pi) — `api.cep.bpcl.in` returns HTTP 403 from GitHub Actions datacenter IPs directly. If the exit node isn't configured, the BPCL job is skipped and the publish step uses the last committed `bpcl-raw.jsonl.gz` instead.
 - **Partial-failure tolerant:** if one brand's census fails, the others are not blocked — the publish step merges whatever brands succeeded.
 - **Resumable:** each brand's crawl writes an append-only worklog (success/failure per work unit). A killed or interrupted run resumes from where it left off by restoring the worklog from GitHub Actions cache.
@@ -185,18 +189,25 @@ src/
   run-bpcl.ts             # CLI entrypoint
   run-jiobp.ts            # CLI entrypoint
   run-nayara.ts           # CLI entrypoint
+  run-shell.ts            # CLI entrypoint
+  scrape-shell-city-pricing.ts  # standalone: Shell's separate city-price table (NOT part of the census — see docs/shell-api.md)
   providers/
     hpcl-provider.ts      # HPCL: sitemap discovery → per-outlet page → price XHR
     iocl-provider.ts      # IOCL: fixed-outlet-list → per-outlet page → price XHR
     bpcl-provider.ts      # BPCL: app-API reverse-engineered endpoint → per-outlet detail
     jiobp-provider.ts     # Jio-bp: national index call → batched per-outlet detail call
     nayara-provider.ts    # Nayara: session+CSRF bootstrap → large-radius locator API calls
+    shell-provider.ts     # Shell: bounding-box walk (geoapp.me locator) → per-outlet detail call
   parsers/
     hpcl.ts               # HPCL outlet-page HTML parser
     iocl.ts               # IOCL outlet-page HTML parser (same locator platform as HPCL)
     bpcl.ts               # BPCL JSON-API response parser
     jiobp.ts              # Jio-bp JSON-API request builders + response parser
     nayara.ts             # Nayara JSON-API response parser (products as flat keys)
+    shell.ts              # Shell locator JSON-API request builders + response parser
+    shell-pricing.ts      # Shell's separate city-price .xlsx parser (see lib/minizip.ts)
+  lib/
+    minizip.ts            # zero-dependency ZIP reader (reads Shell's price .xlsx — see docs/shell-api.md)
 ```
 
 Key design features:
@@ -215,6 +226,8 @@ npm run census:iocl    # full IOCL national census
 npm run census:bpcl    # full BPCL national census (must be run locally — see above)
 npm run census:jiobp   # full Jio-bp national census
 npm run census:nayara  # full Nayara national census
+npm run census:shell   # full Shell national census
+npm run pricing:shell  # Shell's separate city-price table (NOT merged into the dataset — see docs/shell-api.md)
 npm run build-dataset  # regenerate dataset/ from the output JSONL files
 ```
 
@@ -232,7 +245,7 @@ npm run build-dataset  # regenerate dataset/ from the output JSONL files
 ## Contributing
 
 - **Corrections:** if a pump is wrong, closed, or the data is stale, open an issue.
-- **New brands:** Shell and other marketers are welcome as new `Provider` implementations — see `src/provider.ts` for the interface (`src/providers/nayara-provider.ts` and `src/providers/jiobp-provider.ts` are recent examples to model from).
+- **New brands:** other marketers are welcome as new `Provider` implementations — see `src/provider.ts` for the interface (`src/providers/shell-provider.ts` and `src/providers/nayara-provider.ts` are recent examples to model from).
 - **Crowdsourced availability signals** (a "was it available?" feedback mechanism) are planned but not yet built.
 
 ---
