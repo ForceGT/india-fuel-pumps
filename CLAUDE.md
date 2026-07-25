@@ -44,15 +44,23 @@ is a downstream consumer's job (e.g. the private E0-Finder project at
    `{slug}-worklog.jsonl` (cached, not committed), `{slug}-progress.txt` (live),
    `{slug}-discovered-urls.json` (HPCL/IOCL discovery cache).
 
-8. **The `Provider` interface is the extensibility point** for new brands (Jio-bp,
-   Nayara, Shell). Three methods: `init` (optional), `discover` (yield `WorkUnit`s),
+8. **The `Provider` interface is the extensibility point** for new brands (HPCL,
+   IOCL, BPCL, Jio-bp, Nayara). Three methods: `init` (optional), `discover` (yield `WorkUnit`s),
    `process` (unit -> `ProcessResult`). See `src/provider.ts`.
 
-9. **`build-dataset` merges all available raw JSONL** -> dedupes by `stationId`
+9. **Nayara requires session + CSRF auth and deliberately uses a Chrome-mimicking header set.**
+   The nayaraenergy.com locator endpoint (`POST /get-code-ro-radius`) requires an Akamai
+   WAF bypass: a CSRF token + session cookies bootstrapped from one GET of the locator
+   page, then replayed on every POST. Instead of the honest IndiaFuelPumpsBot `User-Agent`,
+   Nayara uses a Chrome browser header set because Akamai blocks the honest identity by
+   header shape alone — a documented architectural tradeoff, same visibility tier as BPCL's
+   Tailscale requirement. See `docs/nayara-api.md`.
+
+10. **`build-dataset` merges all available raw JSONL** -> dedupes by `stationId`
    (latest `capturedAt` wins) -> groups by geohash[0:3] -> writes content-hashed
    shards -> writes `release-stats.json` + `release-notes.md`.
 
-10. **Error logging pattern:** All three providers log the first 3 occurrences of
+11. **Error logging pattern:** All providers log the first 3 occurrences of
     each error type (HTTP status + URL snippet). Connection exceptions are always
     logged. Format: `[brand] error {n} — url`.
 
@@ -61,7 +69,7 @@ is a downstream consumer's job (e.g. the private E0-Finder project at
 ```
 src/provider.ts           Provider interface — how to add a new brand
 src/run-provider.ts       Generic resumable worker pool (consumes any Provider)
-src/run-{hpcl,iocl,bpcl}.ts   Thin CLI wrappers (brand config + env vars)
+src/run-{hpcl,iocl,bpcl,jiobp,nayara}.ts   Thin CLI wrappers (brand config + env vars)
 src/providers/            Brand-specific Provider implementations
 src/parsers/              Per-brand HTML/JSON response parsers
 src/build-dataset.ts      Assembles raw JSONL -> geohash-sharded dataset
@@ -79,6 +87,8 @@ dataset/                  Geohash-sharded output (index.json + shards/)
 npm run census:hpcl       # Full HPCL national census
 npm run census:iocl       # Full IOCL national census
 npm run census:bpcl       # Full BPCL national census (residential IP via Tailscale exit node)
+npm run census:jiobp      # Full Jio-bp national census
+npm run census:nayara     # Full Nayara national census
 npm run build-dataset     # Assemble raw JSONL -> sharded dataset + release notes
 npm run test              # Vitest suite
 npm run typecheck         # tsc --noEmit

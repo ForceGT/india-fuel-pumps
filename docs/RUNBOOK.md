@@ -8,15 +8,15 @@ cd india-fuel-pumps
 npm install
 ```
 
-Requires Node 20+ (tested on Node 22). No API keys or secrets — all three sources are public and require no authentication (except BPCL's OAuth, which is fetched dynamically).
+Requires Node 20+ (tested on Node 22). No API keys or secrets — all sources are public/reverse-engineered and require no authentication (except BPCL's OAuth, which is fetched dynamically; Jio-bp's identity fields are unvalidated constants, see `docs/jiobp-api.md`; Nayara's session+CSRF auth is bootstrapped dynamically, see `docs/nayara-api.md`).
 
 ---
 
 ## Running a full census (all brands)
 
 ```bash
-# Run all three (locally, sequentially — CI runs them in parallel)
-npm run census:hpcl && npm run census:iocl && npm run census:bpcl && npm run build-dataset
+# Run all five (locally, sequentially — CI runs them in parallel)
+npm run census:hpcl && npm run census:iocl && npm run census:bpcl && npm run census:jiobp && npm run census:nayara && npm run build-dataset
 ```
 
 ### What each step produces
@@ -26,6 +26,8 @@ npm run census:hpcl && npm run census:iocl && npm run census:bpcl && npm run bui
 | `census:hpcl` | `output/hpcl-raw.jsonl`, `output/hpcl-worklog.jsonl` |
 | `census:iocl` | `output/iocl-raw.jsonl`, `output/iocl-worklog.jsonl` |
 | `census:bpcl` | `output/bpcl-raw.jsonl`, `output/bpcl-worklog.jsonl` |
+| `census:jiobp` | `output/jiobp-raw.jsonl`, `output/jiobp-worklog.jsonl` |
+| `census:nayara` | `output/nayara-raw.jsonl`, `output/nayara-worklog.jsonl` |
 | `build-dataset` | `dataset/index.json`, `dataset/shards/*.json`, `dataset/release-notes.md` |
 
 ---
@@ -41,6 +43,12 @@ IOCL_CENSUS_LIMIT=5 npm run census:iocl
 
 # BPCL — limit only
 BPCL_CENSUS_LIMIT=5 npm run census:bpcl
+
+# Jio-bp — limit only (limit counts BATCHES, not individual outlets)
+JIOBP_CENSUS_LIMIT=2 npm run census:jiobp
+
+# Nayara — limit only (limit counts BATCHES of large-radius API calls)
+NAYARA_CENSUS_LIMIT=1 npm run census:nayara
 ```
 
 ---
@@ -118,6 +126,25 @@ Once configured, the BPCL CI job connects via Tailscale and scrapes through the 
 | `BPCL_CENSUS_MAX_AGE_DAYS` | `3` | Staleness threshold |
 | `FRESH` | (unset) | Set to `1` to restart from scratch |
 
+### Jio-bp
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `JIOBP_CENSUS_CONCURRENCY` | `2` | Concurrent lanes — kept low; this is a private app backend, not a public locator |
+| `JIOBP_CENSUS_LIMIT` | (no limit) | Stop after N new **batches** (not individual outlets — a batch is ~18 outlets) |
+| `JIOBP_CENSUS_BATCH_SIZE` | `18` | Station codes per `FindFuelStation` call (18 is the observed in-app batch size) |
+| `JIOBP_CENSUS_MAX_AGE_DAYS` | `3` | Staleness threshold |
+| `JIOBP_CENSUS_STALE_AFTER_DAYS` | `14` | Baseline records not refreshed within this many days are pruned |
+
+### Nayara
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `NAYARA_CENSUS_CONCURRENCY` | `1` | Concurrent lanes — only 2 work units total, so concurrency doesn't meaningfully speed this up |
+| `NAYARA_CENSUS_LIMIT` | (no limit) | Stop after N new units (there are only 2 total — the two center-point calls) |
+| `NAYARA_CENSUS_MAX_AGE_DAYS` | `3` | Staleness threshold |
+| `NAYARA_CENSUS_STALE_AFTER_DAYS` | `14` | Baseline records not refreshed within this many days are pruned |
+
 ---
 
 ## Concurrency tuning and WAF limits
@@ -126,7 +153,9 @@ Once configured, the BPCL CI job connects via Tailscale and scrapes through the 
 |-------|-----------------|------|---------------|
 | HPCL | 12 | ~94 min | No |
 | IOCL | 12 (CI), 10 (residential) | ~3.5h | Yes — pattern-based, triggers at 15+. If failures persist, drop to 10. |
-| BPCL | 4 | ~25 min | No — app API, not a website.
+| BPCL | 10 (residential, via Tailscale) | ~25 min | No — app API, not a website. |
+| Jio-bp | 2 (default, deliberately conservative) | minutes — whole census is only ~dozens of batched requests | Not calibrated; untested at higher concurrency, and there's little reason to push it given how few requests the whole census needs. |
+| Nayara | 1 (default) | minutes — only ~2 large-radius API calls needed to enumerate ~9000+ stations | No — simple POST API. Only 2 work units total, so concurrency barely matters. |
 
 ---
 
@@ -163,6 +192,7 @@ npm run census:hpcl
 - **HPCL:** deletes `output/hpcl-discovered-urls.json` so the sitemap walk re-runs.
 - **IOCL:** same as HPCL (same `locator-platform` sitemap cache).
 - **BPCL:** deletes any cached route/cell discovery state.
+- **Jio-bp:** nothing to delete — `discover()` has no on-disk cache, it re-fetches the full `FetchROMaster` index on every run (that call is cheap; see `docs/EDGE-CASES.md`'s Jio-bp entry for what happens if it fails).
 
 ---
 
@@ -194,7 +224,9 @@ https://cdn.jsdelivr.net/gh/ForceGT/india-fuel-pumps@main/dataset/shards/<prefix
 |---------|-------------|-----|
 | All IOCL requests 403 mid-run | WAF block | `FRESH=1` with concurrency 10, wait 30 min, restart |
 | BPCL all 401 at startup | OAuth token fetch failed | Re-run — token refresh self-heals |
-| BPCL all 403 | GH Actions IP blocked | Run locally, commit raw output, re-trigger CI |
+| BPCL all 403 | GH Actions IP blocked / Tailscale exit node unreachable | Check Tailscale connectivity, or run locally and commit raw output |
+| Jio-bp census reports 0/0/0 units, finishes instantly | `FetchROMaster` index call failed (see `docs/EDGE-CASES.md`) | Re-run — usually transient; check job log for the ROMaster fetch error |
+| Nayara all 419 or persistent httpFailed | CSRF token / session cookie bootstrap broke | Nayara's page structure or WAF rules changed; check `docs/nayara-api.md` and verify the session/CSRF flow still works, then re-run |
 | HPCL "no such sitemap" | Sitemap structure changed | Check `petrolpump.hpretail.in/sitemap.xml` |
 | `build-dataset` exits with 0 outlets | No raw JSONL files exist | Run censuses first |
 | Stale data after resume | Worklog records >3 days old | Set `maxAgeDays` lower or `FRESH=1` |

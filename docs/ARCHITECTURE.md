@@ -6,22 +6,23 @@
                         ┌──────────────────────┐
                         │  cron trigger         │
                         │  GitHub Actions       │
-                        │  (every 3 days)       │
+                        │  (daily, 02:07 UTC)   │
                         └──────────┬───────────┘
                                    │
-                      ┌────────────┼────────────┐
-                      ▼            ▼            ▼
-                ┌──────────┐ ┌──────────┐ ┌──────────┐
-                │   HPCL   │ │   IOCL   │ │   BPCL   │
-                │ Provider │ │ Provider │ │ Provider │
-                │ (CI)     │ │ (CI)     │ │ (CI)     │
-                └────┬─────┘ └────┬─────┘ └────┬─────┘
-                     │            │            │
-                     │  each writes:           │
-                     │  output/{slug}-raw.jsonl │
-                     │  output/{slug}-worklog.jsonl │
-                     │  (gzipped after job)    │
-                     └────────────┼────────────┘
+                  ┌────────────┬───────────┬────────────┬──────────────┐
+                  ▼             ▼           ▼            ▼              ▼
+            ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐
+            │   HPCL   │ │   IOCL   │ │   BPCL   │ │  Jio-bp  │ │  Nayara  │
+            │ Provider │ │ Provider │ │ Provider │ │ Provider │ │ Provider │
+            │ (CI)     │ │ (CI)     │ │(CI, via  │ │ (CI)     │ │ (CI)     │
+            │          │ │          │ │Tailscale)│ │          │ │          │
+            └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘
+                 │            │            │            │            │
+                 │  each writes:                                     │
+                 │  output/{slug}-raw.jsonl                           │
+                 │  output/{slug}-worklog.jsonl                       │
+                 │  (gzipped after job)                               │
+                 └────────────┬───────────────────────────────────────┘
                                   ▼
                      ┌──────────────────────────┐
                      │  build-dataset.ts         │
@@ -56,11 +57,11 @@
 
 The plug-in contract every brand implements. Two methods:
 
-- **`discover(opts)`** — enumerates all units of work. Returns an `AsyncIterable<WorkUnit>`. For HPCL/IOCL this means walking a sitemap or fixed URL list to find every per-outlet page. For BPCL it means constructing a hand-curated route mesh plus an adaptive grid over India.
+- **`discover(opts)`** — enumerates all units of work. Returns an `AsyncIterable<WorkUnit>`. For HPCL/IOCL this means walking a sitemap or fixed URL list to find every per-outlet page. For BPCL it means constructing a hand-curated route mesh plus an adaptive grid over India. For Jio-bp it means one `FetchROMaster` call for the national station index, then yielding batches of station codes (default 18/batch) as work units. Note `discover()` does NOT receive `ctx` — any network call it needs (HPCL/IOCL's sitemap walk, Jio-bp's index call) uses its own injectable `fetchImpl`, not `ctx.fetch`.
 
 - **`process(unit, ctx)`** — fetches the page/API for ONE work unit, parses it, returns zero or more `RawOutletRecord`s plus optional follow-up work units (BPCL's grid subdivision on saturation). Uses `ctx.fetch` (injectable for tests) and `ctx.now()` (injectable for deterministic timestamps).
 
-- **`init?(ctx)`** — optional one-time setup. Used by BPCL to fetch its initial OAuth token so auth failures fail fast before any crawl work begins.
+- **`init?(ctx)`** — optional one-time setup. Used by BPCL to fetch its initial OAuth token so auth failures fail fast before any crawl work begins. Nayara uses `init()` to bootstrap session cookies and CSRF token from one GET of the locator page, then replays them on every subsequent POST (see `docs/nayara-api.md`). Jio-bp doesn't need this — its identity fields are unvalidated constants (see `docs/jiobp-api.md`).
 
 All brand-specific knowledge lives in the provider. The runner is generic.
 
@@ -78,7 +79,7 @@ Key properties: resumable (rerun skips done units), polite (configurable delay b
 
 ### build-dataset (`src/build-dataset.ts`)
 
-Reads all three brands' `output/{hpcl,iocl,bpcl}-raw.jsonl.gz` (or `.jsonl`), deduplicates each brand by `stationId` (latest `capturedAt` wins), merges across brands, groups by 3-character geohash prefix, and writes:
+Reads all five brands' `output/{hpcl,iocl,bpcl,jiobp,nayara}-raw.jsonl.gz` (or `.jsonl`), deduplicates each brand by `stationId` (latest `capturedAt` wins), merges across brands, groups by 3-character geohash prefix, and writes:
 
 - `dataset/shards/{prefix}.{sha256-hex-16}.json` — one file per cell, content-hashed so unchanged cells keep the same URL across runs.
 - `dataset/index.json` — manifest listing every shard file, total outlet count, per-brand counts.
@@ -89,12 +90,14 @@ Missing brand files are tracked as `missingBrands` and flagged in the release no
 
 ### Workflow (`census.yml`)
 
-Three parallel brand jobs, one publish job, one notify job:
+Five parallel brand jobs, one publish job, one notify job, one resolve job:
 
 - **HPCL** and **IOCL** run on `ubuntu-latest` at concurrency 12. HPCL ~94 min; IOCL ~3.5h.
-- **BPCL** runs on `ubuntu-latest** at concurrency 4. ~25 min. OAuth token fetched dynamically.
-- **Publish** runs after all three (or after whatever completed) — downloads artifacts, runs build-dataset, commits `dataset/`, creates a tagged GitHub Release with auto-generated release notes.
-- **Notify** files a GitHub issue (or comments on an existing one) when any brand fails.
+- **BPCL** runs on `ubuntu-latest` at concurrency 10, routed through a Tailscale exit node (residential IP). ~25 min. OAuth token fetched dynamically. Skipped (falls back to the last committed `bpcl-raw.jsonl.gz`) if the exit node isn't configured.
+- **Jio-bp** runs on `ubuntu-latest` at a conservative default concurrency (2) — the whole national census is only ~dozens of batched requests (~2294 stations / batch size), so it finishes in minutes even at low concurrency.
+- **Nayara** runs on `ubuntu-latest` at concurrency 1 (default) — needs only ~2 large-radius API calls to enumerate the entire national roster (~9000+ stations), finishes in minutes.
+- **Publish** runs after all five (or after whatever completed) — downloads artifacts, runs build-dataset, commits `dataset/`, creates a tagged GitHub Release with auto-generated release notes.
+- **Notify** files a GitHub issue (or comments on an existing one) when any brand fails. **Resolve** closes/comments on that issue once a previously-failing brand succeeds again.
 
 ## Data flow
 
@@ -106,6 +109,7 @@ Three parallel brand jobs, one publish job, one notify job:
 │  Resumability key = id.                                         │
 │  HPCL/IOCL: id = sourceUrl of the per-outlet page               │
 │  BPCL:       id = routeChunkId or cellId (grid cell)            │
+│  Jio-bp:     id = "batch-{n}" (a batch of station codes)        │
 └─────────────────────────────────────────────────────────────────┘
          │ process()
          ▼
@@ -145,7 +149,7 @@ Fetch RawOutletRecord[] → filter/products by name pattern
 → apply own ethanol-content table → render on map
 ```
 
-## Adding a new brand (Jio-bp, Nayara, Shell, etc.)
+## Adding a new brand (Shell, etc.)
 
 1. Create `src/parsers/{brand}.ts` — parse the brand's outlet page or API response, return outlet metadata + products.
 2. Create `src/providers/{brand}-provider.ts` — implement the `Provider` interface:
@@ -154,10 +158,10 @@ Fetch RawOutletRecord[] → filter/products by name pattern
    - `init()` — if the brand needs auth (BPCL-style OAuth).
 3. Create `src/run-{brand}.ts` — CLI entrypoint wrapping `runProvider(provider, opts)`.
 4. Add a `census:{brand}` script to `package.json`.
-5. Add a job step to `.github/workflows/census.yml` (copy one of the existing three, adjust `timeout-minutes`, `concurrency`, and env vars).
-6. Add the brand to `build-dataset.ts`'s `BRANDS` array and the publish job's artifact download pattern.
+5. Add a job step to `.github/workflows/census.yml` (copy one of the existing brand jobs, adjust `timeout-minutes`, `concurrency`, and env vars), and extend the `needs:`/brand-tracking logic in the `publish`, `notify`, and `resolve` jobs.
+6. Add the brand to `build-dataset.ts`'s `BRANDS` array.
 
-No changes needed to `types.ts`, `provider.ts`, `run-provider.ts`, or the build-dataset dedup/merge logic — those are all brand-agnostic by design.
+No changes needed to `types.ts`, `provider.ts`, `run-provider.ts`, or the build-dataset dedup/merge logic — those are all brand-agnostic by design. `src/parsers/jiobp.ts` + `src/providers/jiobp-provider.ts` are a recent, fully-worked example of this recipe applied to an API-only brand with no public web page (see `docs/jiobp-api.md` for the reverse-engineered API reference it's built from).
 
 ## Technology
 
@@ -170,4 +174,4 @@ No changes needed to `types.ts`, `provider.ts`, `run-provider.ts`, or the build-
 | Sharding | Geohash (precision 3, ~156 km cells) | Map-friendly, deterministic, content-hashed |
 | Compression | gzip (`gzip -f` in CI; `.jsonl.gz` files under 50 MB) | Git-friendly, GitHub 50 MB limit compliant |
 | Delivery | jsDelivr CDN (`cdn.jsdelivr.net/gh/ForceGT/...`) | Free, fast, no auth; avoids `raw.githubusercontent.com` rate limits |
-| Orchestration | GitHub Actions (`.github/workflows/census.yml`) | Free compute (runs every 3 days), cron scheduling |
+| Orchestration | GitHub Actions (`.github/workflows/census.yml`) | Free compute (runs daily), cron scheduling |

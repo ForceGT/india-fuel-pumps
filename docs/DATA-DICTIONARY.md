@@ -8,9 +8,9 @@ A single fuel outlet as captured from the source. One JSON object per line in `o
 |-------|------|----------|-------------|---------|
 | `schemaVersion` | `number` | No | Schema version (currently `1`). Incremented on breaking changes. | `1` |
 | `brand` | `string` | No | OMC brand — one of `"HPCL"`,`"IOCL"`,`"BPCL"`,`"JioBP"`,`"Nayara"`,`"Shell"` | `"HPCL"` |
-| `outletId` | `string` | No | The source's own internal ID for this outlet. HPCL/IOCL use `outletId`; BPCL uses `roId`. | `"398563"` |
+| `outletId` | `string` | No | The source's own internal ID for this outlet. HPCL/IOCL use `outletId`; BPCL uses `roId`; JioBP uses its `FuelStationCode` (e.g. `"MHC117"`); Nayara uses its `cms_code` (e.g. `"45839TA839"`). | `"398563"` |
 | `stationId` | `string` | No | Stable dedup key: `makeStationId(brand, outletId, lat, lng)`. Unique across brands. | `"hpcl_398563_28.612_77.227"` |
-| `sourceUrl` | `string` | Yes | Canonical source page URL. `null` for BPCL (app API, no public web page). | `"https://petrolpump.hpretail.in/Home/398563"` |
+| `sourceUrl` | `string` | Yes | Canonical source page URL. `null` for BPCL (app API, no public web page). JioBP has no per-outlet page either, but sets `sourceUrl` to the API endpoint (`https://netmanager.ril.com:4005/CustomerMobility`) rather than `null`, for traceability. | `"https://petrolpump.hpretail.in/Home/398563"` |
 | `capturedAt` | `string` | No | ISO-8601 timestamp of when our crawler retrieved this data from the source. | `"2026-07-20T03:14:42.123Z"` |
 | `name` | `string` | No | Outlet name from the source's live page (not from a static roster). Live name always wins over static lists. Max ~200 chars. | `"Deepak Mittal Service Provider"` |
 | `address` | `string` | Yes | Full street address. `null` if the source didn't provide one. | `"NH 24, Haldwani Road, Kathgodam, Haldwani, Uttarakhand"` |
@@ -20,8 +20,8 @@ A single fuel outlet as captured from the source. One JSON object per line in `o
 | `lat` | `number` | No | Latitude in decimal degrees (WGS84). | `29.2205` |
 | `lng` | `number` | No | Longitude in decimal degrees (WGS84). Should always match `geohash`. | `79.5186` |
 | `geohash` | `string` | No | Geohash (precision 7, ~150 m cell). Encoding of `lat`/`lng`. Used for sharding at precision 3. | `"ttn0q70"` |
-| `hours` | `string` | Yes | Opening hours as free text. HPCL/IOCL: specific times. BPCL: null. | `"Mon-Sat 06:00-22:00, Sun 08:00-20:00"` |
-| `contact` | `string` | Yes | Phone number as published. Strips leading `tel:` prefixes. `null` if not published. | `"05946-123456"` |
+| `hours` | `string` | Yes | Opening hours as free text. HPCL/IOCL: specific times. BPCL, JioBP, Nayara: null (source doesn't report it). | `"Mon-Sat 06:00-22:00, Sun 08:00-20:00"` |
+| `contact` | `string` | Yes | Phone number as published. Strips leading `tel:` prefixes. `null` if not published. BPCL, JioBP, Nayara: always null. | `"05946-123456"` |
 | `mapsLink` | `string` | Yes | Google Maps directions URL if published by the source. `null` otherwise. | `"https://maps.google.com/?q=29.2205,79.5186"` |
 | `products` | `RawProduct[]` | No | Every fuel product+price the source reported at this outlet. See RawProduct below. Empty array if the source reported no products (rare but possible). | See below |
 
@@ -44,7 +44,7 @@ Per-unit crawl bookkeeping. One JSON per line in `output/{slug}-worklog.jsonl`. 
 
 | Field | Type | Nullable | Description | Example |
 |-------|------|----------|-------------|---------|
-| `workUnitId` | `string` | No | Resumability key. For HPCL/IOCL: the outlet's `sourceUrl`. For BPCL: `routeChunkId` or `cellId` (never collide across the two work kinds). | `"https://petrolpump.hpretail.in/Home/398563"` |
+| `workUnitId` | `string` | No | Resumability key. For HPCL/IOCL: the outlet's `sourceUrl`. For BPCL: `routeChunkId` or `cellId` (never collide across the two work kinds). For JioBP: `"batch-{n}"`, a batch of ~18 station codes (JioBP's unit of work is a batch, not a single outlet — one `"ok"` record can produce multiple `RawOutletRecord`s). | `"https://petrolpump.hpretail.in/Home/398563"` |
 | `status` | `string` | No | One of `"ok"`, `"empty"`, `"httpFailed"`, `"parsedNull"`, `"errored"`. Only `ok`/`empty` are treated as "done" on resume. Any other status is always retried. | `"ok"` |
 | `recordCount` | `number` | No | Number of `RawOutletRecord`s this work unit produced. 0 for `empty`, `httpFailed`, etc. | `1` |
 | `saturated` | `boolean` | Yes | BPCL only. `true` when a grid cell hit the saturation threshold and was subdivided. Absent for other brands. | `true` |
@@ -72,7 +72,7 @@ The manifest file at `dataset/index.json`.
 | `schemaVersion` | `number` | Currently `1`. |
 | `generatedAt` | `string` | ISO-8601 timestamp of when the dataset was built. |
 | `totalOutlets` | `number` | Total unique outlets across all brands. One outlet can only appear once (deduped by `stationId`). |
-| `brands` | `Record<string, number>` | Per-brand outlet counts. Keys are brand slugs (`"hpcl"`, `"iocl"`, `"bpcl"`). Missing brands are omitted (not set to 0). |
+| `brands` | `Record<string, number>` | Per-brand outlet counts. Keys are brand slugs (`"hpcl"`, `"iocl"`, `"bpcl"`, `"jiobp"`, `"nayara"`). Missing brands are omitted (not set to 0). |
 | `shards` | `ShardEntry[]` | Array of shard descriptors (see below). |
 
 ### ShardEntry
@@ -161,6 +161,61 @@ products: [
   { "name": "Speed 100", "priceInr": 198.25 }
 ]
 ```
+
+### JioBP outlet (`netmanager.ril.com`, no per-outlet page — `sourceUrl` is the API endpoint)
+
+Shown as diff from HPCL — only the fields that differ:
+
+```
+brand: "JioBP"
+outletId: "MHC117"
+stationId: "jiobp_MHC117_19.05508168_73.00673056"
+sourceUrl: "https://netmanager.ril.com:4005/CustomerMobility"
+name: "PALM BEACH"
+address: "PLOT NO 7, SECTOR 18, OFF PALM BEACH MARG, BESIDES FULL STOP MALL, Sanpada, Navi Mumbai, Maharashtra 400706"
+city: null
+state: "Maharashtra"
+lat: 19.05508168, lng: 73.00673056, geohash: "te7hz1r"
+hours: null, mapsLink: null
+contact: "9930505541"
+products: [
+  { "name": "Petrol", "priceInr": 111.28 },
+  { "name": "Diesel", "priceInr": 97.90 },
+  { "name": "CNG", "priceInr": 86.00 }
+]
+```
+
+Notes specific to JioBP:
+- `state` comes from the separate `FetchROMaster` index call (the per-outlet `FindFuelStation` response doesn't include it) — the provider looks it up by `outletId` from the batch's discovery payload.
+- Each product's `priceInr` is the entry with the latest `PriceDate` in a dated price-history array, not necessarily the first array entry — see `docs/jiobp-api.md` for the full parsing rule.
+- `city` is always `null` — JioBP's `Address` field is a single free-text string, not broken into breadcrumb components like HPCL/IOCL.
+
+### Nayara outlet (nayaraenergy.com `POST /get-code-ro-radius`)
+
+Shown as diff from HPCL — only the fields that differ:
+
+```
+brand: "Nayara"
+outletId: "123456"
+stationId: "nayara_123456_19.076_72.8777"
+sourceUrl: "https://www.nayaraenergy.com/get-code-ro-radius" (API endpoint, not per-outlet page)
+name: "Nayara Petrol Pump"
+address: "Some address string"
+city: null
+state: null
+pincode: null
+lat: 19.076, lng: 72.8777, geohash: "te7j5p0"
+hours: null, contact: null, mapsLink: null
+products: [
+  { "name": "Petrol", "priceInr": 105.42 },
+  { "name": "Diesel", "priceInr": 94.52 }
+]
+```
+
+Notes specific to Nayara:
+- `city`, `state`, `pincode` are always `null` — Nayara's API doesn't provide these fields.
+- `hours` and `contact` are always `null` — Nayara's API doesn't publish these.
+- Products are exactly `PETROL` and/or `DIESEL` as flat top-level keys in the source API; the parser converts them to the standard `products[]` array. A station may have only one product (omitting the key entirely if unavailable).
 
 ### WorkLogRecord (success)
 
