@@ -222,6 +222,26 @@ describe("createJiobpProvider().process", () => {
     expect(result.records).toEqual([]);
   });
 
+  it("parsedNull: a non-success ResponseFlag with an empty FuelStations array is retried, not treated as done", async () => {
+    const provider = createJiobpProvider();
+    const unit: WorkUnit = {
+      id: "batch-MHC117",
+      payload: { codes: ["MHC117"], stateByCode: { MHC117: "Maharashtra" } },
+    };
+
+    const ctx = makeCtx([
+      {
+        match: (body) => body.includes('"FuelStationCode":"MHC117"'),
+        json: { ResponseFlag: "E", ResponseMsg: "An error occurred while processing" },
+      },
+    ]);
+
+    const result = await provider.process(unit, ctx);
+
+    expect(result.status).toBe("parsedNull");
+    expect(result.records).toEqual([]);
+  });
+
   it("errored: ctx.fetch throws", async () => {
     const provider = createJiobpProvider();
     const unit: WorkUnit = {
@@ -368,7 +388,7 @@ describe("createJiobpProvider().discover", () => {
     expect(units[1]!.id.length).toBeGreaterThan(0);
   });
 
-  it("discover() yields nothing if the ROMaster fetch fails", async () => {
+  it("discover() throws if the ROMaster fetch fails (so a broken discovery call fails the job loudly instead of silently scraping nothing)", async () => {
     const mockFetch = (async () => ({
       ok: false,
       status: 500,
@@ -377,11 +397,9 @@ describe("createJiobpProvider().discover", () => {
 
     const provider = createJiobpProvider({ fetchImpl: mockFetch });
 
-    const units: WorkUnit[] = [];
-    for await (const unit of provider.discover({})) {
-      units.push(unit);
-    }
-
-    expect(units).toEqual([]);
+    await expect(async () => {
+      const units: WorkUnit[] = [];
+      for await (const unit of provider.discover({})) units.push(unit);
+    }).rejects.toThrow();
   });
 });

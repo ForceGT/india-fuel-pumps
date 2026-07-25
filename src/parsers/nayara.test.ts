@@ -161,4 +161,16 @@ describe("parseRadiusResponse", () => {
     expect(parseRadiusResponse("not an array")).toEqual([]);
     expect(parseRadiusResponse([null, "not-an-object", 42])).toEqual([]);
   });
+
+  it("rejects null/blank coordinates instead of silently coercing to 0 (Number(null) === 0 would otherwise pass)", () => {
+    const json = [
+      { cms_code: "NULL01", latitude: null, longitude: "76.5" },
+      { cms_code: "BLANK01", latitude: "10.0", longitude: "" },
+      { cms_code: "WS01", latitude: "10.0", longitude: "   " },
+      { cms_code: "GOOD01", latitude: "10.0", longitude: "20.0" },
+    ];
+    const result = parseRadiusResponse(json);
+    expect(result).toHaveLength(1);
+    expect(result[0]!.cmsCode).toBe("GOOD01");
+  });
 });

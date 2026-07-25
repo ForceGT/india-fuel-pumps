@@ -22,7 +22,7 @@ describe("buildROMasterRequest", () => {
       CustomerRequest: {
         ROMaster: {
           IMEINo: "AE3A.240806.043",
-          MobileNumber: "9028833886",
+          MobileNumber: "9000000000",
           TokenNumber: "test-token-123",
         },
       },
@@ -44,7 +44,7 @@ describe("buildFindFuelStationRequest", () => {
           FindFuelStation: {
             FuelStations: [{ FuelStationCode: "MHC117" }, { FuelStationCode: "MHF175" }],
             IMEINo: "AE3A.240806.043",
-            MobileNumber: "9028833886",
+            MobileNumber: "9000000000",
             TokenNumber: "test-token-456",
             SearchFlag: "R",
             State: "",
@@ -141,6 +141,26 @@ describe("parseROMasterResponse", () => {
     expect(result).toHaveLength(2);
     expect(result[0]!.state).toBeNull();
     expect(result[1]!.state).toBeNull();
+  });
+
+  it("rejects null/blank coordinates instead of silently coercing to 0 (Number(null) === 0 would otherwise pass)", () => {
+    const json = {
+      CustomerResponse: {
+        MasterData: {
+          FetchROMaster: {
+            ROMasterData: [
+              { FuelStationCode: "NULL01", Lattitude: null, Longitude: "76.5" },
+              { FuelStationCode: "BLANK01", Lattitude: "10.0", Longitude: "" },
+              { FuelStationCode: "WS01", Lattitude: "10.0", Longitude: "   " },
+              { FuelStationCode: "GOOD01", Lattitude: "10.0", Longitude: "20.0" },
+            ],
+          },
+        },
+      },
+    };
+    const result = parseROMasterResponse(json);
+    expect(result).toHaveLength(1);
+    expect(result[0]!.fuelStationCode).toBe("GOOD01");
   });
 });
 
@@ -322,5 +342,79 @@ describe("parseFindFuelStationResponse", () => {
         CustomerResponse: { FuelStation: { FindFuelStation: { FuelStations: "not-an-array" } } },
       })
     ).toEqual([]);
+  });
+
+  it("rejects null/blank coordinates instead of silently coercing to 0 (Number(null) === 0 would otherwise pass)", () => {
+    const json = {
+      CustomerResponse: {
+        FuelStation: {
+          FindFuelStation: {
+            FuelStations: [
+              { FuelStationCode: "NULL01", Lattitude: null, Longitude: "76.5", HistoryFuelProducts: [] },
+              { FuelStationCode: "BLANK01", Lattitude: "10.0", Longitude: "", HistoryFuelProducts: [] },
+              { FuelStationCode: "WS01", Lattitude: "10.0", Longitude: "   ", HistoryFuelProducts: [] },
+              { FuelStationCode: "GOOD01", Lattitude: "10.0", Longitude: "20.0", HistoryFuelProducts: [] },
+            ],
+          },
+        },
+      },
+    };
+    const result = parseFindFuelStationResponse(json);
+    expect(result).toHaveLength(1);
+    expect(result[0]!.fuelStationCode).toBe("GOOD01");
+  });
+
+  it("falls back to the only entry's price when no PriceDetails entry has a parseable PriceDate", () => {
+    const json = {
+      CustomerResponse: {
+        FuelStation: {
+          FindFuelStation: {
+            FuelStations: [
+              {
+                FuelStationCode: "BADDATE01",
+                Lattitude: "10.0",
+                Longitude: "20.0",
+                HistoryFuelProducts: [
+                  {
+                    ProductName: "Petrol",
+                    PriceDetails: [{ ProductPrice: "100.50", PriceDate: "not-a-date" }],
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      },
+    };
+    const result = parseFindFuelStationResponse(json);
+    expect(result).toHaveLength(1);
+    expect(result[0]!.products).toEqual([{ name: "Petrol", priceInr: 100.5 }]);
+  });
+
+  it("accepts a numeric (not just string) ProductPrice", () => {
+    const json = {
+      CustomerResponse: {
+        FuelStation: {
+          FindFuelStation: {
+            FuelStations: [
+              {
+                FuelStationCode: "NUMPRICE01",
+                Lattitude: "10.0",
+                Longitude: "20.0",
+                HistoryFuelProducts: [
+                  {
+                    ProductName: "Diesel",
+                    PriceDetails: [{ ProductPrice: 95.5, PriceDate: "25-07-2026 00:00:00" }],
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      },
+    };
+    const result = parseFindFuelStationResponse(json);
+    expect(result).toHaveLength(1);
+    expect(result[0]!.products).toEqual([{ name: "Diesel", priceInr: 95.5 }]);
   });
 });

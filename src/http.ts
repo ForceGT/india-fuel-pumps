@@ -60,6 +60,9 @@ export async function fetchWithBackoff(
     body,
   } = opts;
 
+  const hasCustomUserAgent = Object.keys(headers).some((k) => k.toLowerCase() === "user-agent");
+  const mergedHeaders = hasCustomUserAgent ? { ...headers } : { "User-Agent": USER_AGENT, ...headers };
+
   let attempt = 0;
   let delay = initialDelayMs;
 
@@ -69,7 +72,7 @@ export async function fetchWithBackoff(
       response = await fetchImpl(url, {
         method,
         body,
-        headers: { "User-Agent": USER_AGENT, ...headers },
+        headers: mergedHeaders,
       });
     } catch (err) {
       if (attempt >= maxRetries) throw err;

@@ -67,12 +67,10 @@ export function createJiobpProvider(config: JiobpProviderConfig = {}): Provider 
       try {
         res = await fetchImpl(req.url, { method: req.method, headers: req.headers, body: req.body });
       } catch (err) {
-        console.error(`[jiobp-provider] discover: ROMaster fetch threw:`, String(err));
-        return;
+        throw new Error(`[jiobp-provider] discover: ROMaster fetch threw: ${String(err)}`);
       }
       if (!res.ok) {
-        console.error(`[jiobp-provider] discover: ROMaster fetch failed HTTP ${res.status}`);
-        return;
+        throw new Error(`[jiobp-provider] discover: ROMaster fetch failed HTTP ${res.status}`);
       }
       const json = (await res.json()) as unknown;
       const entries = parseROMasterResponse(json);
@@ -84,7 +82,7 @@ export function createJiobpProvider(config: JiobpProviderConfig = {}): Provider 
         const stateByCode: Record<string, string | null> = {};
         for (const e of batch) stateByCode[e.fuelStationCode] = e.state;
         const payload: JiobpUnitPayload = { codes, stateByCode };
-        yield { id: `batch-${i / batchSize}`, payload };
+        yield { id: `batch-${codes[0]}`, payload };
       }
     },
 
@@ -98,8 +96,19 @@ export function createJiobpProvider(config: JiobpProviderConfig = {}): Provider 
           return { status: "httpFailed", detail: `HTTP ${res.status}`, records: [] };
         }
         const json = (await res.json()) as unknown;
+        const responseFlag = (json as Record<string, unknown> | null)?.["CustomerResponse"] as Record<string, unknown> | undefined;
+        const findFuelStation = (responseFlag?.["FuelStation"] as Record<string, unknown> | undefined)?.["FindFuelStation"] as
+          | Record<string, unknown>
+          | undefined;
+        const isSuccessResponse = findFuelStation?.["ResponseFlag"] === "S";
         const stations = parseFindFuelStationResponse(json);
-        if (stations.length === 0) return { status: "empty", records: [] };
+        if (stations.length === 0) {
+          if (!isSuccessResponse) {
+            logErr("parsedNull", `non-success ResponseFlag for unit ${unit.id}`);
+            return { status: "parsedNull", detail: "API response was not ResponseFlag S (or FuelStations array was absent/empty)", records: [] };
+          }
+          return { status: "empty", records: [] };
+        }
 
         const now = ctx.now();
         const records = [];

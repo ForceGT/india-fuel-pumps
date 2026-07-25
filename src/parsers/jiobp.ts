@@ -9,8 +9,15 @@
 export const JIOBP_ENDPOINT = "https://netmanager.ril.com:4005/CustomerMobility";
 
 /** Synthetic identity fields — the live API returns full real data for ANY well-formed mobile/token/IMEI, no login/OTP required (verified end-to-end, see docs/jiobp-api.md). */
-export const JIOBP_MOBILE_NUMBER = "9028833886";
+export const JIOBP_MOBILE_NUMBER = "9000000000";
 export const JIOBP_IMEI_NO = "AE3A.240806.043";
+
+/** Number(null)/Number("")/Number("  ") all coerce to 0, which would silently accept a missing coordinate as (0,0) — this only accepts a real number or a non-blank numeric-looking string. */
+function toCoord(raw: unknown): number {
+  if (typeof raw === "number") return raw;
+  if (typeof raw === "string" && raw.trim() !== "") return Number(raw);
+  return NaN;
+}
 
 export interface JiobpRequestSpec {
   url: string;
@@ -87,8 +94,8 @@ export function parseROMasterResponse(json: unknown): JiobpIndexEntry[] {
     const fuelStationCode = (item as Record<string, unknown>)?.FuelStationCode;
     if (typeof fuelStationCode !== "string") continue;
 
-    const lat = Number((item as Record<string, unknown>)?.Lattitude);
-    const lng = Number((item as Record<string, unknown>)?.Longitude);
+    const lat = toCoord((item as Record<string, unknown>)?.Lattitude);
+    const lng = toCoord((item as Record<string, unknown>)?.Longitude);
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
 
     const rawState = (item as Record<string, unknown>)?.State;
@@ -141,16 +148,17 @@ function latestProductPrice(priceDetails: unknown): number | null {
       }
     }
 
-    if (timestamp > latestTimestamp) {
+    if (latestEntry === null || timestamp > latestTimestamp) {
       latestTimestamp = timestamp;
       latestEntry = entryRecord;
     }
   }
 
   if (!latestEntry) return null;
-  const productPrice = latestEntry.ProductPrice;
-  if (typeof productPrice !== "string") return null;
-  const price = Number(productPrice.trim());
+  const rawPrice = latestEntry.ProductPrice;
+  const priceStr = typeof rawPrice === "string" ? rawPrice : typeof rawPrice === "number" ? String(rawPrice) : null;
+  if (priceStr === null) return null;
+  const price = Number(priceStr.trim());
   return Number.isFinite(price) && price > 0 ? price : null;
 }
 
@@ -174,8 +182,8 @@ export function parseFindFuelStationResponse(json: unknown): JiobpStationDetail[
     const fuelStationCode = itemRecord?.FuelStationCode;
     if (typeof fuelStationCode !== "string") continue;
 
-    const lat = Number(itemRecord?.Lattitude);
-    const lng = Number(itemRecord?.Longitude);
+    const lat = toCoord(itemRecord?.Lattitude);
+    const lng = toCoord(itemRecord?.Longitude);
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
 
     const fuelStationName = itemRecord?.FuelStationName;

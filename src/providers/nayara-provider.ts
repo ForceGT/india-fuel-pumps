@@ -146,7 +146,10 @@ export function createNayaraProvider(config: NayaraProviderConfig = {}): Provide
 
         const json = (await res.json()) as unknown;
         const stations = parseRadiusResponse(json);
-        if (stations.length === 0) return { status: "empty", records: [] };
+        if (stations.length === 0) {
+          logErr("parsedNull", `zero stations parsed for unit ${unit.id} (radius queries realistically always return ~9000+; treating as a parse/response failure, not a legitimate empty result)`);
+          return { status: "parsedNull", detail: "parseRadiusResponse returned zero stations — response was likely non-array/malformed rather than a real empty result", records: [] };
+        }
 
         const now = ctx.now();
         const records = [];

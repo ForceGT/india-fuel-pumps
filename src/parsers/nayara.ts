@@ -30,6 +30,13 @@ export const NAYARA_BASE_URL = "https://www.nayaraenergy.com";
 export const NAYARA_LOCATOR_PAGE_URL = `${NAYARA_BASE_URL}/petrol-pump-near-me`;
 export const NAYARA_RADIUS_ENDPOINT = `${NAYARA_BASE_URL}/get-code-ro-radius`;
 
+/** Number(null)/Number("")/Number("  ") all coerce to 0, which would silently accept a missing coordinate as (0,0) — this only accepts a real number or a non-blank numeric-looking string. */
+function toCoord(raw: unknown): number {
+  if (typeof raw === "number") return raw;
+  if (typeof raw === "string" && raw.trim() !== "") return Number(raw);
+  return NaN;
+}
+
 /** Chrome-mimicking header set — see module doc comment above for why this (not the honest IndiaFuelPumpsBot UA) is used for this brand only. */
 export const NAYARA_CHROME_HEADERS: Record<string, string> = {
   "user-agent":
@@ -154,8 +161,8 @@ export function parseRadiusResponse(json: unknown): NayaraStation[] {
     const cmsCode = rec.cms_code;
     if (typeof cmsCode !== "string" || !cmsCode.trim()) continue;
 
-    const lat = Number(rec.latitude);
-    const lng = Number(rec.longitude);
+    const lat = toCoord(rec.latitude);
+    const lng = toCoord(rec.longitude);
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
 
     const rawName = rec.ro_name;

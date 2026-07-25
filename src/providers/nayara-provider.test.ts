@@ -151,16 +151,16 @@ describe("createNayaraProvider().process", () => {
     const ctx = makeCtx({ radiusResponses: [{ status: 200, json: [] }] });
     const unit: WorkUnit = { id: "center-1", payload: { lat: 1, lng: 2, radiusKm: 3000 } };
     const result = await provider.process(unit, ctx);
-    expect(result.status).toBe("empty");
+    expect(result.status).toBe("parsedNull");
   });
 
-  it("empty: radius response is an empty array", async () => {
+  it("parsedNull: radius response is an empty array (treated as parse failure, not legitimate empty result)", async () => {
     const provider = createNayaraProvider();
     const ctx = makeCtx({ radiusResponses: [{ status: 200, json: [] }] });
     await provider.init!(ctx);
     const unit: WorkUnit = { id: "center-1", payload: { lat: 1, lng: 2, radiusKm: 3000 } };
     const result = await provider.process(unit, ctx);
-    expect(result.status).toBe("empty");
+    expect(result.status).toBe("parsedNull");
     expect(result.records).toEqual([]);
   });
 
@@ -202,6 +202,60 @@ describe("createNayaraProvider().process", () => {
     const result = await provider.process(unit, ctx);
     expect(result.status).toBe("errored");
     expect(result.detail).toContain("network exploded");
+    expect(result.records).toEqual([]);
+  });
+
+  it("parsedNull: a non-array (malformed) response is treated as a parse failure, not a legitimate empty result", async () => {
+    const provider = createNayaraProvider();
+    const ctx = makeCtx({
+      radiusResponses: [{ status: 200, json: { unexpected: "shape" } }],
+    });
+    await provider.init!(ctx);
+    const unit: WorkUnit = { id: "center-1", payload: { lat: 1, lng: 2, radiusKm: 3000 } };
+    const result = await provider.process(unit, ctx);
+    expect(result.status).toBe("parsedNull");
+    expect(result.records).toEqual([]);
+  });
+
+  it("httpFailed: a SECOND 419 after the retry also fails (not an infinite retry loop)", async () => {
+    const provider = createNayaraProvider();
+    const ctx = makeCtx({
+      radiusResponses: [
+        { status: 419, json: {} },
+        { status: 419, json: {} },
+      ],
+    });
+    await provider.init!(ctx);
+    const unit: WorkUnit = { id: "center-1", payload: { lat: 1, lng: 2, radiusKm: 3000 } };
+    const result = await provider.process(unit, ctx);
+    expect(result.status).toBe("httpFailed");
+    expect(result.records).toEqual([]);
+  });
+
+  it("errored: if the 419-triggered session re-bootstrap itself fails, process() reports errored (not a silent hang or false success)", async () => {
+    const provider = createNayaraProvider();
+    const ctx = makeCtx({
+      bootstrap: { html: VALID_HTML, setCookie: VALID_SET_COOKIE },
+      radiusResponses: [{ status: 419, json: {} }],
+    });
+    await provider.init!(ctx);
+
+    // Now make the bootstrap GET start failing, so the 419-triggered re-bootstrap inside process() fails.
+    const brokenCtx: ProviderContext = {
+      now: ctx.now,
+      fetch: (async (url: string, init?: Parameters<ProviderContext["fetch"]>[1]) => {
+        const method = (init?.method ?? "GET").toUpperCase();
+        if (method === "GET") {
+          return { ok: false, status: 500, text: async () => "", headers: { getSetCookie: () => [], get: () => null } } as unknown as Response;
+        }
+        return ctx.fetch(url, init);
+      }) as ProviderContext["fetch"],
+    };
+
+    const unit: WorkUnit = { id: "center-1", payload: { lat: 1, lng: 2, radiusKm: 3000 } };
+    const result = await provider.process(unit, brokenCtx);
+
+    expect(result.status).toBe("errored");
     expect(result.records).toEqual([]);
   });
 });
