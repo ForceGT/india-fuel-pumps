@@ -94,6 +94,25 @@ Each file at `dataset/shards/{prefix}.{hash}.json`.
 | `prefix` | `string` | Same 3-character geohash prefix as the filename. |
 | `outlets` | `RawOutletRecord[]` | All outlets in this cell, sorted by `stationId` for deterministic hashing. |
 
+Each shard filename embeds a **content hash** (first 16 hex of SHA-256), so a shard
+file is **immutable** — an unchanged cell keeps the same URL across updates and stays
+cached; only cells whose data actually changed get a new filename and re-download. If
+every cell is unchanged, a new `index.json` references the same shard files and the
+CDN cache is untouched.
+
+### Consumption pattern
+
+1. Fetch `dataset/index.json` — read `shards[]` to know which cells exist.
+2. Parallel-fetch the shards whose `prefix` intersects your area of interest
+   (bounding box / city / current location — decode each `prefix` back to a
+   lat/lng box with any geohash library).
+3. Merge the returned `RawOutletRecord[]` arrays in memory and apply your own
+   classification / search / map rendering.
+
+A client that loads all shards at once (~103,000 records, well under 50 MB
+decompressed) is also fine for a national map — the shard structure is designed to
+enable per-viewport streaming but does not require it.
+
 ---
 
 ## Example records

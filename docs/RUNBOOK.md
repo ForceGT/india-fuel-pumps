@@ -230,3 +230,40 @@ https://cdn.jsdelivr.net/gh/ForceGT/india-fuel-pumps@main/dataset/shards/<prefix
 | HPCL "no such sitemap" | Sitemap structure changed | Check `petrolpump.hpretail.in/sitemap.xml` |
 | `build-dataset` exits with 0 outlets | No raw JSONL files exist | Run censuses first |
 | Stale data after resume | Worklog records >3 days old | Set `maxAgeDays` lower or `FRESH=1` |
+
+---
+
+## FAQ
+
+**A brand's census failed in CI — does that mean the next release loses pumps for that brand?**
+
+No. `publish` (`.github/workflows/census.yml`) only uploads a brand's raw-data artifact if that brand's job actually produced fresh output — the artifact-upload step for each brand has no `if: always()`, so a job that fails before writing `output/{brand}-raw.jsonl` uploads nothing. `publish`'s own `actions/checkout` step already has the *last committed* `{brand}-raw.jsonl.gz` in the working tree, and `download-artifact` only overwrites files it actually receives. So a failed brand silently falls back to yesterday's committed baseline for that brand — same mechanism as the documented "Tailscale exit node not configured" case — and the release shows no delta for it, not a drop to zero. Even in the case where a job *partially* scrapes before dying, `Guard against dataset collapse` fails the publish outright if any brand's count drops >50% from the previous baseline (for brands with >1,000 records), so a half-finished scrape can't silently roll the published dataset backward either.
+
+**How do I re-run just one brand?**
+
+Trigger `workflow_dispatch` on `census.yml` with `brands` set to a comma-separated subset, e.g. `brands=bpcl`. Only that brand's census job runs; every other brand's job is skipped, and `publish` merges the freshly-scraped brand with the already-committed raw data for the rest — it does not need every brand to run in order to produce a full release.
+
+```bash
+gh workflow run census.yml -f brands=bpcl
+```
+
+**A "Census failure" issue got filed — do I need to close it manually?**
+
+No. The `resolve` job runs after every workflow trigger (scheduled or manual) and auto-closes any open `census-failure`-labeled issue once every brand named in its title has succeeded again — partial recoveries get a comment instead, and the issue stays open until all named brands are back. Manual closing is only needed if you're overriding that logic for some reason.
+
+**How is stale data (used as a fallback) surfaced, since it doesn't fail the build?**
+
+`publish`'s `Check data freshness` step compares each brand's raw file's age against `STALE_AFTER_DAYS` (3, matching the scraper's own re-scrape cadence) and writes a `⚠️ Stale data used` warning into the job summary listing the affected brands. This is visibility only — it does not block the release, since a few days' staleness is expected and safe (E0-Finder's own staleness threshold is 14 days).
+
+**Why did a run fail with no obvious WAF/auth signature?**
+
+Check the job's raw log before assuming a block — the issue-template's suggested checks (WAF, OAuth expiry) are common causes but not the only ones. A `getaddrinfo EAI_AGAIN <host>` error on the *first* request, especially alongside the same DNS failure on unrelated GitHub-internal hosts, points to a transient network/DNS blip (e.g. on BPCL's Tailscale exit node) rather than anything OMC-side.
+
+**A brand's census usually takes hours — why did it finish in a few minutes?**
+
+By design, not a fluke. `actions/cache/restore@v6`'s `restore-keys: worklog-{brand}-` always pulls in the *most recent prior* worklog (a plain prefix match, not tied to a specific run), and `runProvider`'s `computeDoneWorkUnitIds` (CLAUDE.md fact #4) treats a work unit as done — skipped with zero HTTP requests — if the worklog shows it was captured within `{BRAND}_CENSUS_MAX_AGE_DAYS` (3 days). So runtime depends entirely on how many units are still inside that 3-day window, not on total outlet count:
+
+- IOCL run `30734379310` (2026-08-02): worklog inherited from three days earlier showed only 1,588 of 39,586 outlets still fresh → 37,998 had to be scraped → **3h12m**.
+- IOCL run `30788312263` (2026-08-03, ~21h later): worklog inherited from the run directly above, which had *just* refreshed almost everything → 38,813 of 39,586 already fresh, only 735 pending → **~6 minutes**.
+
+Because most of a brand's outlets tend to get captured in the same burst, they also cross the 3-day threshold together — so a brand cycles between one ~3-hour "cold" run roughly every 3 days and several ~minutes-long "warm" runs in between, all in the same job. A fast run isn't a sign that something was skipped or broken; check the job log for `total units / already done / pending` to confirm.
