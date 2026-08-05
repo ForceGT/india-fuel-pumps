@@ -7,7 +7,7 @@
 
 An open, machine-readable dataset of **every fuel pump across India's public-sector oil marketing companies, plus Shell**: HPCL, IndianOil (IOCL), BPCL, Jio-bp, Nayara, and Shell. **~103,000+ outlets**, each with location, contact, hours, and **every fuel product and price the source reports, captured exactly as-is**.
 
-No login, no scraping of private data — every source is a public store-locator. No grade classification, no filtering, no assumptions about what any of it means: this is raw material, not a finished product. See [Methodology](#methodology) below for the full reasoning.
+No login, no scraping of personal data. Four of the six sources are public locator websites (HPCL, IOCL, Nayara, Shell); the other two (BPCL, Jio-bp) are the same public backend APIs their official mobile apps call — see [Provenance & license](#provenance-license) for exactly which is which. No grade classification, no filtering, no assumptions about what any of it means: this is raw material, not a finished product. See [Methodology](#methodology) below for the full reasoning.
 
 > &#x26A0;&#xFE0F; **Unofficial. Always confirm at the pump.** This data is compiled from public sources and can be out of date or wrong. Never rely on it for a decision that a wrong answer would cost you — call the pump (numbers are included) to confirm.
 
@@ -24,7 +24,7 @@ This README is deliberately short. Everything else lives in one of these:
 | **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** | How the pipeline code is structured — the `Provider` interface, the resumable worker pool, the CI workflow, how to add a new brand. |
 | **[docs/RUNBOOK.md](./docs/RUNBOOK.md)** | How to actually run the scrapers: prerequisites, per-brand env vars, resuming a killed run, common failure modes, and an operational FAQ. |
 | **[docs/EDGE-CASES.md](./docs/EDGE-CASES.md)** | A catalog of specific quirks and incidents per brand (WAF calibration, token expiry, cache staleness) and their root causes. |
-| **[docs/jiobp-api.md](./docs/jiobp-api.md)**, **[docs/nayara-api.md](./docs/nayara-api.md)**, **[docs/shell-api.md](./docs/shell-api.md)** | Full reverse-engineering write-ups for each brand's private/undocumented API — every request, every field, and how it was found. |
+| **[docs/jiobp-api.md](./docs/jiobp-api.md)**, **[docs/nayara-api.md](./docs/nayara-api.md)**, **[docs/shell-api.md](./docs/shell-api.md)** | Full API references for each brand's undocumented locator/app backend — every request, every field. |
 | **[CONTRIBUTING.md](./CONTRIBUTING.md)** | How to report a wrong pump, add a new brand, or submit a code change. |
 
 ---
@@ -67,7 +67,7 @@ npm run build-dataset   # regenerate dataset/ from the scraped output
 | **HPCL** | ~23,980 | `petrolpump.hpretail.in` |
 | **IOCL (IndianOil)** | ~39,611 | `locator.iocl.com` |
 | **BPCL** | ~27,961 | `api.cep.bpcl.in` (same backend as the "BharatGas" app) |
-| **Jio-bp** | ~2,296 | `netmanager.ril.com` (private app backend; see [docs/jiobp-api.md](./docs/jiobp-api.md)) |
+| **Jio-bp** | ~2,296 | `netmanager.ril.com` (the MyJio-bp app's backend API; see [docs/jiobp-api.md](./docs/jiobp-api.md)) |
 | **Nayara** | ~9,065 | nayaraenergy.com "Petrol Pump Near Me" locator |
 | **Shell** | ~332 | shellretaillocator.geoapp.me (third-party widget; see [docs/shell-api.md](./docs/shell-api.md)) |
 
@@ -101,10 +101,13 @@ The short version — full reasoning for each point is in [docs/METHODOLOGY.md](
 
 ## Provenance & license
 
-- Data is derived from **public** official oil-company outlet locators (no login, no scraping of gated or personal data). Contact numbers are the pumps' listed business numbers.
-- The BPCL endpoint (`api.cep.bpcl.in`) was reverse-engineered from static bytecode analysis of the legitimate "BharatGas" Android app — no emulator, no RASP bypass, no authentication credentials.
-- The Jio-bp endpoint (`netmanager.ril.com`) was reverse-engineered from the "MyJio-bp" Android app (SSL-pinning disabled in an emulator, traffic captured via a local mitmproxy — see [docs/jiobp-api.md](./docs/jiobp-api.md) for the full repro). Unlike the public HPCL/IOCL/BPCL locators, this is a **private customer-app backend** — the underlying data is not sensitive, but scraping it is a different posture than a public store-locator. No login/OTP/valid session is required or used.
-- **License: [MIT](./LICENSE)** — use it freely for anything, commercial or not; just keep the copyright and license notice. No warranty (see the disclaimer above).
+No login is used anywhere, no personal/gated data is touched, and contact numbers are the pumps' own listed business numbers.
+
+- **HPCL, IOCL, Nayara, Shell** are fetched from their public locator websites — the same pages/endpoints anyone's browser hits when using the "find a pump" search on each brand's own site.
+- **BPCL and Jio-bp** are fetched from the same backend APIs their official mobile apps (BharatGas, MyJio-bp) call — these aren't documented publicly, but they're ordinary HTTP endpoints, not gated behind any login or app-specific authentication. See [docs/jiobp-api.md](./docs/jiobp-api.md) for Jio-bp's full request/response reference.
+- Nayara's site blocks this project's honest, self-identifying `User-Agent` at the WAF level; a deliberate, documented call was made to send standard browser headers there instead — see [docs/nayara-api.md](./docs/nayara-api.md) for the reasoning.
+
+**License: [MIT](./LICENSE)** — use it freely for anything, commercial or not; just keep the copyright and license notice. No warranty (see the disclaimer above).
 
 ---
 

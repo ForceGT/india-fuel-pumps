@@ -1,11 +1,10 @@
-# Shell India locator — reverse-engineered reference
+# Shell India locator — API reference
 
 How `shell.in`'s "Shell Station Locator"
 (`/shell-service-station/shell-station-locator.html`) fetches outlet data,
 and how Shell separately publishes an indicative city-level price table.
-Captured via Chrome DevTools MCP (live page inspection + network capture),
-verified end-to-end with standalone `curl`/`python` calls from a cold start
-(no browser, no cookies).
+Verified end-to-end with standalone `curl`/`python` calls from a cold start
+(no browser, no cookies needed).
 
 > **Status:** working contract, verified end-to-end on 2026-07-25.
 

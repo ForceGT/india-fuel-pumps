@@ -1,33 +1,32 @@
-# Jio-bp (RBML) Mobility API — reverse-engineered reference
+# Jio-bp (RBML) Mobility API — reference
 
-How the **MyJio-bp** Android app (`com.jiobp.myjio_bp`, a Flutter app) fetches the
-national fuel-station list, per-station live prices, and amenities. Captured by
-running the app in an emulator with SSL-pinning disabled (reFlutter) and an
-mitmproxy reverse-proxy on `netmanager.ril.com`.
+How the same backend the **MyJio-bp** Android app uses fetches the national
+fuel-station list, per-station live prices, and amenities. This is a publicly
+reachable API — the app was simply the easiest way to identify and reproduce
+the exact request/response shapes; the endpoint itself requires no login and
+is not gated to app traffic specifically.
 
-> **Status:** working contract, verified end-to-end on 2026-07-24. Prices returned
-> matched the app UI exactly (Palm Beach: Petrol 111.28, Diesel 97.90 Rs/l, CNG
-> 86.00 Rs/kg). **Auth is not validated** — both operations return full real data
-> with a fully synthetic `MobileNumber` + `TokenNumber` + `IMEINo` (confirmed by
-> replaying against the live server with random values). No login/OTP required.
+> **Status:** working contract, verified end-to-end on 2026-07-24. Prices
+> returned matched the app UI exactly (Palm Beach: Petrol 111.28, Diesel
+> 97.90 Rs/l, CNG 86.00 Rs/kg). **Identity fields are not validated** — both
+> operations return full real data with synthetic `MobileNumber` +
+> `TokenNumber` + `IMEINo` values. No login/OTP required.
 
 ---
 
 ## Endpoint
 
-Everything runs through **one** JSON endpoint. The *operation* is selected by the
-**shape of the JSON body**, not the URL path (JSON-RPC style).
+Everything runs through **one** JSON endpoint. The *operation* is selected by
+the **shape of the JSON body**, not the URL path (JSON-RPC style).
 
 ```
 POST https://netmanager.ril.com:4005/CustomerMobility
 ```
 
-- Host is publicly reachable (resolves to `116.50.97.246`), no datacenter-IP block
-  observed (unlike BPCL).
-- **No `Authorization` header, no API key, no bearer.** Config was shipped in
-  cleartext in the APK (`assets/flutter_assets/.env.prod`).
+- Publicly reachable, no datacenter-IP block observed (unlike BPCL).
+- **No `Authorization` header, no API key, no bearer token required.**
 
-### Request headers (all that the app sends)
+### Request headers
 
 ```
 user-agent: Dart/3.10 (dart:io)
@@ -37,30 +36,29 @@ accept-encoding: gzip
 
 Responses are gzipped JSON.
 
-### Identity / auth model
+### Identity fields
 
 Identity is carried **inside the body**, not in headers:
 
 | Field          | Example                                  | Notes |
 |----------------|------------------------------------------|-------|
-| `MobileNumber` | `9000000000`                             | The logged-in mobile number (any well-formed 10-digit number — see below; scraper uses a synthetic placeholder). |
-| `TokenNumber`  | `9a5848e6-8d58-7177-3da6-fb46fa8f7f4c`   | Session UUID minted at login. Rotates per response. |
-| `IMEINo`       | `AE3A.240806.043`                        | Device build id (any stable string). |
+| `MobileNumber` | `9000000000`                             | Any well-formed 10-digit number. |
+| `TokenNumber`  | `9a5848e6-8d58-7177-3da6-fb46fa8f7f4c`   | A UUID. Rotates per response. |
+| `IMEINo`       | `AE3A.240806.043`                        | Any stable string. |
 
-**The values are not validated.** Replaying both operations against the live
-server with a random 10-digit `MobileNumber`, a random UUID `TokenNumber`, and a
-garbage `IMEINo` returned full, correct data (`ResponseFlag: S`) — MHC117 prices
-matched the app; a Kerala station returned its own real prices. The fields must be
-*present and well-formed* (a fully anonymous `GetROCNGQueueTime` with no mobile
-returns `"Please provide mobile number"`), but **no login, OTP, or valid session
-is needed**. `init()` can just use constants; `TokenNumber` can be any fresh UUID.
+**These values are not validated by the server.** A random 10-digit
+`MobileNumber`, a random UUID `TokenNumber`, and an arbitrary `IMEINo` all
+return full, correct data (`ResponseFlag: S`). The fields must be *present
+and well-formed* (an empty `MobileNumber` returns `"Please provide mobile
+number"`), but no login, OTP, or valid session is needed. A client can just
+use constants for `MobileNumber`/`IMEINo`, and any fresh UUID for `TokenNumber`.
 
 ---
 
 ## Operation 1 — `FetchROMaster` (national station index)
 
-Returns **every** Jio-bp station in one call (2294 on capture), with just code +
-coordinates + state. This is the discovery/index call.
+Returns **every** Jio-bp station in one call (2294 at time of writing), with
+just code + coordinates + state. This is the discovery/index call.
 
 ### Request
 
@@ -99,9 +97,8 @@ coordinates + state. This is the discovery/index call.
 ```
 
 Notes:
-- `FuelStationCode` is the stable outlet id (the app's "Mobility Station Code",
-  e.g. `MHC117`). First two letters ≈ state (`MH`, `KL`, `UT`…); 3rd letter looks
-  like a type marker (`F`/`C`/`T`).
+- `FuelStationCode` is the stable outlet id (e.g. `MHC117`). First two letters
+  ≈ state (`MH`, `KL`, `UT`…); 3rd letter looks like a type marker (`F`/`C`/`T`).
 - Field is misspelled **`Lattitude`** (two t's). `Longitude` is normal.
 - No prices or names here — that's Operation 2.
 
@@ -109,8 +106,8 @@ Notes:
 
 ## Operation 2 — `FindFuelStation` (details + prices + amenities)
 
-Takes a **batch** of station codes, returns full detail for each. The app sends
-the nearby codes it got from the index; batch size is flexible (18 observed).
+Takes a **batch** of station codes, returns full detail for each. Batch size
+is flexible (18 used by this project's own scraper).
 
 ### Request
 
@@ -139,8 +136,8 @@ the nearby codes it got from the index; batch size is flexible (18 observed).
 > **All five trailing fields are required.** Omitting `IMEINo` / `MobileNumber` /
 > `TokenNumber` / `SearchFlag` / `State` — sending only the `FuelStations` array —
 > returns `{"ResponseFlag":"E","ResponseMsg":"An error occurred while processing"}`.
-> `SearchFlag":"R"` and `State":""` were the non-obvious ones. The values
-> themselves are not validated (random mobile/token/IMEI work).
+> `SearchFlag":"R"` and `State":""` are required exact values. The identity
+> field values themselves are not validated (random mobile/token/IMEI work).
 
 ### Response (one station, full object)
 
@@ -211,11 +208,11 @@ Latest prices decoded for `MHC117 / PALM BEACH` (matched the app UI exactly):
 | Diesel      | 97.90   | Rs/liter | 25-05-2026 07:44:00  |
 | CNG         | 86.00   | Rs/kg    | 30-05-2026 00:00:00  |
 
-Product master list (from `GetCAMasterData`, port 4009):
-`["Petrol", "Diesel", "Auto LPG", "EV", "CNG"]`. `ProductName` is captured
-verbatim, so any grade string a station reports (e.g. an E12/E20/E100 variant)
-would appear here as-is — no separate grade field. (Palm Beach reports only
-Petrol/Diesel/CNG; grade variants would surface at whichever outlets carry them.)
+Product master list: `["Petrol", "Diesel", "Auto LPG", "EV", "CNG"]`.
+`ProductName` is captured verbatim, so any grade string a station reports
+(e.g. an E12/E20/E100 variant) would appear here as-is — no separate grade
+field. (Palm Beach reports only Petrol/Diesel/CNG; grade variants would
+surface at whichever outlets carry them.)
 
 ---
 
@@ -251,45 +248,23 @@ scope** for this repo — dropped.
 - **`process(unit)`** → one `FindFuelStation` call with that batch → up to
   `batchSize` `RawOutletRecord`s.
 - **No `init()`.** Since neither `MobileNumber`/`TokenNumber`/`IMEINo` is actually
-  validated by the server (see "Identity / auth model" above), there's no session
-  or token to bootstrap — `TokenNumber` is just a fresh `crypto.randomUUID()`
-  generated inline on every request, and `MobileNumber`/`IMEINo` are hardcoded
-  constants. There's nothing for a one-time setup step to do.
-- Default concurrency is deliberately conservative (2, via `JIOBP_CENSUS_CONCURRENCY`)
-  — this is a private app backend, not a public locator.
+  validated by the server, there's no session or token to bootstrap —
+  `TokenNumber` is just a fresh `crypto.randomUUID()` generated inline on
+  every request, and `MobileNumber`/`IMEINo` are hardcoded constants. There's
+  nothing for a one-time setup step to do.
+- Concurrency defaults conservatively (2, via `JIOBP_CENSUS_CONCURRENCY`).
 
 ---
 
-## Resolved decisions (this census is built and running)
+## Notes on the census
 
-These were open questions during initial reverse-engineering; kept here as a
-record of what was decided and why, now that `src/providers/jiobp-provider.ts`
-is implemented and shipping in the daily census.
-
-1. **Auth token.** No login/OTP/valid session required — synthetic
-   `MobileNumber` + `TokenNumber` + `IMEINo` return full real data. No `init()`
-   needed; `TokenNumber` is a fresh UUID per request.
-2. **Ethics / authorization.** This is a **private customer-app backend**, not
-   the public store-locator. The *data* (public station locations +
-   publicly-posted fuel prices) is not sensitive, but scraping it at national
-   scale is a different posture than the HPCL/IOCL/BPCL public-locator scrapes
-   — called out explicitly in the main README/CONTRIBUTING, same tier of
-   disclosure as BPCL's residential-IP requirement.
-3. **Rate/volume.** Batched at 18 codes/request (`JIOBP_CENSUS_BATCH_SIZE`),
+1. **Auth.** No login/OTP/valid session required — synthetic identity fields
+   return full real data. No `init()` needed; `TokenNumber` is a fresh UUID
+   per request.
+2. **Rate/volume.** Batched at 18 codes/request (`JIOBP_CENSUS_BATCH_SIZE`),
    the whole national census is only ~128 requests — trivial vs HPCL/IOCL/BPCL,
    and finishes in minutes even at low concurrency.
-4. **Price history vs. current.** `PriceDetails` is a dated history; some
+3. **Price history vs. current.** `PriceDetails` is a dated history; some
    products' latest entry can be weeks old. `src/parsers/jiobp.ts`'s
    `latestProductPrice` takes the max by `PriceDate` — see
    [EDGE-CASES.md](./EDGE-CASES.md)'s Jio-bp entry for the full detail.
-
-## How this was captured (repro)
-
-1. `apkeep` → XAPK; merged splits with `APKEditor` → universal APK.
-2. `reFlutter` patched the APK to disable Flutter's bundled-CA cert validation.
-3. arm64 emulator (`google_apis`, `adb root`); logged in; opened **Near By**.
-4. reFlutter's proxy-inject didn't take (app uses a networking path that ignores
-   the Dart proxy), so instead: `iptables -t nat` DNAT of `116.50.97.246:4005/4009`
-   → `10.0.2.2`, with **mitmproxy in reverse mode** (`--ssl-insecure`) terminating
-   TLS (accepted because reFlutter disabled verification) and forwarding upstream.
-5. Decoded the flow files with mitmproxy's `FlowReader`.

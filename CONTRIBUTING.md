@@ -26,7 +26,7 @@ Other fuel marketers (e.g. a state-run brand not yet covered) are welcome as new
    (`init`, `discover`, `process`).
 2. Read [docs/shell-api.md](./docs/shell-api.md) or
    [docs/nayara-api.md](./docs/nayara-api.md) for a full worked example of
-   reverse-engineering a locator's backend, from first request to final record shape.
+   documenting a locator's backend API, from first request to final record shape.
 3. Read [docs/METHODOLOGY.md](./docs/METHODOLOGY.md) — a new provider must respect the
    same grade-agnostic, no-reconciliation, live-source-wins rules as every existing
    one. A PR that adds classification logic, city/state normalization, or synthesizes
@@ -37,7 +37,10 @@ Other fuel marketers (e.g. a state-run brand not yet covered) are welcome as new
    rate-limiting via `src/http.ts`, parser tested against captured fixtures with zero
    live network calls).
 
-See [docs/RUNBOOK.md](./docs/RUNBOOK.md) for how to actually run a census locally
+For the concrete mechanical checklist — which files to create, where to register
+the new brand's slug, which CI job/`needs:` arrays to extend — see
+[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md#adding-a-new-brand). See
+[docs/RUNBOOK.md](./docs/RUNBOOK.md) for how to actually run a census locally
 once your provider is written, including environment variables and concurrency
 limits per brand.
 

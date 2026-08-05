@@ -81,7 +81,7 @@ The plug-in contract every brand implements. Three methods, two required:
   and skip this.
 
 Discovery strategy per brand, briefly (see each brand's own doc for the full
-reverse-engineering writeup where one exists):
+API reference where one exists):
 
 | Brand | Discovery | Auth |
 |---|---|---|
@@ -318,7 +318,7 @@ walk against an unauthenticated JSON API) and Nayara (session+CSRF auth
 against a WAF-protected endpoint) are the two most recently added brands and
 the most representative worked examples to model a new one from — see
 [shell-api.md](./shell-api.md) and [nayara-api.md](./nayara-api.md) for their
-full reverse-engineering writeups.
+full API references.
 
 ---
 

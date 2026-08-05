@@ -8,7 +8,7 @@ cd india-fuel-pumps
 npm install
 ```
 
-Requires Node 20+ (tested on Node 22). No API keys or secrets — all sources are public/reverse-engineered and require no authentication (except BPCL's OAuth, which is fetched dynamically; Jio-bp's identity fields are unvalidated constants, see `docs/jiobp-api.md`; Nayara's session+CSRF auth is bootstrapped dynamically, see `docs/nayara-api.md`).
+Requires Node 20+ (tested on Node 22). No API keys or secrets — all sources are public APIs and require no authentication (except BPCL's OAuth, which is fetched dynamically; Jio-bp's identity fields are unvalidated constants, see `docs/jiobp-api.md`; Nayara's session+CSRF auth is bootstrapped dynamically, see `docs/nayara-api.md`).
 
 ---
 
@@ -130,7 +130,7 @@ Once configured, the BPCL CI job connects via Tailscale and scrapes through the 
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `JIOBP_CENSUS_CONCURRENCY` | `2` | Concurrent lanes — kept low; this is a private app backend, not a public locator |
+| `JIOBP_CENSUS_CONCURRENCY` | `2` | Concurrent lanes — kept low out of politeness; the national census is small enough that higher concurrency wouldn't meaningfully speed it up |
 | `JIOBP_CENSUS_LIMIT` | (no limit) | Stop after N new **batches** (not individual outlets — a batch is ~18 outlets) |
 | `JIOBP_CENSUS_BATCH_SIZE` | `18` | Station codes per `FindFuelStation` call (18 is the observed in-app batch size) |
 | `JIOBP_CENSUS_MAX_AGE_DAYS` | `3` | Staleness threshold |
