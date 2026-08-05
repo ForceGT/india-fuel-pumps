@@ -228,47 +228,60 @@ Petrol/Diesel/CNG; grade variants would surface at whichever outlets carry them.
 | `stationId`          | `makeStationId("JioBP", FuelStationCode, lat, lng)` |
 | `name`               | `FuelStationName` |
 | `address`            | `Address` |
-| `state`              | `State` (from index) / parse from `Address` |
-| `city`, `pincode`    | parse from `Address` (raw, unreconciled) |
+| `state`              | `State`, looked up from the `FetchROMaster` index entry for this code (carried through `discover()`'s batch payload — never re-fetched or parsed from `Address`) |
+| `city`, `pincode`    | **always `null`** — the implementation does not attempt to parse these out of the single free-text `Address` field |
 | `lat` / `lng`        | `Lattitude` / `Longitude` (note the typo) |
 | `geohash`            | `geohashEncode(lat, lng, 7)` |
 | `contact`            | `ContactNumber` |
 | `products[]`         | one `{ name: ProductName, priceInr }` per `HistoryFuelProducts` entry, `priceInr` = latest `ProductPrice` trimmed→number (or `null` if missing/unparseable) |
-| `sourceUrl`          | `null` (or the endpoint URL) |
+| `sourceUrl`          | the shared endpoint constant, `https://netmanager.ril.com:4005/CustomerMobility` — **not** `null`; there's no per-outlet page, so every JioBP record's `sourceUrl` is identical |
+| `hours` / `mapsLink` | always `null` — neither operation's response carries them |
 | `capturedAt`         | now |
 
 Amenities (`GetROAmenities`) have no home in `RawOutletRecord` and are **out of
-scope** for this repo — drop them.
+scope** for this repo — dropped.
 
-### Provider shape (fits `src/provider.ts` cleanly)
+### Provider shape (`src/providers/jiobp-provider.ts`, as actually built)
 
-- **`discover()`** → one `FetchROMaster` call → yield `WorkUnit`s, each a **batch**
-  of N `FuelStationCode`s (tune N; 18 works, larger likely fine). Batching means
-  the whole census is ~`2294 / N` requests — trivial vs HPCL/IOCL/BPCL.
-- **`process(unit)`** → one `FindFuelStation` call with that batch → N
-  `RawOutletRecord`s.
-- **`init(ctx)`** → mint/refresh the `MobileNumber`+`TokenNumber` (see below).
-- Concurrency: works with the existing worker pool; be conservative (this is a
-  private app backend, not a public locator).
+- **`discover()`** → one `FetchROMaster` call → yields `WorkUnit`s, each a **batch**
+  of `batchSize` (default 18, `JIOBP_CENSUS_BATCH_SIZE`) `FuelStationCode`s, plus a
+  `stateByCode` map built from that batch's own index entries (so `process()` never
+  needs a second lookup for `state`). Batching means the whole census is
+  `~2294 / batchSize` requests — trivial vs HPCL/IOCL/BPCL.
+- **`process(unit)`** → one `FindFuelStation` call with that batch → up to
+  `batchSize` `RawOutletRecord`s.
+- **No `init()`.** Since neither `MobileNumber`/`TokenNumber`/`IMEINo` is actually
+  validated by the server (see "Identity / auth model" above), there's no session
+  or token to bootstrap — `TokenNumber` is just a fresh `crypto.randomUUID()`
+  generated inline on every request, and `MobileNumber`/`IMEINo` are hardcoded
+  constants. There's nothing for a one-time setup step to do.
+- Default concurrency is deliberately conservative (2, via `JIOBP_CENSUS_CONCURRENCY`)
+  — this is a private app backend, not a public locator.
 
 ---
 
-## Open questions before building a census
+## Resolved decisions (this census is built and running)
 
-1. ~~**Auth token.**~~ **Resolved.** No login/OTP/valid session required — synthetic
-   `MobileNumber` + `TokenNumber` + `IMEINo` return full real data. `init()` uses
-   constants; `TokenNumber` = any fresh UUID.
-2. **Ethics / authorization.** This is a **private customer-app backend**, not the
-   public store-locator. The *data* (public station locations + publicly-posted
-   fuel prices) is not sensitive, but scraping it at national scale is a different
-   posture than the HPCL/IOCL/BPCL public-locator scrapes. Worth a conscious call
-   + a note in the README, similar to the BPCL residential-IP caveat.
-3. **Rate/volume.** Batched, the census is only ~dozens of requests — keep it
-   gentle and cache/resume as usual. Confirm the max batch size for
-   `FindFuelStation` (18 observed in-app; larger untested).
-4. **Price history vs. current.** `PriceDetails` is a dated history; some products'
-   latest entry can be weeks old (Diesel/CNG at MHC117 dated May). Take the max by
-   `PriceDate` and capture that date if a freshness signal is ever wanted.
+These were open questions during initial reverse-engineering; kept here as a
+record of what was decided and why, now that `src/providers/jiobp-provider.ts`
+is implemented and shipping in the daily census.
+
+1. **Auth token.** No login/OTP/valid session required — synthetic
+   `MobileNumber` + `TokenNumber` + `IMEINo` return full real data. No `init()`
+   needed; `TokenNumber` is a fresh UUID per request.
+2. **Ethics / authorization.** This is a **private customer-app backend**, not
+   the public store-locator. The *data* (public station locations +
+   publicly-posted fuel prices) is not sensitive, but scraping it at national
+   scale is a different posture than the HPCL/IOCL/BPCL public-locator scrapes
+   — called out explicitly in the main README/CONTRIBUTING, same tier of
+   disclosure as BPCL's residential-IP requirement.
+3. **Rate/volume.** Batched at 18 codes/request (`JIOBP_CENSUS_BATCH_SIZE`),
+   the whole national census is only ~128 requests — trivial vs HPCL/IOCL/BPCL,
+   and finishes in minutes even at low concurrency.
+4. **Price history vs. current.** `PriceDetails` is a dated history; some
+   products' latest entry can be weeks old. `src/parsers/jiobp.ts`'s
+   `latestProductPrice` takes the max by `PriceDate` — see
+   [EDGE-CASES.md](./EDGE-CASES.md)'s Jio-bp entry for the full detail.
 
 ## How this was captured (repro)
 

@@ -193,7 +193,13 @@ extraKeysSeen:   []
 
 ---
 
-## Mapping to `RawOutletRecord` (grade-agnostic, sketch — not yet implemented)
+## Mapping to `RawOutletRecord` (grade-agnostic — as actually implemented)
+
+`src/providers/nayara-provider.ts` is built and shipping in the daily census.
+The open design questions below were resolved by taking the conservative
+option every time: where a field has no reliable source in this API, it's
+left `null` nationally rather than parsed out of free text with a real risk
+of getting it wrong.
 
 | RawOutletRecord | Source |
 |---|---|
@@ -202,21 +208,16 @@ extraKeysSeen:   []
 | `stationId` | `makeStationId("Nayara", cms_code, lat, lng)` |
 | `name` | `ro_name` |
 | `address` | `address` (full string) |
-| `city` | `address1`? — needs a decision; it reads more like a village/locality name than a city, unlike HPCL/IOCL's breadcrumb-derived `city`. Possibly leave `city: null` and let `address1` inform `address` only. |
-| `state` | Not present anywhere in this API — would have to be parsed out of the free-text `address` string (raw, unreconciled per this repo's policy), or left `null`. |
+| `city` | **always `null`.** `address1` reads more like a village/locality name than a city, unlike HPCL/IOCL's breadcrumb-derived `city` — rather than guess, the implementation leaves it unset and keeps the full text in `address` only. |
+| `state` | **always `null`.** Not present anywhere in this API; parsing it out of the free-text `address` string was considered and rejected as too fragile/unreconciled to trust — see [METHODOLOGY.md](./METHODOLOGY.md) on why this repo doesn't guess at fields the source didn't structure. Nayara is the one brand in this dataset with no `state` at all. |
 | `lat` / `lng` | `Number(latitude)` / `Number(longitude)` |
 | `geohash` | `geohashEncode(lat, lng, 7)` |
 | `contact` | always `null` — not in this API |
 | `hours` | always `null` — not in this API |
 | `pincode` | always `null` — not in this API |
 | `mapsLink` | always `null` — not in this API |
-| `products[]` | exactly two fixed entries: `{ name: "PETROL", priceInr: Number(PETROL) }`, `{ name: "DIESEL", priceInr: Number(DIESEL) }` — omit an entry if its key is absent (2 known cases for PETROL), never fabricate a `0`/`null` placeholder for a genuinely-missing key. |
-| `sourceUrl` | the `/get-code-ro-radius` endpoint URL, or `null` — same open question Jio-bp had; resolved there as "set to the endpoint for traceability," likely the same call here. |
-
-Open design question not yet resolved: `state` has no source field at all
-here (every other brand has at least a raw state string). Worth a decision
-before implementation — parse from `address`'s trailing state name (fragile,
-free text) vs. leaving it `null` nationally.
+| `products[]` | exactly two possible entries: `{ name: "PETROL", priceInr: Number(PETROL) }`, `{ name: "DIESEL", priceInr: Number(DIESEL) }` — an entry is omitted if its key is absent from the response (the 2 known petrol-missing cases), never fabricated as `0`/`null`. |
+| `sourceUrl` | the shared `/get-code-ro-radius` endpoint constant (`NAYARA_RADIUS_ENDPOINT`) — **not** `null`; same convention as Jio-bp, since there's no per-outlet page. |
 
 ---
 
