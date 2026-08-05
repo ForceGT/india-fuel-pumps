@@ -47,9 +47,12 @@
                      ┌──────────────────────────┐
                      │  git commit dataset/     │
                      │  + GitHub Release        │
-                     │  + CDN (jsDelivr)        │
                      └──────────────────────────┘
 ```
+
+There is no separate publish/CDN step — the git commit above is the distribution.
+Consumers fetch the committed files directly (`raw.githubusercontent.com` or a
+clone); see the main [README](../README.md#quick-start).
 
 ## Components
 
@@ -173,5 +176,5 @@ No changes needed to `types.ts`, `provider.ts`, `run-provider.ts`, or the build-
 | Testing | `vitest` | Fast, TS-native, watch mode |
 | Sharding | Geohash (precision 3, ~156 km cells) | Map-friendly, deterministic, content-hashed |
 | Compression | gzip (`gzip -f` in CI; `.jsonl.gz` files under 50 MB) | Git-friendly, GitHub 50 MB limit compliant |
-| Delivery | jsDelivr CDN (`cdn.jsdelivr.net/gh/ForceGT/...`) | Free, fast, no auth; avoids `raw.githubusercontent.com` rate limits |
+| Delivery | Direct from git (`raw.githubusercontent.com` or clone) | No separate publish step — the committed repo *is* the distribution |
 | Orchestration | GitHub Actions (`.github/workflows/census.yml`) | Free compute (runs daily), cron scheduling |

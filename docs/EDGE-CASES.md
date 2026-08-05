@@ -127,7 +127,7 @@ gzip -f output/bpcl-raw.jsonl   # 92 MB -> 13 MB
 
 The CI pipeline does this automatically in the "Compress raw output" step. `build-dataset.ts` reads `.jsonl.gz` files transparently (prefers them over plain `.jsonl`).
 
-Shard files are not compressed server-side -- they are served via jsDelivr which handles gzip/Brotli at the edge. Individual shard files are small enough that even the largest (a dense metro at geohash-3) stays well under 50 MB uncompressed.
+Shard files are not gzip-compressed like the raw JSONL — they're committed as plain JSON. Individual shard files are small enough that even the largest (a dense metro at geohash-3) stays well under 50 MB uncompressed, so the 50 MB limit never applies to them the way it does to a brand's full raw JSONL.
 
 ---
 

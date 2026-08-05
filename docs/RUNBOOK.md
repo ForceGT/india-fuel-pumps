@@ -209,11 +209,11 @@ git push --tags
 
 Then trigger `workflow_dispatch` on GH Actions with `publish_dataset: true` to run the CI publish job (or just commit directly to main if you pushed from your local machine).
 
-The dataset is served via jsDelivr:
+There is no separate publish/CDN step — the commit above *is* the publish. Consumers fetch the committed files directly:
 
 ```
-https://cdn.jsdelivr.net/gh/ForceGT/india-fuel-pumps@main/dataset/index.json
-https://cdn.jsdelivr.net/gh/ForceGT/india-fuel-pumps@main/dataset/shards/<prefix>.<hash>.json
+https://raw.githubusercontent.com/ForceGT/india-fuel-pumps/main/dataset/index.json
+https://raw.githubusercontent.com/ForceGT/india-fuel-pumps/main/dataset/shards/<prefix>.<hash>.json
 ```
 
 ---

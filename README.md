@@ -31,19 +31,22 @@ This README is deliberately short. Everything else lives in one of these:
 
 ## Quick start
 
-**Use the data** — no clone required, served over jsDelivr's CDN:
+**Use the data** — there's no publish step or CDN; the committed files in this repo
+*are* the distribution. Fetch them directly:
 
 ```js
 const index = await fetch(
-  "https://cdn.jsdelivr.net/gh/ForceGT/india-fuel-pumps@main/dataset/index.json"
+  "https://raw.githubusercontent.com/ForceGT/india-fuel-pumps/main/dataset/index.json"
 ).then((r) => r.json());
 
 // Fetch only the shards covering your area of interest — see
 // docs/DATA-DICTIONARY.md#consumption-pattern for the full pattern and shard format.
 const shard = await fetch(
-  `https://cdn.jsdelivr.net/gh/ForceGT/india-fuel-pumps@main/dataset/${index.shards[0].file}`
+  `https://raw.githubusercontent.com/ForceGT/india-fuel-pumps/main/dataset/${index.shards[0].file}`
 ).then((r) => r.json());
 ```
+
+For anything beyond occasional fetches, clone the repo instead — `raw.githubusercontent.com` is unauthenticated-rate-limited per IP.
 
 **Run the scraper** — needs Node 20+, no API keys:
 
