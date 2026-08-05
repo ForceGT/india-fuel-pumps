@@ -1,53 +1,42 @@
 # Architecture
 
+This document covers the scraper pipeline's own design — the parts that would
+work identically no matter what schedules or hosts them. For how this
+project specifically runs it on GitHub Actions today (the cron schedule,
+caching, failure notifications), see [CI-CD.md](./CI-CD.md) instead — that's
+a deliberately separate concern from what's described here.
+
 ## Pipeline
 
-```
-                        ┌──────────────────────┐
-                        │  cron trigger         │
-                        │  GitHub Actions       │
-                        │  (daily, 02:07 UTC)   │
-                        └──────────┬───────────┘
-                                   │
-        ┌───────────┬───────────┬───────────┬───────────┬───────────┬───────────┐
-        ▼            ▼           ▼           ▼           ▼           ▼
-   ┌──────────┐┌──────────┐┌──────────┐┌──────────┐┌──────────┐┌──────────┐
-   │   HPCL   ││   IOCL   ││   BPCL   ││  Jio-bp  ││  Nayara  ││  Shell   │
-   │ Provider ││ Provider ││ Provider ││ Provider ││ Provider ││ Provider │
-   │ (CI)     ││ (CI)     ││(CI, via  ││ (CI)     ││ (CI)     ││ (CI)     │
-   │          ││          ││Tailscale)││          ││          ││          │
-   └────┬─────┘└────┬─────┘└────┬─────┘└────┬─────┘└────┬─────┘└────┬─────┘
-        │           │           │           │           │           │
-        │  each writes:                                             │
-        │  output/{slug}-raw.jsonl                                  │
-        │  output/{slug}-worklog.jsonl                               │
-        │  (gzipped after job)                                       │
-        └───────────┴───────────┴─────┬─────┴───────────┴───────────┘
-                                       ▼
-                     ┌──────────────────────────┐
-                     │  build-dataset.ts         │
-                     │  (publish job)            │
-                     │                           │
-                     │  1. Read each brand's     │
-                     │     raw JSONL             │
-                     │  2. Dedup by stationId    │
-                     │     (latest capturedAt)   │
-                     │  3. Group by geohash-3    │
-                     │     prefix                │
-                     │  4. SHA-256 content-hash  │
-                     │     each shard            │
-                     │  5. Write:                │
-                     │     dataset/              │
-                     │       index.json          │
-                     │       shards/*.hash.json  │
-                     │       release-stats.json  │
-                     │       release-notes.md    │
-                     └──────────┬────────────────┘
-                                ▼
-                     ┌──────────────────────────┐
-                     │  git commit dataset/     │
-                     │  + GitHub Release        │
-                     └──────────────────────────┘
+Conceptually, a full run is just two stages: six independent scraper
+processes (one per brand, safe to run in any order or in parallel), followed
+by one merge-and-publish step once they're done.
+
+```mermaid
+flowchart LR
+    subgraph Scrape ["Stage 1 — six independent scraper processes"]
+        direction TB
+        HPCL[HPCL]
+        IOCL[IOCL]
+        BPCL[BPCL]
+        JioBP[Jio-bp]
+        Nayara[Nayara]
+        Shell[Shell]
+    end
+
+    Scrape -->|"each writes:<br/>output/{slug}-raw.jsonl<br/>output/{slug}-worklog.jsonl"| Merge
+
+    subgraph Merge ["Stage 2 — build-dataset.ts"]
+        direction TB
+        M1["1. Read each brand's raw JSONL"]
+        M2["2. Dedupe by stationId<br/>(latest capturedAt wins)"]
+        M3["3. Group by geohash-3 prefix"]
+        M4["4. SHA-256 content-hash each shard"]
+        M5["5. Write dataset/ (index.json,<br/>shards/*.hash.json, release-stats.json,<br/>release-notes.md)"]
+        M1 --> M2 --> M3 --> M4 --> M5
+    end
+
+    Merge --> Publish["git commit dataset/<br/>+ tag a release"]
 ```
 
 There is no separate publish/CDN step — the git commit above is the distribution.
@@ -96,7 +85,45 @@ All brand-specific knowledge lives in the provider; the runner is fully generic.
 
 ### runProvider (`src/run-provider.ts`)
 
-The generic, resumable orchestrator every `run-{brand}.ts` CLI entrypoint calls:
+This is the piece worth understanding in depth, since it's what makes the
+whole pipeline resumable and safe to interrupt — a plain, boring design, on
+purpose.
+
+**The core idea:** every attempt to fetch one outlet gets appended as one
+line to a log file — never overwritten, only ever added to. That line just
+says which outlet, whether it worked, and when. Before starting any new
+work, a run reads that log and asks, for every outlet it knows about: "does
+the most recent line for this outlet say it succeeded, and was that recent
+enough?" If yes, skip it — zero requests made. If no — never attempted,
+previously failed, or just stale — it goes in this run's queue.
+
+The one rule that makes this safe rather than merely fast: **a failure is
+never allowed to count as "done."** No matter how many times an outlet fails,
+or how recently, it stays in the queue and gets retried on every future run
+until it actually succeeds (or is confirmed to legitimately have nothing —
+which counts the same as succeeding). This is a deliberate asymmetry: a
+success can retire a unit of work, but nothing except a success can. That
+one rule is what guarantees a transient failure can never quietly turn into
+a permanent gap in the data — there's no code path where "this failed" ever
+gets treated the same as "this is done."
+
+On top of that, before writing anything new, a run also reloads whatever was
+already published, collapses down to one record per outlet (favoring
+whichever capture is more recent), and drops anything that hasn't had a
+successful capture in a while (on the theory that a station nobody's been
+able to confirm for two weeks has probably closed or moved). Everything
+freshly scraped this run gets added on top of that survivors list. So what
+gets published is always "everything still recently confirmed to exist,"
+continuously topped up — never something that resets to empty and rebuilds
+from scratch, even if a run gets cut off halfway through.
+
+Put together, those two ideas — append-only log of attempts, with only
+success ever marked as done, layered under a baseline that only ever
+accumulates and prunes rather than resets — are what let this whole pipeline
+be interrupted at any point, on any schedule, run by anyone, without ever
+needing a human to notice and manually patch up a gap.
+
+The actual orchestration steps, mechanically:
 
 1. Calls `provider.init()` if present.
 2. Calls `provider.discover()` and collects every work unit.
@@ -160,75 +187,18 @@ run" for that brand instead of a misleading "-23,980" drop. If every brand
 produces zero outlets, `build-dataset` exits without touching `dataset/` at all
 (a fully-failed run doesn't wipe the published dataset).
 
-### Workflow (`census.yml`)
+### Where this runs today
 
-Six parallel brand jobs, then a publish job, a notify job, and a resolve job.
-Triggered by the daily cron (`7 2 * * *`, i.e. 02:07 UTC) or manually via
-`workflow_dispatch`, which additionally accepts: a comma-separated `brands`
-subset (skip the rest), a per-brand `*_limit` (stop after roughly N new
-units — smoke-test only), a `concurrency` override, and `publish_dataset`
-(set `false` to dry-run without committing). Overlapping runs are prevented —
-a `concurrency: group: census-${{ github.ref }}` with `cancel-in-progress:
-false` queues a new run behind one still in progress rather than racing it.
-
-Each brand job follows the same shape: checkout → restore its worklog from
-GH Actions cache (`restore-keys` falls back to the most recent prior worklog,
-so even a first-time cache miss on a brand-new run id degrades gracefully) →
-`npm run census:{brand}` with that brand's env vars → gzip the raw output →
-save the worklog back to cache (`if: always()`, so even a killed/timed-out job
-preserves progress for the next run) → upload the gzipped raw output as a
-build artifact.
-
-- **HPCL** and **IOCL** run at concurrency 12 (`hpcl_limit`/`iocl_limit`
-  configurable). Both use the same "singleinterface.com" locator platform.
-  IOCL is WAF-sensitive to sustained request rate — see
-  [EDGE-CASES.md](./EDGE-CASES.md) for calibration history. Runtime varies
-  hugely depending on how many units are inside the 3-day freshness window
-  already (a "cold" run after a gap can take hours; a "warm" run the next day
-  can take minutes) — see [RUNBOOK.md](./RUNBOOK.md)'s FAQ for a concrete
-  worked example.
-- **BPCL** runs at concurrency 10, routed through a Tailscale exit node
-  (`tailscale/github-action`) onto a residential-IP Raspberry Pi —
-  `api.cep.bpcl.in` blocks GitHub Actions' datacenter IPs directly. The job's
-  `if` condition requires `vars.TAILSCALE_EXIT_NODE` to be set; if it isn't,
-  the whole job is skipped (not failed) and publish falls back to the last
-  committed `bpcl-raw.jsonl.gz`.
-- **Jio-bp** and **Nayara** each need only a handful of requests to enumerate
-  their entire national roster (Jio-bp: one index call + batched detail
-  calls; Nayara: two large-radius calls), so both finish in minutes even at
-  low default concurrency (2 and 1 respectively).
-- **Shell** walks a bounding-box grid (~342 outlets total) at concurrency 5;
-  no rate limiting has been observed against `geoapp.me`.
-
-**Publish** runs once all six brand jobs have reached a terminal state
-(`success`, `failure`, or `skipped` — `always()` so it still runs even if
-some brands failed), and only if **at least one** brand succeeded. It:
-
-1. Downloads whatever brand artifacts were actually uploaded (a
-   single-brand calibration run only produces one).
-2. Checks each brand's committed raw file's age against `STALE_AFTER_DAYS`
-   (3) and records a `{brand}_stale`/`{brand}_age` output for the job
-   summary — visibility only, doesn't block anything.
-3. Runs `build-dataset`.
-4. **Guards against dataset collapse** — a Python step compares
-   `release-stats.json`'s `previous` vs `current` per brand; if a brand had
-   >1,000 records previously and now has less than half that, the publish
-   job **fails outright** rather than committing what looks like a
-   resume/scrape bug. This is a second, coarser safety net on top of
-   `runProvider`'s own baseline-accumulation behavior.
-5. Writes a job summary table (brand / census result / raw line count / data
-   age) with a staleness warning banner if any brand is using fallback data.
-6. Commits `dataset/` plus any freshly-produced `{brand}-raw.jsonl.gz` files
-   (only on `schedule` or explicit `publish_dataset: true`) and pushes.
-7. If something was actually committed, tags and creates a GitHub Release
-   (`dataset-<UTC timestamp>`) with `release-notes.md` as the body.
-
-**Notify** runs if any brand job failed: it files a GitHub issue labeled
-`census-failure` (or comments on an existing open one instead of duplicating).
-**Resolve** runs after every trigger regardless of outcome: it closes that
-issue once every brand named in its title has succeeded again, or comments
-on partial recovery. See [RUNBOOK.md](./RUNBOOK.md)'s FAQ for exactly how the
-fallback/staleness/issue-lifecycle mechanics interact.
+Everything above (`Provider`, `runProvider`, `build-dataset`) is plain
+Node/TypeScript with no dependency on any particular scheduler or host — it
+would behave identically run by hand, from a plain cron job on a server, or
+from any CI system. This project happens to run it on GitHub Actions today;
+the scheduling, the worklog caching between runs, the failure-notification
+issue lifecycle, and the collapse-guard safety check are all specific to
+*that* hosting choice and documented separately in
+[CI-CD.md](./CI-CD.md) — deliberately kept out of this file so the two
+concerns (what the pipeline does vs. where it happens to run) don't get
+tangled together.
 
 ---
 
@@ -305,10 +275,8 @@ never touches grade logic, and never will.
 3. Create `src/run-{brand}.ts` — a thin CLI entrypoint reading
    `{BRAND}_CENSUS_*` env vars and calling `runProvider(provider, opts)`.
 4. Add a `census:{brand}` script to `package.json`.
-5. Add a job to `.github/workflows/census.yml` (copy an existing brand job,
-   adjust `timeout-minutes`/`concurrency`/env vars and the `*_limit` input),
-   and extend the `needs:`/brand-tracking arrays in `publish`, `notify`, and
-   `resolve`.
+5. Wire it into CI — see [CI-CD.md](./CI-CD.md) for how the six existing
+   brand jobs are structured; a new brand follows the same shape.
 6. Add the brand's slug to `build-dataset.ts`'s `BRANDS` array.
 
 No changes needed to `types.ts`, `provider.ts`, `run-provider.ts`, or
@@ -333,7 +301,7 @@ full API references.
 | Sharding | Geohash (precision 3, ~156 km cells) via `src/geo.ts`'s `geohashEncode` | Map-friendly, deterministic, content-hashed |
 | Compression | gzip (`gzip -f` in CI; `.jsonl.gz` files under GitHub's 50 MB limit) | Git-friendly, GitHub 50 MB limit compliant |
 | Delivery | Direct from git (`raw.githubusercontent.com` or clone) | No separate publish step — the committed repo *is* the distribution |
-| Orchestration | GitHub Actions (`.github/workflows/census.yml`) | Free compute (runs daily), cron scheduling |
+| Orchestration | See [CI-CD.md](./CI-CD.md) | Decoupled from this doc — hosting-specific |
 
 `src/geo.ts` also exports `neighborPrefixes`/`geohashDecodeBounds`/
 `neighborCoverageKm` — bounding-box/neighbor-cell helpers for a spatial

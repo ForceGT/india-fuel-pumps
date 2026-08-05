@@ -23,6 +23,7 @@ This README is deliberately short. Everything else lives in one of these:
 | **[docs/DATA-DICTIONARY.md](./docs/DATA-DICTIONARY.md)** | The field-by-field schema reference: `RawOutletRecord`, shard file format, `index.json`, worked examples per brand. |
 | **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** | How the pipeline code is structured — the `Provider` interface, the resumable worker pool, the CI workflow, how to add a new brand. |
 | **[docs/RUNBOOK.md](./docs/RUNBOOK.md)** | How to actually run the scrapers: prerequisites, per-brand env vars, resuming a killed run, common failure modes, and an operational FAQ. |
+| **[docs/CI-CD.md](./docs/CI-CD.md)** | How the daily GitHub Actions pipeline is wired up — scheduling, worklog caching between runs, publish safety checks, and how failures get filed/auto-resolved as issues. Includes a diagram of every branch the pipeline can take. |
 | **[docs/EDGE-CASES.md](./docs/EDGE-CASES.md)** | A catalog of specific quirks and incidents per brand (WAF calibration, token expiry, cache staleness) and their root causes. |
 | **[docs/jiobp-api.md](./docs/jiobp-api.md)**, **[docs/nayara-api.md](./docs/nayara-api.md)**, **[docs/shell-api.md](./docs/shell-api.md)** | Full API references for each brand's undocumented locator/app backend — every request, every field. |
 | **[CONTRIBUTING.md](./CONTRIBUTING.md)** | How to report a wrong pump, add a new brand, or submit a code change. |
