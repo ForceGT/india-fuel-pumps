@@ -159,6 +159,22 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # TEMPORARY diagnostic — checking whether the current 403 is an
+      # IP/ASN-level WAF block on all of locator.iocl.com, or specific to
+      # the sitemap.xml path. Remove once answered.
+      - name: DEBUG — probe locator.iocl.com endpoints
+        run: |
+          UA="IndiaFuelPumpsBot/0.1 (+https://github.com/ForceGT/india-fuel-pumps; contact: thakkargaurav409@gmail.com)"
+          for url in \
+            "https://locator.iocl.com/sitemap.xml" \
+            "https://locator.iocl.com/" \
+            "https://locator.iocl.com/?state_name=Maharashtra&city_name=Pune&locality_name=Pune&radius=13" \
+            "https://locator.iocl.com/indianoil-patel-petroleums-petrol-pump-lulla-nagar-pune-183933/Home" \
+            ; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" -A "$UA" "$url")
+            echo "HTTP $code — $url"
+          done
+
       - uses: actions/setup-node@v7
         with:
           node-version: '22'
