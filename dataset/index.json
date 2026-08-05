@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-05T05:33:31.626Z",
-  "totalOutlets": 103248,
+  "generatedAt": "2026-08-05T08:57:24.327Z",
+  "totalOutlets": 103245,
   "brands": {
     "hpcl": 23980,
-    "iocl": 39614,
+    "iocl": 39611,
     "bpcl": 27961,
     "jiobp": 2296,
     "nayara": 9065,
@@ -43,7 +43,7 @@
     },
     {
       "prefix": "t9u",
-      "file": "shards/t9u.1e387380b3f916ed.json",
+      "file": "shards/t9u.9e07cc9d9e6250bf.json",
       "count": 2
     },
     {
@@ -178,7 +178,7 @@
     },
     {
       "prefix": "ted",
-      "file": "shards/ted.49670db349a1a472.json",
+      "file": "shards/ted.7b314b4d85c4234f.json",
       "count": 200
     },
     {
@@ -213,8 +213,8 @@
     },
     {
       "prefix": "tem",
-      "file": "shards/tem.3d9f631dc8d12cb2.json",
-      "count": 763
+      "file": "shards/tem.ab490570abf50124.json",
+      "count": 762
     },
     {
       "prefix": "ten",
@@ -333,8 +333,8 @@
     },
     {
       "prefix": "tg2",
-      "file": "shards/tg2.10089cf86d303550.json",
-      "count": 637
+      "file": "shards/tg2.7fcc9c7d7fe4a695.json",
+      "count": 636
     },
     {
       "prefix": "tg3",
@@ -643,8 +643,8 @@
     },
     {
       "prefix": "ttw",
-      "file": "shards/ttw.4383a555297692f6.json",
-      "count": 820
+      "file": "shards/ttw.e2b5677e77cb848c.json",
+      "count": 819
     },
     {
       "prefix": "ttx",
@@ -878,17 +878,17 @@
     },
     {
       "prefix": "w41",
-      "file": "shards/w41.73fc5b23b8e9f864.json",
+      "file": "shards/w41.a9cf13b08f4d7e33.json",
       "count": 11
     },
     {
       "prefix": "w44",
-      "file": "shards/w44.02a23ca1c11c94a6.json",
+      "file": "shards/w44.27ccda844380e70e.json",
       "count": 4
     },
     {
       "prefix": "w46",
-      "file": "shards/w46.a782c0ce208c8223.json",
+      "file": "shards/w46.4be6cf298a19a924.json",
       "count": 2
     },
     {
@@ -903,7 +903,7 @@
     },
     {
       "prefix": "wh0",
-      "file": "shards/wh0.356fd3441916234e.json",
+      "file": "shards/wh0.2f131a47873c6cfa.json",
       "count": 44
     },
     {
@@ -918,7 +918,7 @@
     },
     {
       "prefix": "wh3",
-      "file": "shards/wh3.3d2f65b98419b0d6.json",
+      "file": "shards/wh3.98d785ca54d586f4.json",
       "count": 204
     },
     {
