@@ -1,26 +1,14 @@
-## Census update — 2026-08-05
+## Dataset baseline — 2026-08-05
 
-### Summary
+**1,03,245** outlets across **6** brands, split into **196** geohash shards.
 
-| Metric | Before | After | Δ |
-|--------|-------:|------:|--:|
-| **Total outlets** | 1,03,248 | 1,03,245 | **-3** |
-| **Shards** | 196 | 196 | 0 |
-
-### Per brand
-
-| Brand | Before | After | Δ |
-|-------|-------:|------:|--:|
-| BPCL | 27,961 | 27,961 | 0 — |
-| HPCL | 23,980 | 23,980 | 0 — |
-| IOCL | 39,614 | 39,611 | -3 📉 |
-| JIOBP | 2,296 | 2,296 | 0 — |
-| NAYARA | 9,065 | 9,065 | 0 — |
-| SHELL | 332 | 332 | 0 — |
-
-### Changed brands
-
-- **IOCL**: -3 outlets (39,614 → 39,611)
-
+| Brand | Outlets |
+|-------|--------:|
+| HPCL | 23,980 |
+| IOCL | 39,611 |
+| BPCL | 27,961 |
+| JIOBP | 2,296 |
+| NAYARA | 9,065 |
+| SHELL | 332 |
 ---
-*Generated: 2026-08-05T09:54:25.474Z*
+*Generated: 2026-08-05T09:56:10.938Z*
