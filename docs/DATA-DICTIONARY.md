@@ -1,57 +1,156 @@
 # Data Dictionary
 
-## RawOutletRecord
+## The problem this schema is solving
 
-A single fuel outlet as captured from the source. One JSON object per line in `output/{brand}-raw.jsonl`. Defined in `src/types.ts`.
+Six sources, six completely different ideas of what a fuel outlet even *is*.
+HPCL and IOCL scrape a real web page with a JSON-LD block and structured
+opening hours. BPCL and Jio-bp are app backends that hand back whatever
+fields their mobile app happened to need — no opening hours at all, in
+BPCL's case. Nayara's API is thinner still: no city, no state, no phone
+number, nothing but a name, an address string, and two prices. Shell has
+locations and hours but never a price.
+
+Two bad options were available and both were rejected. Take the *union* of
+every field any source ever provides, and you get a schema that's honest but
+where almost every record has a dozen `null`s — technically correct, useless
+to skim. Take the *intersection* — only fields every single source agrees
+on — and you'd be left with little more than a name and coordinates,
+throwing away real data that five of the six sources do report.
+
+The actual answer: **one shape wide enough for the richest source, with
+explicit `null` standing in for "this source doesn't say."** Nothing is
+fabricated to fill a gap, and nothing a source *does* report gets thrown
+away to keep the shape uniform. What follows is that shape, built up
+piece by piece in the order the problems actually showed up: first, how to
+describe one outlet; then how to describe one product/price on it; then how
+to recognize the *same* outlet again tomorrow, or across a different brand's
+overlapping data; then how to record whether a fetch attempt worked at all;
+and finally how ~103,000 of these individual records become one
+downloadable dataset.
+
+---
+
+## Step 1 — describing one outlet: `RawOutletRecord`
+
+This is the atomic unit. One JSON object per line in `output/{brand}-raw.jsonl`,
+one object per outlet, defined in `src/types.ts`. Every field that isn't
+universally available is nullable — not as a hedge, but because forcing a
+value where a source has none would mean inventing data this project
+explicitly promises never to invent.
+
+A few fields carry a decision worth knowing before looking at the table:
+
+- **`name` always comes from the live page/response, never a static roster.**
+  If an OMC's own downloadable outlet list disagrees with what that same
+  OMC's live per-outlet page currently shows, the live page wins — dealer
+  names change, franchises get reassigned, and the live page is the more
+  current signal every time.
+- **`city`/`state` are the raw strings the source reports, not reconciled
+  against any gazetteer.** "Bengaluru" and "Bangalore" are not merged into
+  one canonical spelling here — a consumer with its own geo-normalization
+  can do that; baking one reconciliation scheme into this repo would just
+  mean every consumer inherits this project's specific opinion about it,
+  wanted or not.
+- **`schemaVersion` exists because this file is committed to git forever.**
+  A future breaking change to the shape needs a way to say "records after
+  this point mean something different," without silently reinterpreting old
+  history.
 
 | Field | Type | Nullable | Description | Example |
 |-------|------|----------|-------------|---------|
 | `schemaVersion` | `number` | No | Schema version (currently `1`). Incremented on breaking changes. | `1` |
 | `brand` | `string` | No | OMC brand — one of `"HPCL"`,`"IOCL"`,`"BPCL"`,`"JioBP"`,`"Nayara"`,`"Shell"` | `"HPCL"` |
 | `outletId` | `string` | No | The source's own internal ID for this outlet. HPCL/IOCL: the trailing digits of the outlet's `/Home` URL. BPCL: `roId`. JioBP: `FuelStationCode` (e.g. `"MHC117"`). Nayara: `cms_code`. Shell: the `geoapp.me` location id. | `"398563"` |
-| `stationId` | `string` | No | Stable dedup key — the first 16 hex characters of `SHA-1("{brand}:{outletId}:{lat}:{lng}")` (`makeStationId` in `src/id.ts`). NOT a human-readable composite string. Unique across brands (brand is part of the hash input). | `"a1f9c3d7e2b60481"` |
-| `sourceUrl` | `string` | Yes | Canonical source reference. HPCL/IOCL: the outlet's own `/Home` page. BPCL: the same details API endpoint the outlet's data came from (`GET /retail/v2/bpcl/retail/rolocator/details?roId=...`) — **not** `null`; there's no separate public web page, but the API URL is still a real, fetchable reference. JioBP/Nayara: the shared API endpoint constant (not per-outlet — there's no per-outlet page or id-addressable URL). Shell: the outlet's own `website_url` if the source published one, else the `GET /api/v2/locations/{id}` detail endpoint. | `"https://petrolpump.hpretail.in/hpcl-deepak-mittal-service-provider-petrol-pump-kathgodam-haldwani-398563/Home"` |
+| `stationId` | `string` | No | Stable dedup key — see [Step 3](#step-3-recognizing-the-same-outlet-again-stationid) below. | `"a1f9c3d7e2b60481"` |
+| `sourceUrl` | `string` | Yes | Canonical source reference. HPCL/IOCL: the outlet's own `/Home` page. BPCL: the same details API endpoint the outlet's data came from — **not** `null`; there's no separate public web page, but the API URL is still a real, fetchable reference. JioBP/Nayara: the shared API endpoint constant (not per-outlet — there's no per-outlet page or id-addressable URL). Shell: the outlet's own `website_url` if published, else the detail endpoint. | `"https://petrolpump.hpretail.in/hpcl-deepak-mittal-service-provider-petrol-pump-kathgodam-haldwani-398563/Home"` |
 | `capturedAt` | `string` | No | ISO-8601 timestamp of when our crawler retrieved this data from the source. | `"2026-07-20T03:14:42.123Z"` |
-| `name` | `string` | No | Outlet name from the source's live page/response (not from any static roster). Live name always wins over a static list. | `"Deepak Mittal Service Provider"` |
+| `name` | `string` | No | Outlet name from the source's live page/response. | `"Deepak Mittal Service Provider"` |
 | `address` | `string` | Yes | Full street address. `null` if the source didn't provide one. | `"NH 24, Haldwani Road, Kathgodam, Haldwani, Uttarakhand"` |
-| `city` | `string` | Yes | Raw breadcrumb/town/field the source reports, **not reconciled** against any canonical city list. Always `null` for JioBP (its `Address` is one free-text field, not broken into components) and Nayara (not provided by the API). Populated for HPCL, IOCL, BPCL (`address.town`, title-cased for display only), and Shell. | `"Haldwani"` |
-| `state` | `string` | Yes | Raw state name as the source reports it, not reconciled. Always `null` for Nayara (not provided). JioBP gets this from a separate index lookup (see JioBP notes below), not the per-outlet response itself. | `"Uttarakhand"` |
+| `city` | `string` | Yes | Raw, unreconciled. Always `null` for JioBP (its `Address` is one free-text field) and Nayara (not provided). Populated for HPCL, IOCL, BPCL, and Shell. | `"Haldwani"` |
+| `state` | `string` | Yes | Raw, unreconciled. Always `null` for Nayara (not provided). JioBP gets this from a separate index lookup, not the per-outlet response itself. | `"Uttarakhand"` |
 | `pincode` | `string` | Yes | PIN code as published. `null` if not provided (always `null` for JioBP and Nayara). | `"263139"` |
 | `lat` | `number` | No | Latitude in decimal degrees (WGS84). | `29.2205` |
 | `lng` | `number` | No | Longitude in decimal degrees (WGS84). | `79.5186` |
-| `geohash` | `string` | No | Geohash of `lat`/`lng` at precision 7 (~150 m cell), via `geohashEncode` in `src/geo.ts`. Used for sharding at precision 3. | `"ttn0q70"` |
-| `hours` | `string` | Yes | Opening hours as free text, parsed from the source's own structured field where one exists (HPCL/IOCL's JSON-LD `openingHoursSpecification`; Shell's location detail). Always `null` for BPCL (not present in its payload), JioBP, and Nayara (neither's API publishes it). | `"Mon-Sat 06:00-22:00, Sun 08:00-20:00"` |
-| `contact` | `string` | Yes | Phone number as published, `tel:` prefix stripped. Always `null` for Nayara (its API doesn't publish it). Can be populated for HPCL, IOCL, BPCL, JioBP, and Shell — whichever the source actually reports. | `"05946-123456"` |
-| `mapsLink` | `string` | Yes | Google Maps directions URL, only when the source itself publishes one (HPCL/IOCL's JSON-LD `hasMap`). Always `null` for BPCL, JioBP, Nayara, and Shell — none of their APIs publish a maps link. | `"https://maps.google.com/?q=29.2205,79.5186"` |
-| `products` | `RawProduct[]` | No | Every fuel product+price the source reported at this outlet. Empty array if the source reported no products (rare but possible). | See below |
+| `geohash` | `string` | No | Geohash of `lat`/`lng` at precision 7 (~150 m cell), via `geohashEncode` in `src/geo.ts`. Used for sharding at precision 3 — see [Step 5](#step-5-from-one-outlet-to-one-published-dataset). | `"ttn0q70"` |
+| `hours` | `string` | Yes | Opening hours as free text, where the source has a structured field for it (HPCL/IOCL's JSON-LD, Shell's location detail). Always `null` for BPCL, JioBP, and Nayara — none of their APIs publish it. | `"Mon-Sat 06:00-22:00, Sun 08:00-20:00"` |
+| `contact` | `string` | Yes | Phone number as published, `tel:` prefix stripped. Always `null` for Nayara only. | `"05946-123456"` |
+| `mapsLink` | `string` | Yes | Google Maps directions URL, only when the source itself publishes one (HPCL/IOCL's JSON-LD `hasMap`). Always `null` for BPCL, JioBP, Nayara, and Shell. | `"https://maps.google.com/?q=29.2205,79.5186"` |
+| `products` | `RawProduct[]` | No | Every fuel product+price the source reported. Empty array if the source reported none. | See Step 2 |
 
 ---
 
-## RawProduct
+## Step 2 — describing what's sold there: `RawProduct`
 
-One observed fuel product/price. Part of `RawOutletRecord.products[]`.
+Part of `RawOutletRecord.products[]`. This shape exists because a product
+card and its price are, surprisingly often, *two separate facts* — a source
+can clearly say "this outlet sells XP100" while its price field is blank,
+malformed, or zero. Collapsing "no price shown" into "no product" would
+silently delete a true fact (the outlet does sell it); collapsing it into
+"price is zero" would fabricate a false one. So the two are kept
+independent: the product's presence and its price can each be true, false,
+or unknown on their own terms.
 
 | Field | Type | Nullable | Description | Example |
 |-------|------|----------|-------------|---------|
 | `name` | `string` | No | Product name exactly as the source wrote it. No cleanup, no casing fixes, no BS-suffix stripping. | `"XP100"`, `"Speed 100"`, `"Power 100"`, `"Diesel"`, `"XP95"` |
-| `priceInr` | `number` | Yes | Price per litre in Indian Rupees. `null` if a product card/entry was present but the price was missing, non-positive, or unparseable — never fabricated. **Always `null` for every Shell product** — Shell's India locator doesn't publish per-outlet prices at all through this API (see [shell-api.md](./shell-api.md)); the product name is still captured. | `167.35`, `null` |
+| `priceInr` | `number` | Yes | Price per litre in Indian Rupees. `null` if a product card/entry was present but the price was missing, non-positive, or unparseable — never fabricated. **Always `null` for every Shell product** — Shell's India locator doesn't publish per-outlet prices at all (see [shell-api.md](./shell-api.md)); the product name is still captured. | `167.35`, `null` |
 
 ---
 
-## WorkLogRecord
+## Step 3 — recognizing the same outlet again: `stationId`
 
-Per-unit crawl bookkeeping. One JSON per line in `output/{slug}-worklog.jsonl`. Separate from `RawOutletRecord` — describes whether the crawl *attempt* succeeded, not what the data is. Defined in `src/types.ts`.
+Once individual records exist, a new problem shows up immediately: the same
+physical pump can appear more than once. BPCL's route-mesh and grid-crawl
+discovery overlap and can both find the same station. Nayara's two large-radius
+queries deliberately overlap as a safety margin. And every brand gets
+re-scraped on a rolling basis, so the same outlet is captured again and
+again over time, each capture its own line in the raw file.
+
+None of that is a bug to prevent at scrape time — it's cheaper and safer to
+let duplicates happen and collapse them afterward than to try to detect
+"have I already seen this one" mid-crawl. That collapsing needs a stable
+key: something that comes out identical for the same physical outlet no
+matter how many times, or by which discovery path, it gets captured — and
+that can *never* collide between two different brands' outlets, since brand
+IDs are only unique within their own source.
+
+`stationId` (`makeStationId` in `src/id.ts`) is the first 16 hex characters
+of `SHA-1("{brand}:{outletId}:{lat}:{lng}")`. Not a human-readable composite
+string — a genuine hash. `brand` is folded into the input specifically so
+two different brands' outlets, even at identical coordinates (a shared
+forecourt, say), can never produce the same `stationId`. Wherever this
+project needs to answer "is this the same outlet as that one," the answer is
+just string equality on this one field — see `dedupeByStationId` in
+`src/build-dataset.ts`, which keeps whichever captured copy has the newest
+`capturedAt` and discards the rest.
+
+---
+
+## Step 4 — recording whether a fetch actually worked: `WorkLogRecord`
+
+`RawOutletRecord` describes an outlet. It says nothing about whether *this
+run's attempt* to fetch that outlet succeeded — and that's deliberate.
+Whether an HTTP request came back 200 or 403 is a fact about a scrape
+attempt, not a fact about a fuel pump, so it doesn't belong in the same file
+or the same shape as the outlet data itself. Mixing the two would also mean
+a failed attempt's leftovers (a partial parse, a stale cached value) could
+end up sitting in the data file looking like a real outlet record — keeping
+them in genuinely separate files makes that impossible by construction.
+
+One JSON object per line in `output/{slug}-worklog.jsonl`, defined in
+`src/types.ts`:
 
 | Field | Type | Nullable | Description | Example |
 |-------|------|----------|-------------|---------|
-| `workUnitId` | `string` | No | The `WorkUnit.id` this record is for — see the per-brand shapes below. | `"https://petrolpump.hpretail.in/hpcl-.../398563/Home"` |
+| `workUnitId` | `string` | No | The `WorkUnit.id` this record is for — shape varies per brand, see below. | `"https://petrolpump.hpretail.in/hpcl-.../398563/Home"` |
 | `status` | `string` | No | One of `"ok"`, `"empty"`, `"httpFailed"`, `"parsedNull"`, `"errored"`. Only `ok`/`empty` are treated as "done" on resume. Any other status is always retried. | `"ok"` |
 | `recordCount` | `number` | No | Number of `RawOutletRecord`s this work unit produced. `0` for `empty`, `httpFailed`, etc. | `1` |
 | `saturated` | `boolean` | Yes | BPCL only. `true` when a grid cell hit the saturation threshold (≥100 results) and was subdivided. Absent for other brands. | `true` |
 | `detail` | `string` | Yes | Human-readable detail about the result — the error reason for failures. | `"HTTP 403"` |
 | `fetchedAt` | `string` | No | ISO-8601 timestamp of when the work unit was processed. Used for staleness checks on resume. | `"2026-07-20T03:14:42.123Z"` |
 
-`workUnitId` shape per brand:
+`workUnitId` isn't always "one outlet" — it's whatever unit that brand's
+discovery strategy actually works in:
 
 | Brand | Shape | Example |
 |---|---|---|
@@ -64,19 +163,49 @@ Per-unit crawl bookkeeping. One JSON per line in `output/{slug}-worklog.jsonl`. 
 
 ### Status semantics
 
+The asymmetry here is the single most load-bearing design decision in the
+whole pipeline — see [ARCHITECTURE.md](./ARCHITECTURE.md#runprovider-srcrun-providerts)
+for the full reasoning behind why only `ok`/`empty` can ever mark a unit as
+done:
+
 | Status | Meaning | Resume behavior |
 |--------|---------|-----------------|
 | `ok` | Unit processed successfully, produced ≥1 record | **Marked done** — skipped on resume |
 | `empty` | Unit processed successfully, produced 0 records (e.g. BPCL's "NoDataFoundError" over open ocean) | **Marked done** — skipped on resume |
 | `httpFailed` | HTTP request completed but returned a non-OK status (403, 404, 500, etc.) | **Always retried** |
-| `parsedNull` | HTTP OK, but the response body couldn't be parsed into an outlet (HTML/JSON shape changed, or — for JioBP/Nayara — a response that came back structurally empty when it shouldn't have) | **Always retried** |
+| `parsedNull` | HTTP OK, but the response body couldn't be parsed into an outlet (HTML/JSON shape changed, or a response that came back structurally empty when it shouldn't have) | **Always retried** |
 | `errored` | An unhandled exception occurred during processing (connection failure, missing required field, etc.) | **Always retried** |
 
 ---
 
-## Dataset index.json
+## Step 5 — from one outlet to one published dataset
 
-The manifest file at `dataset/index.json`, written by `src/build-dataset.ts`.
+Individually, the pieces above answer "what is this outlet" and "did we
+successfully fetch it." What's still missing is how ~103,000 of these
+records, scraped independently across six brands, become the one thing a
+consumer actually downloads.
+
+The scale problem is straightforward: nobody rendering a local map wants to
+download all 103,000 records to show the twelve pumps near them. So the
+merged, deduped dataset (`src/build-dataset.ts`) is split by **geohash**
+prefix — the first 3 characters of each outlet's geohash, which naturally
+groups outlets into roughly 156 km cells without needing any external
+geographic data or lookup table; the grouping falls straight out of the
+coordinates themselves.
+
+Splitting into files creates a second, smaller problem: if every publish
+renamed every file, every consumer's cache would be worthless — a client
+would have to re-download the whole country on every update just to catch
+one changed price. The fix is naming each shard by the **SHA-256 hash of its
+own contents**, not by a run number or timestamp. A cell whose outlets
+haven't changed produces the exact same filename it had before, so an
+unchanged cell simply isn't re-downloaded; only cells that actually changed
+get a new filename, and everything else stays cached exactly where it was.
+
+### `dataset/index.json`
+
+The manifest — the thing a consumer fetches first to find out which shard
+files currently exist.
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -86,7 +215,7 @@ The manifest file at `dataset/index.json`, written by `src/build-dataset.ts`.
 | `brands` | `Record<string, number>` | Per-brand outlet counts. Keys are brand slugs (`"hpcl"`, `"iocl"`, `"bpcl"`, `"jiobp"`, `"nayara"`, `"shell"`). A brand whose raw JSONL was missing/empty this run is omitted entirely (not set to `0`) — see `missingBrands` in `dataset/release-stats.json`. |
 | `shards` | `ShardEntry[]` | Array of shard descriptors (see below). |
 
-### ShardEntry
+#### `ShardEntry`
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -94,9 +223,7 @@ The manifest file at `dataset/index.json`, written by `src/build-dataset.ts`.
 | `file` | `string` | Relative path to the shard file: `"shards/<prefix>.<hash>.json"`. |
 | `count` | `number` | Number of outlets in this shard. |
 
----
-
-## Shard file
+### Shard file
 
 Each file at `dataset/shards/{prefix}.{hash}.json`.
 
@@ -104,12 +231,6 @@ Each file at `dataset/shards/{prefix}.{hash}.json`.
 |-------|------|-------------|
 | `prefix` | `string` | Same 3-character geohash prefix as the filename. |
 | `outlets` | `RawOutletRecord[]` | All outlets in this cell, sorted by `stationId` for deterministic hashing. |
-
-Each shard filename embeds a **content hash** (first 16 hex of SHA-256), so a shard
-file is **immutable** — an unchanged cell keeps the same URL across updates and stays
-cached; only cells whose data actually changed get a new filename and re-download. If
-every cell is unchanged, a new `index.json` references the same shard files and the
-CDN cache is untouched.
 
 ### Consumption pattern
 
@@ -126,7 +247,31 @@ enable per-viewport streaming but does not require it.
 
 ---
 
-## Example records
+## How it all connects
+
+Put end to end: a scraper visits one outlet's page or API entry and produces
+one `RawOutletRecord` (Step 1), whose `products[]` holds whatever prices
+were actually legible (Step 2). That record gets written alongside a
+`WorkLogRecord` noting the attempt succeeded (Step 4) — a record that on any
+later run lets the scraper skip this outlet entirely until it's worth
+re-checking. Once a brand's whole raw file exists, `stationId` (Step 3) is
+what lets `build-dataset` collapse however many overlapping captures of the
+same physical pump — from route/grid overlap, repeat queries, or ordinary
+re-scraping over time — down to just the newest one. Every brand's deduped
+records are then merged, grouped by rough geographic cell, and written out
+as content-addressed shard files plus one manifest (Step 5) — which is the
+form a map client, or anyone else, actually downloads.
+
+Every step in that chain exists to solve one specific problem that showed up
+when six very differently-shaped sources had to become one dataset: how to
+describe an outlet without inventing data, how to tell "no price" from "no
+product," how to recognize the same pump twice, how to know an attempt
+actually worked, and how to hand the result to a consumer without making
+them download more than they need.
+
+---
+
+## Worked examples
 
 ### HPCL outlet (live-scraped from `petrolpump.hpretail.in`)
 

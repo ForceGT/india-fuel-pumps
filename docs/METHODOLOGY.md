@@ -33,7 +33,7 @@ That has a few concrete consequences:
 
 The tradeoff is that git isn't a real database — there's no query language, and a
 consumer has to fetch whole files rather than run a `WHERE` clause. The
-[geohash-sharding scheme](./DATA-DICTIONARY.md#dataset-indexjson) exists specifically
+[geohash-sharding scheme](./DATA-DICTIONARY.md#step-5-from-one-outlet-to-one-published-dataset) exists specifically
 to make that tradeoff cheap: a map client only downloads the shards covering the area
 it actually needs, instead of the whole country.
 
