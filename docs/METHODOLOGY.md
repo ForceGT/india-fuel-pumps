@@ -123,5 +123,4 @@ outlet, and always reflects the most recently captured version of it.
 
 - [DATA-DICTIONARY.md](./DATA-DICTIONARY.md) — the field-by-field schema reference.
 - [ARCHITECTURE.md](./ARCHITECTURE.md) — how the pipeline code itself is structured.
-- [EDGE-CASES.md](./EDGE-CASES.md) — specific quirks and incidents encountered per brand.
 - [RUNBOOK.md](./RUNBOOK.md) — how to actually run the scrapers, including the FAQ.

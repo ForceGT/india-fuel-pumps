@@ -24,7 +24,6 @@ This README is deliberately short. Everything else lives in one of these:
 | **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** | How the pipeline code is structured — the `Provider` interface, the resumable worker pool, the CI workflow, how to add a new brand. |
 | **[docs/RUNBOOK.md](./docs/RUNBOOK.md)** | How to actually run the scrapers: prerequisites, per-brand env vars, resuming a killed run, common failure modes, and an operational FAQ. |
 | **[docs/CI-CD.md](./docs/CI-CD.md)** | How the daily GitHub Actions pipeline is wired up — scheduling, worklog caching between runs, publish safety checks, and how failures get filed/auto-resolved as issues. Includes a diagram of every branch the pipeline can take. |
-| **[docs/EDGE-CASES.md](./docs/EDGE-CASES.md)** | A catalog of specific quirks and incidents per brand (WAF calibration, token expiry, cache staleness) and their root causes. |
 | **[docs/jiobp-api.md](./docs/jiobp-api.md)**, **[docs/nayara-api.md](./docs/nayara-api.md)**, **[docs/shell-api.md](./docs/shell-api.md)** | Full API references for each brand's undocumented locator/app backend — every request, every field. |
 | **[CONTRIBUTING.md](./CONTRIBUTING.md)** | How to report a wrong pump, add a new brand, or submit a code change. |
 
@@ -114,7 +113,7 @@ No login is used anywhere, no personal/gated data is touched, and contact number
 
 ## Related projects
 
-- **[E0 Finder](https://gtxtreme.pages.dev/e0-finder)** — a fast, mobile-first map that helps people in India find ethanol-free (E0) petrol. The primary consumer of this dataset, applying its own grade-classification and confidence rules on top of the raw records here.
+- **[E0 Finder](https://e0fuel.in)** — a fast, mobile-first map that helps people in India find ethanol-free (E0) petrol. The primary consumer of this dataset, applying its own grade-classification and confidence rules on top of the raw records here.
 
 ---
 

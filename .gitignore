@@ -3,3 +3,4 @@ dist/
 output/
 *.log
 .DS_Store
+docs/EDGE-CASES.md

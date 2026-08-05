@@ -266,5 +266,5 @@ scope** for this repo — dropped.
    and finishes in minutes even at low concurrency.
 3. **Price history vs. current.** `PriceDetails` is a dated history; some
    products' latest entry can be weeks old. `src/parsers/jiobp.ts`'s
-   `latestProductPrice` takes the max by `PriceDate` — see
-   [EDGE-CASES.md](./EDGE-CASES.md)'s Jio-bp entry for the full detail.
+   `latestProductPrice` takes the max by `PriceDate` (see "Reading prices"
+   above) rather than assuming array order or a fixed position.

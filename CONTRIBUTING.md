@@ -59,5 +59,5 @@ limits per brand.
   designed — if you want to build it, open an issue to discuss the design first
   rather than sending a PR cold.
 - Grade/ethanol classification of any kind belongs in a downstream consumer (e.g.
-  [E0 Finder](https://gtxtreme.pages.dev/e0-finder)), not this repo — see
+  [E0 Finder](https://e0fuel.in)), not this repo — see
   [docs/METHODOLOGY.md](./docs/METHODOLOGY.md) for why.

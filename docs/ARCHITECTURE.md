@@ -76,7 +76,7 @@ API reference where one exists):
 |---|---|---|
 | HPCL | Sitemap walk (`petrolpump.hpretail.in/sitemap.xml`) → per-district `.xml.gz` files → per-outlet `/Home` URLs | None |
 | IOCL | Same "singleinterface.com" platform as HPCL, same shape (`locator.iocl.com/sitemap.xml`) | None |
-| BPCL | Hand-curated route mesh (city-pair corridors) **+** an adaptive point-grid over India with saturation-triggered subdivision (see [EDGE-CASES.md](./EDGE-CASES.md)) | OAuth token, fetched in `init()` |
+| BPCL | Hand-curated route mesh (city-pair corridors) **+** an adaptive point-grid over India with saturation-triggered subdivision | OAuth token, fetched in `init()` |
 | Jio-bp | One `FetchROMaster` call for the national station index, then batches of station codes (default 18/batch) as work units | None — identity fields are unvalidated constants (see [jiobp-api.md](./jiobp-api.md)) |
 | Nayara | Two large-radius (`3000km`) `/get-code-ro-radius` calls from widely separated center points — each alone returns close to the entire national roster (see [nayara-api.md](./nayara-api.md)) | Session cookies + CSRF token, bootstrapped in `init()`, refreshed on HTTP 419 |
 | Shell | Recursive bounding-box walk over India via `within_bounds` (subdivides when the response signals `clusters`), then one `GET /api/v2/locations/{id}` per outlet id (see [shell-api.md](./shell-api.md)) | None |

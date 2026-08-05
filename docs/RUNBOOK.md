@@ -192,7 +192,7 @@ npm run census:hpcl
 - **HPCL:** deletes `output/hpcl-discovered-urls.json` so the sitemap walk re-runs.
 - **IOCL:** same as HPCL (same `locator-platform` sitemap cache).
 - **BPCL:** deletes any cached route/cell discovery state.
-- **Jio-bp:** nothing to delete — `discover()` has no on-disk cache, it re-fetches the full `FetchROMaster` index on every run (that call is cheap; see `docs/EDGE-CASES.md`'s Jio-bp entry for what happens if it fails).
+- **Jio-bp:** nothing to delete — `discover()` has no on-disk cache, it re-fetches the full `FetchROMaster` index on every run (that call is cheap). If that single index call fails, `discover()` throws immediately rather than silently yielding zero units — the run crashes loudly with a clear error instead of looking like a suspiciously-fast success.
 
 ---
 
@@ -225,7 +225,7 @@ https://raw.githubusercontent.com/ForceGT/india-fuel-pumps/main/dataset/shards/<
 | All IOCL requests 403 mid-run | WAF block | `FRESH=1` with concurrency 10, wait 30 min, restart |
 | BPCL all 401 at startup | OAuth token fetch failed | Re-run — token refresh self-heals |
 | BPCL all 403 | GH Actions IP blocked / Tailscale exit node unreachable | Check Tailscale connectivity, or run locally and commit raw output |
-| Jio-bp census reports 0/0/0 units, finishes instantly | `FetchROMaster` index call failed (see `docs/EDGE-CASES.md`) | Re-run — usually transient; check job log for the ROMaster fetch error |
+| Jio-bp census crashes with a `ROMaster fetch failed/threw` error | The single `FetchROMaster` index call failed | Re-run — usually transient; check the error message for the underlying HTTP status or network error |
 | Nayara all 419 or persistent httpFailed | CSRF token / session cookie bootstrap broke | Nayara's page structure or WAF rules changed; check `docs/nayara-api.md` and verify the session/CSRF flow still works, then re-run |
 | HPCL "no such sitemap" | Sitemap structure changed | Check `petrolpump.hpretail.in/sitemap.xml` |
 | `build-dataset` exits with 0 outlets | No raw JSONL files exist | Run censuses first |
