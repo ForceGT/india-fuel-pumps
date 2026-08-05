@@ -32,21 +32,25 @@ This README is deliberately short. Everything else lives in one of these:
 ## Quick start
 
 **Use the data** — there's no publish step or CDN; the committed files in this repo
-*are* the distribution. Fetch them directly:
+*are* the distribution. The dataset isn't one big file — it's split into ~200 small
+**shards**, one per ~156 km geographic cell, so a consumer only downloads the area it
+actually needs (see [why we shard](#why-the-dataset-is-sharded) below). Fetch the
+manifest first, then just the shard(s) you want:
 
 ```js
-const index = await fetch(
-  "https://raw.githubusercontent.com/ForceGT/india-fuel-pumps/main/dataset/index.json"
-).then((r) => r.json());
+const BASE = "https://raw.githubusercontent.com/ForceGT/india-fuel-pumps/main/dataset";
 
-// Fetch only the shards covering your area of interest — see
-// docs/DATA-DICTIONARY.md#consumption-pattern for the full pattern and shard format.
-const shard = await fetch(
-  `https://raw.githubusercontent.com/ForceGT/india-fuel-pumps/main/dataset/${index.shards[0].file}`
-).then((r) => r.json());
+const index = await fetch(`${BASE}/index.json`).then((r) => r.json());
+
+// Every shard is listed by its geohash-3 prefix — e.g. "te7" covers the
+// Mumbai area. Pick whichever prefix(es) intersect your area of interest.
+const mumbai = index.shards.find((s) => s.prefix === "te7");
+const outlets = await fetch(`${BASE}/${mumbai.file}`).then((r) => r.json());
+
+console.log(outlets.outlets.length, "outlets in this cell");
 ```
 
-For anything beyond occasional fetches, clone the repo instead — `raw.githubusercontent.com` is unauthenticated-rate-limited per IP.
+For anything beyond occasional fetches, clone the repo instead — `raw.githubusercontent.com` is unauthenticated-rate-limited per IP. Full consumption pattern (matching a bounding box to prefixes, loading everything for a national view, etc.): [docs/DATA-DICTIONARY.md](./docs/DATA-DICTIONARY.md#consumption-pattern).
 
 **Run the scraper** — needs Node 20+, no API keys:
 
@@ -76,6 +80,22 @@ Every record carries a `capturedAt` timestamp — see [Methodology](#methodology
 Shell also separately publishes an **indicative city-level price table** (22 major cities, not per-outlet) — deliberately kept out of this dataset since it's a city-average estimate, not a fact about any specific outlet. See [docs/shell-api.md](./docs/shell-api.md) for what it is and why.
 
 Updated **daily** by GitHub Actions; every run that changes data produces a [GitHub Release](https://github.com/ForceGT/india-fuel-pumps/releases) with a human-readable diff. Full pipeline details: [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
+
+---
+
+## Why the dataset is sharded
+
+~103,000 records is small enough to just download as one file — so sharding
+isn't about today's size, it's about not designing something that stops
+working as the dataset grows. Splitting by geohash means a consumer only
+ever pays for the area they actually care about, not the whole country, no
+matter how large the dataset eventually gets. It also solves a caching
+problem for free: each shard's filename is a hash of its own contents, so a
+daily update that only changed prices in one city only invalidates that
+city's file — everyone else's cached shards stay valid, forever, without
+any of this needing a CDN, a database, or a cache-invalidation scheme of any
+kind. See [docs/DATA-DICTIONARY.md](./docs/DATA-DICTIONARY.md#step-5-from-one-outlet-to-one-published-dataset)
+for the full reasoning behind the shard size and the content-hash filenames.
 
 ---
 
