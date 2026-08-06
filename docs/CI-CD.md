@@ -139,6 +139,39 @@ force a clean crawl.
 
 ---
 
+## What's cached here, and what isn't (HPCL/IOCL discovery cache is a different thing)
+
+Everything above is about the **worklog** cache (`output/{slug}-worklog.jsonl`)
+— that's the only file any `actions/cache` step in `census.yml` ever
+restores or saves, for any of the six brands. Look at the `path:` line on
+every restore/save step above and it's always `{slug}-worklog.jsonl`, never
+anything else.
+
+HPCL and IOCL separately maintain their own **discovery URL cache**
+(`output/{slug}-discovered-urls.json` — the cached sitemap-walk result,
+see [EDGE-CASES.md](./EDGE-CASES.md#discovery-url-cache-staleness-hpcliocl)
+for what it's for and how it can go stale). That file is **not** wired into
+any `actions/cache` step here — it's not restored at the start of a CI job
+and not saved at the end of one. Since every CI job starts on a brand-new,
+disposable VM with nothing on disk, this means **CI always does a full,
+fresh sitemap walk from scratch every single day** for HPCL and IOCL —
+`discover()`'s `existsSync(urlsCachePath)` check is always false in CI, so
+the cache-hit code path it guards (skip the walk, trust whatever's on disk)
+never executes there at all.
+
+This matters because of an asymmetry: the discovery cache staleness/
+truncation problem described in EDGE-CASES.md is a **local-run-only**
+hazard. A local machine keeps `{slug}-discovered-urls.json` on disk
+indefinitely across runs (nothing ever cleans it up automatically), so a
+single bad walk — say, one that got WAF-blocked partway through and
+silently returned an empty URL list for every district it didn't reach —
+can leave a local checkout permanently missing a large fraction of the
+true outlet universe until someone notices and deletes the file (or runs
+with `FRESH=1`). CI can't get stuck this way, because it never has a
+pre-existing file to (wrongly) trust in the first place.
+
+---
+
 ## The six brand jobs
 
 HPCL, IOCL, BPCL, Jio-bp, Nayara, and Shell each run as their own independent

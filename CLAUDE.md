@@ -9,6 +9,19 @@ no opinion on what counts as ethanol-free or any other grade. That classificatio
 is a downstream consumer's job (e.g. the private E0-Finder project at
 `~/Documents/E0-Finder`).
 
+## Docs
+
+`docs/RUNBOOK.md` (how to run things, incl. concurrency/WAF table) and
+`docs/ARCHITECTURE.md` (design) are the committed starting points. Brand
+deep-dives: `docs/nayara-api.md`, `docs/shell-api.md`, `docs/jiobp-api.md`.
+`docs/CI-CD.md` explains the GH Actions worklog cache in detail — including
+what it does *not* cover (see fact 4 below). Two docs are gitignored,
+local-only operator notes (not public, read them directly on disk, don't
+expect them in a fresh clone): `docs/EDGE-CASES.md` (failure modes with root
+causes) and `docs/LOCAL-RUNS.md` (running a census locally instead of via
+CI, incl. why that's sometimes the right call — CI minutes are a finite,
+shared budget).
+
 ## Non-obvious facts
 
 1. **Grade-agnostic boundary is deliberate and enforced at the type level.**
@@ -27,9 +40,14 @@ is a downstream consumer's job (e.g. the private E0-Finder project at
    before uploading artifacts.
 
 4. **Resumability is cache-based.** `runProvider` writes a worklog
-   (`{slug}-worklog.jsonl`). `computeDoneWorkUnitIds` skips already-ok units.
-   The GitHub workflow caches worklog across runs via `actions/cache@v6` with
-   `restore-keys`. To force a full fresh run, clear the cache.
+   (`{slug}-worklog.jsonl`); `computeDoneWorkUnitIds` skips already-ok units.
+   GitHub Actions caches **only the worklog** (`actions/cache@v6`) — HPCL/
+   IOCL's discovery cache (`{slug}-discovered-urls.json`, fact 7) is always
+   fresh in CI but trusted forever on a local checkout, where a silently
+   truncated walk can hide a large chunk of the outlet universe (see
+   `docs/EDGE-CASES.md`). `discover()` guards new walks against this
+   (`MIN_EXPECTED_OUTLET_URLS`) but doesn't re-validate an existing cache
+   file. `FRESH=1` clears both caches — see `docs/LOCAL-RUNS.md`.
 
 5. **IOCL `locator.iocl.com` is WAF-sensitive.** Concurrency 10 is proven safe
    from both residential and GH Actions IPs; 12 is bumped but unverified above
@@ -90,6 +108,13 @@ is a downstream consumer's job (e.g. the private E0-Finder project at
     write-path archiver with real vulnerabilities for a read-only need this
     small. See `docs/shell-api.md`'s "City-level indicative price table" section.
 
+14. **A `git merge` conflict on `{slug}-raw.jsonl.gz` must never be resolved
+    by picking one side wholesale** (`--ours`/`--theirs`). It's append-only
+    and keyed by `outletId`, so more bytes doesn't mean more correct — one
+    side can be missing individually fresher records. Use
+    `npm run reconcile-raw-jsonl -- <side1> <side2> <output>` instead, which
+    unions both by latest `capturedAt` per outlet. See `docs/EDGE-CASES.md`.
+
 ## Repo map
 
 ```
@@ -99,11 +124,14 @@ src/run-{hpcl,iocl,bpcl,jiobp,nayara,shell}.ts   Thin CLI wrappers (brand config
 src/providers/            Brand-specific Provider implementations
 src/parsers/              Per-brand HTML/JSON response parsers
 src/build-dataset.ts      Assembles raw JSONL -> geohash-sharded dataset
+src/reconcile-raw-jsonl.ts   Union-by-latest-capturedAt fix for raw JSONL merge conflicts (fact 14)
 src/types.ts              RawOutletRecord, WorkLogRecord, Brand (no grades!)
 src/http.ts               fetchWithBackoff: retries 429/5xx + connection errors
 src/id.ts                 Stable stationId generation (brand + outletId + lat/lng)
 output/                   Raw JSONL (gitignored except .gz files committed)
 dataset/                  Geohash-sharded output (index.json + shards/)
+docs/                     RUNBOOK/ARCHITECTURE/CI-CD (public) + EDGE-CASES/LOCAL-RUNS (gitignored)
+run-{hpcl,iocl,bpcl}-census.sh   tmux + caffeinate wrappers for long local runs — see docs/LOCAL-RUNS.md
 .github/workflows/census.yml   Monthly + daily cron; partial-failure-tolerant
 ```
 
@@ -117,6 +145,7 @@ npm run census:jiobp      # Full Jio-bp national census
 npm run census:nayara     # Full Nayara national census
 npm run census:shell      # Full Shell national census
 npm run build-dataset     # Assemble raw JSONL -> sharded dataset + release notes
+npm run reconcile-raw-jsonl -- <a.jsonl.gz> <b.jsonl.gz> <out.jsonl.gz>   # fix a raw-file merge conflict (fact 14)
 npm run test              # Vitest suite
 npm run typecheck         # tsc --noEmit
 ```

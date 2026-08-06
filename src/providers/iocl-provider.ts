@@ -21,6 +21,20 @@ import { buildPriceUrl, extractMasterOutletId, parseIoclPriceFragment, parseOutl
 
 const SITEMAP_INDEX_URL = "https://locator.iocl.com/sitemap.xml";
 
+/**
+ * Floor for a nationwide (no state allow-list) Phase A walk — historical
+ * counts have sat around 39,000-39,500. Deliberately conservative (not the
+ * live number) so legitimate growth never trips it; it exists only to catch
+ * a walk that came back silently gutted (e.g. a WAF block mid-walk causing
+ * `fetchDistrictHomeUrls` to return `[]` for many districts in a row — see
+ * docs/EDGE-CASES.md's "Discovery URL cache staleness" for the incident
+ * this guards against: a truncated walk got cached and silently trusted for
+ * days, hiding ~45% of all outlets from every local run). If nationwide
+ * counts ever legitimately drop below this for a real reason, raise or
+ * remove the floor deliberately — don't just delete this comment.
+ */
+const MIN_EXPECTED_OUTLET_URLS = 35000;
+
 export interface IoclProviderConfig {
   /** Where to cache the discovered outlet-URL list across runs — same directory `runProvider` writes its own output into. */
   outputDir: string;
@@ -98,6 +112,17 @@ export function createIoclProvider(config: IoclProviderConfig): Provider {
         },
         () => {},
       );
+
+      if (stateAllowList.length === 0 && outletUrls.length < MIN_EXPECTED_OUTLET_URLS) {
+        console.error(
+          `[iocl-provider] Phase A SUSPECT: only ${outletUrls.length} outlet URLs found nationwide ` +
+            `(expected >= ${MIN_EXPECTED_OUTLET_URLS}) — likely a WAF block silently truncated the walk. ` +
+            `NOT caching this result to ${urlsCachePath}; the next run will re-walk from scratch instead ` +
+            `of silently trusting an incomplete outlet list. See docs/EDGE-CASES.md.`,
+        );
+        for (const url of outletUrls) yield { id: url, payload: url };
+        return;
+      }
 
       await writeFile(urlsCachePath, JSON.stringify(outletUrls, null, 2), "utf-8");
       console.log(`[iocl-provider] Phase A done: ${outletUrls.length} outlet URLs written to ${urlsCachePath}`);
