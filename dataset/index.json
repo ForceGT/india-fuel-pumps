@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-05T09:56:10.938Z",
-  "totalOutlets": 103245,
+  "generatedAt": "2026-08-06T10:23:52.445Z",
+  "totalOutlets": 103247,
   "brands": {
     "hpcl": 23980,
-    "iocl": 39611,
+    "iocl": 39613,
     "bpcl": 27961,
     "jiobp": 2296,
     "nayara": 9065,
@@ -18,7 +18,7 @@
     },
     {
       "prefix": "t97",
-      "file": "shards/t97.e1e1a303f10148a8.json",
+      "file": "shards/t97.ec038ee3ae2989db.json",
       "count": 1
     },
     {
@@ -28,22 +28,22 @@
     },
     {
       "prefix": "t9g",
-      "file": "shards/t9g.eb51fef4d76dd480.json",
+      "file": "shards/t9g.d53202a9acd832e2.json",
       "count": 2
     },
     {
       "prefix": "t9q",
-      "file": "shards/t9q.cf962d2f0ea8908b.json",
+      "file": "shards/t9q.1d7bc4d685070575.json",
       "count": 147
     },
     {
       "prefix": "t9r",
-      "file": "shards/t9r.fddaa7a742c91237.json",
+      "file": "shards/t9r.77a654a5cff28434.json",
       "count": 148
     },
     {
       "prefix": "t9u",
-      "file": "shards/t9u.1e387380b3f916ed.json",
+      "file": "shards/t9u.8e204472199385a6.json",
       "count": 2
     },
     {
@@ -53,117 +53,117 @@
     },
     {
       "prefix": "t9w",
-      "file": "shards/t9w.aebef84121b27710.json",
+      "file": "shards/t9w.745ac112504551ba.json",
       "count": 1088
     },
     {
       "prefix": "t9x",
-      "file": "shards/t9x.fa9561267a7e960f.json",
+      "file": "shards/t9x.222ee6808ffb749d.json",
       "count": 843
     },
     {
       "prefix": "t9y",
-      "file": "shards/t9y.40b3cd7fd3e32987.json",
+      "file": "shards/t9y.35517df384a1fa1b.json",
       "count": 1947
     },
     {
       "prefix": "t9z",
-      "file": "shards/t9z.37d00161e1175c8e.json",
+      "file": "shards/t9z.8b5c2662fb10ed0a.json",
       "count": 1448
     },
     {
       "prefix": "tc8",
-      "file": "shards/tc8.d5b24a8549381140.json",
+      "file": "shards/tc8.dfc6734066a36198.json",
       "count": 84
     },
     {
       "prefix": "tcb",
-      "file": "shards/tcb.3b525f4573d9c566.json",
+      "file": "shards/tcb.1615b530c2c11909.json",
       "count": 884
     },
     {
       "prefix": "tdj",
-      "file": "shards/tdj.59c9b41f251cecd3.json",
+      "file": "shards/tdj.b69c8238514eb077.json",
       "count": 628
     },
     {
       "prefix": "tdk",
-      "file": "shards/tdk.53d9b4c2249e9cc0.json",
+      "file": "shards/tdk.5844ed024ff0686c.json",
       "count": 2
     },
     {
       "prefix": "tdm",
-      "file": "shards/tdm.f753ff13d60f11ba.json",
+      "file": "shards/tdm.d5645009945a1654.json",
       "count": 668
     },
     {
       "prefix": "tdn",
-      "file": "shards/tdn.d4a1da59c9b0bdea.json",
+      "file": "shards/tdn.29bacd23cebac4f9.json",
       "count": 927
     },
     {
       "prefix": "tdp",
-      "file": "shards/tdp.d08cc0b3d4ddb5f8.json",
+      "file": "shards/tdp.403fe0200ccb318a.json",
       "count": 1515
     },
     {
       "prefix": "tdq",
-      "file": "shards/tdq.0984a33996b44458.json",
+      "file": "shards/tdq.5488e18a31dc8345.json",
       "count": 854
     },
     {
       "prefix": "tdr",
-      "file": "shards/tdr.d1a92e8adf1eae0e.json",
+      "file": "shards/tdr.29f0fbde0441d84a.json",
       "count": 1819
     },
     {
       "prefix": "tds",
-      "file": "shards/tds.04844b7086f425ed.json",
+      "file": "shards/tds.5ca17777704c9c4c.json",
       "count": 143
     },
     {
       "prefix": "tdt",
-      "file": "shards/tdt.67bae6c12767e6ca.json",
+      "file": "shards/tdt.182a1c2521b7bd47.json",
       "count": 766
     },
     {
       "prefix": "tdu",
-      "file": "shards/tdu.8d73c332d9084005.json",
+      "file": "shards/tdu.f3ede42047911905.json",
       "count": 692
     },
     {
       "prefix": "tdv",
-      "file": "shards/tdv.7441ec68f9a706bc.json",
+      "file": "shards/tdv.545b47793e19a0b3.json",
       "count": 994
     },
     {
       "prefix": "tdw",
-      "file": "shards/tdw.0c4195cd1da1b819.json",
+      "file": "shards/tdw.2ac81cebe1435a38.json",
       "count": 689
     },
     {
       "prefix": "tdx",
-      "file": "shards/tdx.86eaa699785abb54.json",
+      "file": "shards/tdx.c8965de730faa1a0.json",
       "count": 574
     },
     {
       "prefix": "tdy",
-      "file": "shards/tdy.f96e79858fc5a9bd.json",
+      "file": "shards/tdy.a69ab0db4ae0cedd.json",
       "count": 540
     },
     {
       "prefix": "tdz",
-      "file": "shards/tdz.77da60209c5414d7.json",
+      "file": "shards/tdz.c0d816156d0783e1.json",
       "count": 682
     },
     {
       "prefix": "te5",
-      "file": "shards/te5.6a0924d04ed36b21.json",
+      "file": "shards/te5.8ff18b9b9c1a194c.json",
       "count": 11
     },
     {
       "prefix": "te7",
-      "file": "shards/te7.880ac8d187423768.json",
+      "file": "shards/te7.d301e385671af101.json",
       "count": 598
     },
     {
@@ -173,128 +173,128 @@
     },
     {
       "prefix": "tec",
-      "file": "shards/tec.143634d193211d4d.json",
+      "file": "shards/tec.ea1909b2c816d9b4.json",
       "count": 472
     },
     {
       "prefix": "ted",
-      "file": "shards/ted.5ab4baec7be20a5f.json",
+      "file": "shards/ted.7e569ea75bf41c79.json",
       "count": 200
     },
     {
       "prefix": "tee",
-      "file": "shards/tee.4430a97635143804.json",
+      "file": "shards/tee.a1efdd4fa3315f3b.json",
       "count": 417
     },
     {
       "prefix": "tef",
-      "file": "shards/tef.256c7ee9b6514b75.json",
+      "file": "shards/tef.2c92ed3a5cd379e2.json",
       "count": 756
     },
     {
       "prefix": "teg",
-      "file": "shards/teg.3d85bb0dd4aef384.json",
+      "file": "shards/teg.87fb428973b0d76b.json",
       "count": 973
     },
     {
       "prefix": "teh",
-      "file": "shards/teh.e95695aa03887ce0.json",
+      "file": "shards/teh.e7ff158e2e02932c.json",
       "count": 700
     },
     {
       "prefix": "tej",
-      "file": "shards/tej.c8413cf47cb60e0c.json",
+      "file": "shards/tej.8668d0c04c0f86cd.json",
       "count": 864
     },
     {
       "prefix": "tek",
-      "file": "shards/tek.14e0cebf604121db.json",
+      "file": "shards/tek.2c8725415b56053f.json",
       "count": 1271
     },
     {
       "prefix": "tem",
-      "file": "shards/tem.ab490570abf50124.json",
+      "file": "shards/tem.f4b5fe9bde41c444.json",
       "count": 762
     },
     {
       "prefix": "ten",
-      "file": "shards/ten.5bc58b329da347b0.json",
+      "file": "shards/ten.f3f16c309356dd3a.json",
       "count": 638
     },
     {
       "prefix": "tep",
-      "file": "shards/tep.b115b056f9e9d5e8.json",
-      "count": 1664
+      "file": "shards/tep.8b96b95e944f8754.json",
+      "count": 1665
     },
     {
       "prefix": "teq",
-      "file": "shards/teq.723f8be66286a26e.json",
+      "file": "shards/teq.1b327ab562d6f66f.json",
       "count": 621
     },
     {
       "prefix": "ter",
-      "file": "shards/ter.afc87c526bb6075b.json",
+      "file": "shards/ter.744a9c7bc6cddc87.json",
       "count": 759
     },
     {
       "prefix": "tes",
-      "file": "shards/tes.a828e70ee859b436.json",
+      "file": "shards/tes.f887c771fffa6905.json",
       "count": 845
     },
     {
       "prefix": "tet",
-      "file": "shards/tet.6d0faa4ae0c00d79.json",
+      "file": "shards/tet.6d753a2701122b0a.json",
       "count": 949
     },
     {
       "prefix": "teu",
-      "file": "shards/teu.da90f9e5ae665703.json",
+      "file": "shards/teu.2b4b50aeded2aa46.json",
       "count": 715
     },
     {
       "prefix": "tev",
-      "file": "shards/tev.f43b035925c45829.json",
+      "file": "shards/tev.0a283fe83f914b14.json",
       "count": 557
     },
     {
       "prefix": "tew",
-      "file": "shards/tew.fdc9885cea756d02.json",
+      "file": "shards/tew.90b955ac32a3614c.json",
       "count": 528
     },
     {
       "prefix": "tex",
-      "file": "shards/tex.c432c41679c6107a.json",
+      "file": "shards/tex.6dcfdc5de599a8cd.json",
       "count": 447
     },
     {
       "prefix": "tey",
-      "file": "shards/tey.64eb10a0e22ed9cb.json",
+      "file": "shards/tey.fa9f6276d628d991.json",
       "count": 407
     },
     {
       "prefix": "tez",
-      "file": "shards/tez.80d18f28bcc721ac.json",
+      "file": "shards/tez.0afa1f736187e3e1.json",
       "count": 354
     },
     {
       "prefix": "tf0",
-      "file": "shards/tf0.01641a5bd2dff4d6.json",
+      "file": "shards/tf0.667edc599538a3d4.json",
       "count": 1088
     },
     {
       "prefix": "tf1",
-      "file": "shards/tf1.90843f06d08cbb6c.json",
+      "file": "shards/tf1.e555e0744478ae9b.json",
       "count": 4
     },
     {
       "prefix": "tf2",
-      "file": "shards/tf2.1802c32e8d301736.json",
+      "file": "shards/tf2.52ae85cb81818b8b.json",
       "count": 1273
     },
     {
       "prefix": "tf3",
-      "file": "shards/tf3.ee5750ea676c1b26.json",
-      "count": 546
+      "file": "shards/tf3.b9d752fa8e60bb12.json",
+      "count": 547
     },
     {
       "prefix": "tf8",
@@ -308,12 +308,12 @@
     },
     {
       "prefix": "tfb",
-      "file": "shards/tfb.c7833292e88f1400.json",
+      "file": "shards/tfb.8b76ee2080d5e884.json",
       "count": 623
     },
     {
       "prefix": "tfc",
-      "file": "shards/tfc.b3c31dd16a5fe677.json",
+      "file": "shards/tfc.20c6e274fb6a3369.json",
       "count": 954
     },
     {
@@ -323,27 +323,27 @@
     },
     {
       "prefix": "tg0",
-      "file": "shards/tg0.1a60b8a5d99b768f.json",
+      "file": "shards/tg0.78864e4bb4355145.json",
       "count": 1172
     },
     {
       "prefix": "tg1",
-      "file": "shards/tg1.c30406fb1a22b60f.json",
+      "file": "shards/tg1.8276c3e4501bf755.json",
       "count": 457
     },
     {
       "prefix": "tg2",
-      "file": "shards/tg2.7fcc9c7d7fe4a695.json",
+      "file": "shards/tg2.7eb0a9ea81b107f0.json",
       "count": 636
     },
     {
       "prefix": "tg3",
-      "file": "shards/tg3.921eddc01f4ad24f.json",
+      "file": "shards/tg3.c6a9bc7b23424ded.json",
       "count": 45
     },
     {
       "prefix": "tg4",
-      "file": "shards/tg4.2c39677e5b4e7fb0.json",
+      "file": "shards/tg4.964252b2fc0dc410.json",
       "count": 529
     },
     {
@@ -363,22 +363,22 @@
     },
     {
       "prefix": "tg8",
-      "file": "shards/tg8.596f41403cf8f05f.json",
+      "file": "shards/tg8.b6710fcf3e392933.json",
       "count": 443
     },
     {
       "prefix": "tg9",
-      "file": "shards/tg9.2eba3cddad5b6c22.json",
+      "file": "shards/tg9.d2ca4784f451c05c.json",
       "count": 293
     },
     {
       "prefix": "tgb",
-      "file": "shards/tgb.b8739de5adba11b7.json",
+      "file": "shards/tgb.35cccc5bc3fd5509.json",
       "count": 664
     },
     {
       "prefix": "tgc",
-      "file": "shards/tgc.52901bce429e93ad.json",
+      "file": "shards/tgc.c61719a0947c1a41.json",
       "count": 492
     },
     {
@@ -393,7 +393,7 @@
     },
     {
       "prefix": "tgf",
-      "file": "shards/tgf.2d32823b933646f3.json",
+      "file": "shards/tgf.3ebe164ea56ea909.json",
       "count": 946
     },
     {
@@ -413,7 +413,7 @@
     },
     {
       "prefix": "tgt",
-      "file": "shards/tgt.4e58a07ad53d7f1b.json",
+      "file": "shards/tgt.ce313483889cb7b1.json",
       "count": 612
     },
     {
@@ -443,17 +443,17 @@
     },
     {
       "prefix": "ts1",
-      "file": "shards/ts1.1bbbca788808ea1f.json",
+      "file": "shards/ts1.9c5a40550825a213.json",
       "count": 301
     },
     {
       "prefix": "ts4",
-      "file": "shards/ts4.8069dfcadbc78222.json",
+      "file": "shards/ts4.7d74dbcf45ab1997.json",
       "count": 541
     },
     {
       "prefix": "ts5",
-      "file": "shards/ts5.dac7a907bc8ef968.json",
+      "file": "shards/ts5.0ac5217db6975c7a.json",
       "count": 1603
     },
     {
@@ -463,7 +463,7 @@
     },
     {
       "prefix": "ts7",
-      "file": "shards/ts7.c2921346d31b7efc.json",
+      "file": "shards/ts7.f1a92a22ac8b4b9b.json",
       "count": 780
     },
     {
@@ -493,7 +493,7 @@
     },
     {
       "prefix": "tsh",
-      "file": "shards/tsh.61e7c08bd994a899.json",
+      "file": "shards/tsh.c6d426b272751ed7.json",
       "count": 823
     },
     {
@@ -528,7 +528,7 @@
     },
     {
       "prefix": "tsr",
-      "file": "shards/tsr.cc2884ff9efdab1c.json",
+      "file": "shards/tsr.371f2dc7ba793993.json",
       "count": 465
     },
     {
@@ -558,17 +558,17 @@
     },
     {
       "prefix": "tsx",
-      "file": "shards/tsx.b4bd656169eecea3.json",
+      "file": "shards/tsx.f454adda29c84b44.json",
       "count": 728
     },
     {
       "prefix": "tsy",
-      "file": "shards/tsy.af55955ef747e115.json",
+      "file": "shards/tsy.7fc05dbf23a0b51f.json",
       "count": 1099
     },
     {
       "prefix": "tsz",
-      "file": "shards/tsz.41a8c8fdb888dbe3.json",
+      "file": "shards/tsz.906113a1e6b837e2.json",
       "count": 1453
     },
     {
@@ -588,37 +588,37 @@
     },
     {
       "prefix": "ttj",
-      "file": "shards/ttj.6c61ea66678335ea.json",
+      "file": "shards/ttj.1b385c3b9f7e57ce.json",
       "count": 746
     },
     {
       "prefix": "ttk",
-      "file": "shards/ttk.346139400b85088d.json",
+      "file": "shards/ttk.4a55c4d009f7a6dc.json",
       "count": 509
     },
     {
       "prefix": "ttm",
-      "file": "shards/ttm.417a03ac37a56d3f.json",
+      "file": "shards/ttm.8e0073a7033dc235.json",
       "count": 1734
     },
     {
       "prefix": "ttn",
-      "file": "shards/ttn.d97b747b319dab36.json",
+      "file": "shards/ttn.0cc3417d8f13cc9c.json",
       "count": 2443
     },
     {
       "prefix": "ttp",
-      "file": "shards/ttp.c222468e220ab4dc.json",
+      "file": "shards/ttp.f3f6026670c11dbe.json",
       "count": 1547
     },
     {
       "prefix": "ttq",
-      "file": "shards/ttq.78e6392b2a0585b9.json",
+      "file": "shards/ttq.611b80f2a67bc6c4.json",
       "count": 2011
     },
     {
       "prefix": "ttr",
-      "file": "shards/ttr.90fcb370c02feaf4.json",
+      "file": "shards/ttr.0096444346e6ca7a.json",
       "count": 856
     },
     {
@@ -668,17 +668,17 @@
     },
     {
       "prefix": "tu1",
-      "file": "shards/tu1.0b53902454bcba70.json",
+      "file": "shards/tu1.68eed563f2f0dedf.json",
       "count": 265
     },
     {
       "prefix": "tu2",
-      "file": "shards/tu2.20e9a502954018ef.json",
+      "file": "shards/tu2.ea59f232a1d74386.json",
       "count": 354
     },
     {
       "prefix": "tu3",
-      "file": "shards/tu3.1cf0d21959bd3c33.json",
+      "file": "shards/tu3.bf6101facc0830d6.json",
       "count": 461
     },
     {
@@ -693,52 +693,52 @@
     },
     {
       "prefix": "tu6",
-      "file": "shards/tu6.e6e52f122c9b98f9.json",
+      "file": "shards/tu6.79723bd7b7eefc65.json",
       "count": 599
     },
     {
       "prefix": "tu7",
-      "file": "shards/tu7.1958255a80e5dad5.json",
+      "file": "shards/tu7.53edfa6396b11241.json",
       "count": 743
     },
     {
       "prefix": "tu8",
-      "file": "shards/tu8.67dbb051261c134b.json",
+      "file": "shards/tu8.7cea535effab2037.json",
       "count": 805
     },
     {
       "prefix": "tu9",
-      "file": "shards/tu9.8307fb9453498f96.json",
+      "file": "shards/tu9.00518aa90d032e3f.json",
       "count": 1093
     },
     {
       "prefix": "tub",
-      "file": "shards/tub.36347841c03281fb.json",
+      "file": "shards/tub.55e7ac3638bd45e0.json",
       "count": 1036
     },
     {
       "prefix": "tuc",
-      "file": "shards/tuc.2d57a23e258f5693.json",
+      "file": "shards/tuc.7958bc8cdaa83843.json",
       "count": 1162
     },
     {
       "prefix": "tud",
-      "file": "shards/tud.f25b9b6429dcc053.json",
+      "file": "shards/tud.d3f7f0371a17b1e3.json",
       "count": 1424
     },
     {
       "prefix": "tue",
-      "file": "shards/tue.85383219ad5a363d.json",
+      "file": "shards/tue.42bbd4b62654edfc.json",
       "count": 1302
     },
     {
       "prefix": "tuf",
-      "file": "shards/tuf.ff0a7a82b3fe365d.json",
+      "file": "shards/tuf.f31bf9f42bca30e8.json",
       "count": 773
     },
     {
       "prefix": "tug",
-      "file": "shards/tug.a90aabfda7555964.json",
+      "file": "shards/tug.b1dbc680f7e4ec36.json",
       "count": 531
     },
     {
@@ -763,7 +763,7 @@
     },
     {
       "prefix": "tun",
-      "file": "shards/tun.89682d7f097ff148.json",
+      "file": "shards/tun.2146a5a8fbb5bf7f.json",
       "count": 1317
     },
     {
@@ -783,7 +783,7 @@
     },
     {
       "prefix": "tus",
-      "file": "shards/tus.27b696be857120da.json",
+      "file": "shards/tus.e055457f32f40feb.json",
       "count": 1306
     },
     {
@@ -808,22 +808,22 @@
     },
     {
       "prefix": "tuy",
-      "file": "shards/tuy.0cb92c64b81d1e7c.json",
+      "file": "shards/tuy.4b1da7e3cc923074.json",
       "count": 104
     },
     {
       "prefix": "tuz",
-      "file": "shards/tuz.e243a2e69f564587.json",
+      "file": "shards/tuz.cbbed78c0d7a6181.json",
       "count": 52
     },
     {
       "prefix": "tv0",
-      "file": "shards/tv0.a764a1840173b507.json",
+      "file": "shards/tv0.d7a29ee3df0e3e3c.json",
       "count": 1203
     },
     {
       "prefix": "tv1",
-      "file": "shards/tv1.fc6bcd4901ed6eb3.json",
+      "file": "shards/tv1.8ed14d34472bf9cc.json",
       "count": 112
     },
     {
@@ -858,37 +858,37 @@
     },
     {
       "prefix": "twn",
-      "file": "shards/twn.23348c3720adb25a.json",
+      "file": "shards/twn.d6059f8c3d12debe.json",
       "count": 12
     },
     {
       "prefix": "twp",
-      "file": "shards/twp.b71f743dc86fe3ce.json",
+      "file": "shards/twp.f07b3a8064ad4015.json",
       "count": 22
     },
     {
       "prefix": "w14",
-      "file": "shards/w14.831194d042a40bbc.json",
+      "file": "shards/w14.b1303fc9085aeeeb.json",
       "count": 1
     },
     {
       "prefix": "w1c",
-      "file": "shards/w1c.e6d89b997a9365b0.json",
+      "file": "shards/w1c.465bde70499eb23d.json",
       "count": 1
     },
     {
       "prefix": "w41",
-      "file": "shards/w41.73fc5b23b8e9f864.json",
+      "file": "shards/w41.00d02ae119b167fb.json",
       "count": 11
     },
     {
       "prefix": "w44",
-      "file": "shards/w44.02a23ca1c11c94a6.json",
+      "file": "shards/w44.fbaf951489ee4ae4.json",
       "count": 4
     },
     {
       "prefix": "w46",
-      "file": "shards/w46.a782c0ce208c8223.json",
+      "file": "shards/w46.4bd9a7325556d317.json",
       "count": 2
     },
     {
@@ -903,22 +903,22 @@
     },
     {
       "prefix": "wh0",
-      "file": "shards/wh0.2221fe9dbf3dbac4.json",
+      "file": "shards/wh0.e0b414eb87cdd94b.json",
       "count": 44
     },
     {
       "prefix": "wh1",
-      "file": "shards/wh1.5285b244642c5dab.json",
+      "file": "shards/wh1.54772466505e1da6.json",
       "count": 105
     },
     {
       "prefix": "wh2",
-      "file": "shards/wh2.0d9471b2aa101983.json",
+      "file": "shards/wh2.c5c9cbec4a27e5a9.json",
       "count": 20
     },
     {
       "prefix": "wh3",
-      "file": "shards/wh3.6370bfa9add8e5d6.json",
+      "file": "shards/wh3.0ab8cebdcb246573.json",
       "count": 204
     },
     {
@@ -943,7 +943,7 @@
     },
     {
       "prefix": "wh9",
-      "file": "shards/wh9.7b7b1ebee75280bf.json",
+      "file": "shards/wh9.b6e077996df6d548.json",
       "count": 626
     },
     {
