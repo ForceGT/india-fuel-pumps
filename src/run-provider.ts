@@ -201,29 +201,36 @@ async function loadAlreadyDone(workLogPath: string, maxAgeMs: number, nowMs: num
 
 /**
  * Load baseline `RawOutletRecord[]` from the raw path, streaming to handle
- * large files (~90 MB uncompressed for BPCL) without blowing memory. Tries
- * `{rawPath}.gz` first (git-committed compressed files take priority), then
- * falls back to uncompressed `{rawPath}` if it exists, else returns `[]`.
- * Skips blank/malformed lines with try/catch, mirroring `build-dataset.ts`'s
- * identical `readRawJsonl` logic.
+ * large files (~90 MB uncompressed for BPCL) without blowing memory. Reads
+ * BOTH `{rawPath}.gz` (git-committed compressed baseline) AND the
+ * uncompressed `{rawPath}` (a locally in-progress run's accumulated live
+ * appends) when both exist, and returns the union of records from each —
+ * the caller's `dedupeByStationId` then picks whichever side has the
+ * fresher `capturedAt` per station. Reading only one side unconditionally
+ * (e.g. always preferring `.gz`) silently discards a same-day local run's
+ * progress on every resume/restart, since the worklog still marks those
+ * units "done" and they're never refetched — a confirmed incident (see
+ * docs/EDGE-CASES.md). Skips blank/malformed lines with try/catch,
+ * mirroring `build-dataset.ts`'s identical `readRawJsonl` logic.
  */
 async function readBaselineRawJsonl(rawPath: string): Promise<RawOutletRecord[]> {
   const gzPath = `${rawPath}.gz`;
-  const readPath = existsSync(gzPath) ? gzPath : existsSync(rawPath) ? rawPath : null;
-  if (!readPath) return [];
+  const paths = [gzPath, rawPath].filter((p) => existsSync(p));
 
   const records: RawOutletRecord[] = [];
-  const input = readPath.endsWith(".gz")
-    ? createReadStream(readPath).pipe(createGunzip())
-    : createReadStream(readPath);
-  const rl = createInterface({ input, crlfDelay: Infinity });
-  for await (const line of rl) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-    try {
-      records.push(JSON.parse(trimmed) as RawOutletRecord);
-    } catch {
-      // Skip malformed/torn lines (e.g. from kill -9 mid-write).
+  for (const readPath of paths) {
+    const input = readPath.endsWith(".gz")
+      ? createReadStream(readPath).pipe(createGunzip())
+      : createReadStream(readPath);
+    const rl = createInterface({ input, crlfDelay: Infinity });
+    for await (const line of rl) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      try {
+        records.push(JSON.parse(trimmed) as RawOutletRecord);
+      } catch {
+        // Skip malformed/torn lines (e.g. from kill -9 mid-write).
+      }
     }
   }
   return records;
