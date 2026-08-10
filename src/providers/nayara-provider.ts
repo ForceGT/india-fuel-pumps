@@ -21,6 +21,14 @@
  * the whole run (see docs/nayara-api.md's "Auth model" section, which
  * explicitly recommends this over a one-time init()).
  *
+ * `init()`'s bootstrap GET also gets one retry (after a short delay) on a
+ * non-OK response before giving up — a single transient Akamai 403 on that
+ * one request otherwise fails the entire day's census before any work unit
+ * is attempted (confirmed 2026-08-10, see docs/EDGE-CASES.md's "Nayara
+ * transient bootstrap 403" entry). This is scoped to `init()` only, not a
+ * change to `fetchWithBackoff`'s deliberate "never retry plain 4xx" policy
+ * elsewhere in this repo.
+ *
  * DELIBERATE DECISION: this brand's requests present as a normal Chrome
  * browser (NAYARA_CHROME_HEADERS in ../parsers/nayara.js), not this repo's
  * honest IndiaFuelPumpsBot identity — see that module's doc comment and
@@ -31,6 +39,7 @@
  * parseRadiusResponse.
  */
 import { geohashEncode } from "../geo.js";
+import { sleep } from "../http.js";
 import { makeStationId } from "../id.js";
 import { buildRawRecord, type OutletMetadata } from "../lib/raw-record.js";
 import type { Provider, ProcessResult, ProviderContext, WorkUnit } from "../provider.js";
@@ -68,16 +77,22 @@ function extractSetCookieHeaders(res: Response): string[] {
   return single ? [single] : [];
 }
 
+/** Delay before init()'s one bootstrap retry — long enough to ride out a momentary WAF hiccup. */
+const BOOTSTRAP_RETRY_DELAY_MS = 3000;
+
 export interface NayaraProviderConfig {
   /** Override the default two center points (tests only). */
   centerPoints?: { id: string; lat: number; lng: number }[];
   /** Override the default 3000km radius (tests only). */
   radiusKm?: number;
+  /** Override the delay before init()'s bootstrap retry (tests only). */
+  bootstrapRetryDelayMs?: number;
 }
 
 export function createNayaraProvider(config: NayaraProviderConfig = {}): Provider {
   const centerPoints = config.centerPoints ?? CENTER_POINTS;
   const radiusKm = config.radiusKm ?? RADIUS_KM;
+  const bootstrapRetryDelayMs = config.bootstrapRetryDelayMs ?? BOOTSTRAP_RETRY_DELAY_MS;
   const sessionState: SessionState = { session: null };
 
   // Error logging — first 3 of each type, matching every other provider in this repo.
@@ -89,7 +104,7 @@ export function createNayaraProvider(config: NayaraProviderConfig = {}): Provide
     if (n < MAX_ERROR_LOG) console.error(`[nayara] error ${n + 1} — ${detail.slice(0, 200)}`);
   }
 
-  async function bootstrapSession(ctx: ProviderContext): Promise<NayaraSession> {
+  async function bootstrapSessionOnce(ctx: ProviderContext): Promise<NayaraSession> {
     const req = buildSessionBootstrapRequest();
     const res = await ctx.fetch(req.url, { method: req.method, headers: req.headers });
     if (!res.ok) throw new Error(`Nayara session bootstrap failed: HTTP ${res.status}`);
@@ -102,13 +117,34 @@ export function createNayaraProvider(config: NayaraProviderConfig = {}): Provide
     return session;
   }
 
+  /**
+   * Same as bootstrapSessionOnce, but retries exactly once (after a short
+   * delay) on a non-OK HTTP response before giving up — see module doc
+   * comment. Only used by init(); process()'s reactive 419 re-bootstrap
+   * already gets its own single retry at the request level and doesn't
+   * need a second layer here.
+   */
+  async function bootstrapSessionWithRetry(ctx: ProviderContext): Promise<NayaraSession> {
+    try {
+      return await bootstrapSessionOnce(ctx);
+    } catch (err) {
+      if (err instanceof Error && err.message.includes("HTTP")) {
+        logErr("bootstrapRetry", `first attempt failed (${err.message}), retrying once`);
+        await sleep(bootstrapRetryDelayMs);
+        return await bootstrapSessionOnce(ctx);
+      }
+      throw err;
+    }
+  }
+
   return {
     brand: "Nayara",
     slug: "nayara",
 
     async init(ctx) {
-      // Fail fast if the session bootstrap is broken, before any work is attempted.
-      sessionState.session = await bootstrapSession(ctx);
+      // Fail fast if the session bootstrap is broken, before any work is attempted —
+      // but survive one transient WAF hiccup on this single request first.
+      sessionState.session = await bootstrapSessionWithRetry(ctx);
     },
 
     async *discover(): AsyncIterable<WorkUnit> {
@@ -122,7 +158,7 @@ export function createNayaraProvider(config: NayaraProviderConfig = {}): Provide
       const { lat, lng, radiusKm: unitRadiusKm } = unit.payload as NayaraUnitPayload;
       try {
         if (!sessionState.session) {
-          sessionState.session = await bootstrapSession(ctx);
+          sessionState.session = await bootstrapSessionOnce(ctx);
         }
 
         const req = buildRadiusRequest(sessionState.session, lat, lng, unitRadiusKm);
@@ -130,7 +166,7 @@ export function createNayaraProvider(config: NayaraProviderConfig = {}): Provide
 
         if (res.status === 419) {
           // CSRF/session expired — refresh once and retry once (mirrors BPCL's 401 -> refresh-token -> retry).
-          sessionState.session = await bootstrapSession(ctx);
+          sessionState.session = await bootstrapSessionOnce(ctx);
           const retryReq = buildRadiusRequest(sessionState.session, lat, lng, unitRadiusKm);
           res = await ctx.fetch(retryReq.url, {
             method: retryReq.method,

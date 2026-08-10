@@ -86,10 +86,37 @@ describe("createNayaraProvider().init", () => {
     await expect(provider.init!(ctx)).rejects.toThrow();
   });
 
-  it("throws when the bootstrap GET itself fails", async () => {
-    const provider = createNayaraProvider();
+  it("throws when the bootstrap GET fails on both the initial attempt and the retry", async () => {
+    const provider = createNayaraProvider({ bootstrapRetryDelayMs: 0 });
     const ctx = makeCtx({ bootstrap: { status: 500 } });
-    await expect(provider.init!(ctx)).rejects.toThrow();
+    await expect(provider.init!(ctx)).rejects.toThrow(/HTTP 500/);
+  });
+
+  it("retries once on a transient bootstrap 403 and succeeds", async () => {
+    const provider = createNayaraProvider({ bootstrapRetryDelayMs: 0 });
+    let getCallCount = 0;
+    const ctx: ProviderContext = {
+      now: () => "2026-07-25T00:00:00.000Z",
+      fetch: (async (url: string, init?: RequestInit) => {
+        const method = (init?.method ?? "GET").toUpperCase();
+        if (method === "GET" && url === NAYARA_LOCATOR_PAGE_URL) {
+          getCallCount++;
+          if (getCallCount === 1) {
+            return { ok: false, status: 403, text: async () => "", headers: { getSetCookie: () => [], get: () => null } } as unknown as Response;
+          }
+          return {
+            ok: true,
+            status: 200,
+            text: async () => VALID_HTML,
+            headers: { getSetCookie: () => VALID_SET_COOKIE, get: (_name: string) => null },
+          } as unknown as Response;
+        }
+        throw new Error(`unexpected fetch in test: ${method} ${url}`);
+      }) as ProviderContext["fetch"],
+    };
+
+    await expect(provider.init!(ctx)).resolves.toBeUndefined();
+    expect(getCallCount).toBe(2);
   });
 });
 
