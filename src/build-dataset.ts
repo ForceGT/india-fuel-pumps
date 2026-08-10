@@ -109,9 +109,16 @@ function readPreviousStats(): CurrentStats | null {
   }
 }
 
+// Fixed to en-IN (lakh/crore grouping) rather than the environment's default
+// locale — this is an India-focused dataset, and `.toLocaleString()` with no
+// locale argument silently follows the running machine's/runner's OS locale,
+// which made release notes format differently depending on who/where they
+// were generated (confirmed: en_IN local machine vs. CI's plain locale).
+const fmt = new Intl.NumberFormat("en-IN");
+
 function deltaStr(delta: number): string {
-  if (delta > 0) return `+${delta}`;
-  if (delta < 0) return `${delta}`;
+  if (delta > 0) return `+${fmt.format(delta)}`;
+  if (delta < 0) return `-${fmt.format(-delta)}`;
   return "0";
 }
 
@@ -132,7 +139,7 @@ function writeReleaseNotes(stats: ReleaseStats): void {
       const missingWithPrior = cur.missingBrands.filter(b => (prev.brands[b] ?? 0) > 0);
       if (missingWithPrior.length > 0) {
         const parts = missingWithPrior.map(b => {
-          const priorCount = prev.brands[b]?.toLocaleString() ?? "?";
+          const priorCount = prev.brands[b] != null ? fmt.format(prev.brands[b]) : "?";
           return `**${b.toUpperCase()}**: previous count was ${priorCount} — not dropped, just missing from this run`;
         });
         lines.push(`> ${parts.join("  \n> ")}`, "");
@@ -145,7 +152,7 @@ function writeReleaseNotes(stats: ReleaseStats): void {
     lines.push(`## Dataset baseline — ${dateLabel}`, "");
     const activeBrands = Object.entries(cur.brands).filter(([, count]) => count > 0).length;
     lines.push(
-      `**${cur.totalOutlets.toLocaleString()}** outlets across **${activeBrands}** brands, split into **${cur.shardCount}** geohash shards.`,
+      `**${fmt.format(cur.totalOutlets)}** outlets across **${activeBrands}** brands, split into **${cur.shardCount}** geohash shards.`,
       "",
     );
     lines.push("| Brand | Outlets |");
@@ -155,7 +162,7 @@ function writeReleaseNotes(stats: ReleaseStats): void {
       if (cur.missingBrands.includes(brand)) {
         lines.push(`| ${brand.toUpperCase()} | ⚠️ *no data* |`);
       } else if (count > 0) {
-        lines.push(`| ${brand.toUpperCase()} | ${count.toLocaleString()} |`);
+        lines.push(`| ${brand.toUpperCase()} | ${fmt.format(count)} |`);
       }
     }
   } else {
@@ -168,7 +175,7 @@ function writeReleaseNotes(stats: ReleaseStats): void {
     lines.push("| Metric | Before | After | Δ |");
     lines.push("|--------|-------:|------:|--:|");
     lines.push(
-      `| **Total outlets** | ${prev.totalOutlets.toLocaleString()} | ${cur.totalOutlets.toLocaleString()} | **${deltaStr(totalDelta)}** |`,
+      `| **Total outlets** | ${fmt.format(prev.totalOutlets)} | ${fmt.format(cur.totalOutlets)} | **${deltaStr(totalDelta)}** |`,
     );
     lines.push(
       `| **Shards** | ${prev.shardCount} | ${cur.shardCount} | ${deltaStr(shardDelta)} |`,
@@ -186,14 +193,14 @@ function writeReleaseNotes(stats: ReleaseStats): void {
       const before = prev.brands[brand] ?? 0;
       if (cur.missingBrands.includes(brand)) {
         // Brand is absent this run — flag, don't pretend it dropped to 0.
-        const beforeStr = before > 0 ? before.toLocaleString() : "—";
+        const beforeStr = before > 0 ? fmt.format(before) : "—";
         lines.push(`| ${brand.toUpperCase()} | ${beforeStr} | ⚠️ *no data* | — |`);
       } else {
         const after = cur.brands[brand] ?? 0;
         const delta = after - before;
         const icon = delta > 0 ? "📈" : delta < 0 ? "📉" : "—";
         lines.push(
-          `| ${brand.toUpperCase()} | ${before.toLocaleString()} | ${after.toLocaleString()} | ${deltaStr(delta)} ${icon} |`,
+          `| ${brand.toUpperCase()} | ${fmt.format(before)} | ${fmt.format(after)} | ${deltaStr(delta)} ${icon} |`,
         );
       }
     }
@@ -210,8 +217,8 @@ function writeReleaseNotes(stats: ReleaseStats): void {
           const before = prev.brands[b] ?? 0;
           const after = cur.brands[b] ?? 0;
           const delta = after - before;
-          if (delta > 0) return `- **${b.toUpperCase()}**: ${deltaStr(delta)} outlets (${before.toLocaleString()} → ${after.toLocaleString()})`;
-          return `- **${b.toUpperCase()}**: ${deltaStr(delta)} outlets (${before.toLocaleString()} → ${after.toLocaleString()})`;
+          if (delta > 0) return `- **${b.toUpperCase()}**: ${deltaStr(delta)} outlets (${fmt.format(before)} → ${fmt.format(after)})`;
+          return `- **${b.toUpperCase()}**: ${deltaStr(delta)} outlets (${fmt.format(before)} → ${fmt.format(after)})`;
         }).join("\n"),
         "",
       );
