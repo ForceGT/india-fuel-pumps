@@ -26,6 +26,7 @@ import { geohashEncode } from "../geo.js";
 import { makeStationId } from "../id.js";
 import { fetchWithBackoff } from "../http.js";
 import { buildRawRecord, type OutletMetadata } from "../lib/raw-record.js";
+import { isCommunityCoco } from "../lib/community-coco.js";
 import type { Provider, ProcessResult, WorkUnit } from "../provider.js";
 import {
   buildLocationDetailUrl,
@@ -155,6 +156,8 @@ export function createShellProvider(config: ShellProviderConfig = {}): Provider 
           hours: detail.hours,
           contact: detail.telephone,
           mapsLink: null,
+          amenities: null,
+          categories: isCommunityCoco(stationId) ? ["COCO"] : [],
         };
         const record = buildRawRecord(metadata, detail.products);
         return { status: "ok", records: [record] };

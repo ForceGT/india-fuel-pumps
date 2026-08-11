@@ -28,6 +28,7 @@ import {
   type GasStationLd,
 } from "../locator-platform.js";
 import type { OutletMetadata } from "../lib/raw-record.js";
+import { isCommunityCoco } from "../lib/community-coco.js";
 
 // Re-exported so importers only need "./hpcl.js" for both.
 export { extractMasterOutletId };
@@ -148,6 +149,7 @@ export async function parseOutletHtml(html: string, sourceUrl: string): Promise<
     brand: "HPCL",
     outletId: outletId ?? stationId,
     stationId,
+    categories: isCommunityCoco(stationId) ? ["COCO"] : [],
     sourceUrl,
     capturedAt: new Date().toISOString(),
     name: outletName,
@@ -161,5 +163,6 @@ export async function parseOutletHtml(html: string, sourceUrl: string): Promise<
     hours: extractHours(findOpeningHoursSpec(ldItems)),
     contact: telephone?.trim() || null,
     mapsLink: gasStation.hasMap?.trim() || null,
+    amenities: null,
   };
 }

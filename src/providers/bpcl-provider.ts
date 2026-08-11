@@ -16,11 +16,38 @@
  * from the raw `weekDayFuelPriceList`, exactly as reported (no positivity
  * filter, no BS-suffix cleanup); classifying any of it is a downstream
  * consumer's job, not this repo's.
+ *
+ * Outlet-format/ownership tagging ("Platinum", "Owned_Operated" (COCO),
+ * "GHAR", "Highway_Start", "PFS_NEXTGEN" — see `BPCL_FUEL_STATION_CATEGORIES`):
+ * neither `rolocators` nor `rolocator/route` echoes this on a record — it's
+ * only knowable by re-querying the SAME location filtered to one category at
+ * a time and checking which `roId`s come back (see `fetchCategoryMembership`
+ * below). "Pure_Sure" is the one exception — it's already in the raw
+ * `amenities` array on every unfiltered response, so it's excluded from the
+ * sweep and captured for free instead.
+ *
+ * This sweep runs inline inside `process()`, every time a route
+ * chunk/cell is actually processed — which, per `run-provider.ts`'s
+ * `computeDoneWorkUnitIds`, is exactly when that unit is new or its last
+ * capture is older than `maxAgeDays` (3 days by default). There's no
+ * separate cron/cadence for this: category data ages on the SAME 3-day
+ * cycle as everything else this provider captures, deliberately — a
+ * one-off backfill sweep was considered and rejected, since it would
+ * desync category freshness from price freshness for no benefit (BPCL's
+ * category filter isn't documented anywhere as WAF-sensitive to burst
+ * rate the way IOCL's sustained-rate case is, so no extra pacing was added
+ * between the up-to-5 sweep calls this adds per unit; revisit if that
+ * changes). A sweep call failing (anything other than a clean 404
+ * NoDataFoundError, which just means "zero outlets in this category here")
+ * is logged and skipped, not treated as a unit failure — losing one
+ * category's data for one unit for one cycle is preferable to losing that
+ * unit's price data too by failing the whole thing over a sweep call.
  */
 import { haversineKm } from "../geo.js";
 import { buildRawRecord } from "../lib/raw-record.js";
 import type { Provider, ProcessResult, ProviderContext, WorkUnit } from "../provider.js";
 import {
+  BPCL_FUEL_STATION_CATEGORIES,
   buildLocatorUrl,
   buildRouteRequest,
   buildTokenRequest,
@@ -273,15 +300,82 @@ export function createBpclProvider(config: BpclProviderConfig = {}): Provider {
     return tokenState.token;
   }
 
-  async function recordOutlets(rawList: BpclPointOfService[], now: string): Promise<ReturnType<typeof buildRawRecord>[]> {
+  async function recordOutlets(
+    rawList: BpclPointOfService[],
+    now: string,
+    categoriesByRoId: Map<string, string[]>,
+  ): Promise<ReturnType<typeof buildRawRecord>[]> {
     const records: ReturnType<typeof buildRawRecord>[] = [];
     for (const raw of rawList) {
       const metadata = await parseOutletMetadata(raw, now);
       if (!metadata) continue;
+      const categories = categoriesByRoId.get(metadata.outletId) ?? [];
       const products = Object.entries(extractRawPrices(raw)).map(([name, priceInr]) => ({ name, priceInr }));
-      records.push(buildRawRecord(metadata, products));
+      records.push(buildRawRecord({ ...metadata, categories }, products));
     }
     return records;
+  }
+
+  /**
+   * Re-queries the same location once per `BPCL_FUEL_STATION_CATEGORIES`
+   * code, filtered, and returns which `roId`s matched which categories. See
+   * module doc comment for why this is a separate sweep rather than a field
+   * on the base response, and why a per-category failure is swallowed here
+   * rather than propagated.
+   */
+  async function fetchCategoryMembership(payload: BpclUnitPayload, ctx: ProviderContext): Promise<Map<string, string[]>> {
+    const byRoId = new Map<string, string[]>();
+
+    for (const category of BPCL_FUEL_STATION_CATEGORIES) {
+      try {
+        const token = await ensureAccessToken(ctx);
+        let url: string;
+        let res: Response;
+
+        if (payload.kind === "route") {
+          const { chunk } = payload;
+          const req = buildRouteRequest({
+            sourceLat: chunk.sourceLat, sourceLng: chunk.sourceLng,
+            destLat: chunk.destLat, destLng: chunk.destLng,
+            steps: chunk.steps, radius: ROUTE_RADIUS_M, fuelStationCategory: category,
+          });
+          url = req.url;
+          res = await ctx.fetch(req.url, { method: req.method, body: req.body, headers: { ...req.headers, Authorization: `Bearer ${token}` } });
+          if (res.status === 401) {
+            const fresh = await refreshToken(ctx);
+            res = await ctx.fetch(req.url, { method: req.method, body: req.body, headers: { ...req.headers, Authorization: `Bearer ${fresh}` } });
+          }
+        } else {
+          const { cell } = payload;
+          url = buildLocatorUrl({ latitude: cell.lat, longitude: cell.lng, radius: cell.radiusM, pageSize: 100, fuelStationCategory: category });
+          res = await ctx.fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+          if (res.status === 401) {
+            const fresh = await refreshToken(ctx);
+            res = await ctx.fetch(url, { headers: { Authorization: `Bearer ${fresh}` } });
+          }
+        }
+
+        if (!res.ok) {
+          const body = await res.json().catch(() => null);
+          if (res.status === 404 && isNoDataFoundResponse(body)) continue; // zero outlets in this category here — not a failure
+          logHttpFailure(`category:${category}`, url, res.status, body);
+          continue; // best-effort — see module doc comment
+        }
+
+        const json = (await res.json()) as unknown;
+        for (const entry of parseLocatorResponseJson(json)) {
+          const roId = entry.roId?.trim();
+          if (!roId) continue;
+          const existing = byRoId.get(roId);
+          if (existing) existing.push(category);
+          else byRoId.set(roId, [category]);
+        }
+      } catch (err) {
+        console.error(`[bpcl] category sweep "${category}" errored — skipping, base capture unaffected:`, String(err));
+      }
+    }
+
+    return byRoId;
   }
 
   return {
@@ -342,7 +436,8 @@ export function createBpclProvider(config: BpclProviderConfig = {}): Provider {
           }
           const json = (await res.json()) as unknown;
           const rawList = parseLocatorResponseJson(json);
-          const records = await recordOutlets(rawList, now);
+          const categoriesByRoId = rawList.length > 0 ? await fetchCategoryMembership(payload, ctx) : new Map<string, string[]>();
+          const records = await recordOutlets(rawList, now, categoriesByRoId);
           return { status: records.length > 0 ? "ok" : "empty", records };
         }
 
@@ -365,7 +460,8 @@ export function createBpclProvider(config: BpclProviderConfig = {}): Provider {
         const json = (await res.json()) as unknown;
         const rawList = parseLocatorResponseJson(json);
         const saturated = rawList.length >= SATURATION_COUNT;
-        const records = await recordOutlets(rawList, now);
+        const categoriesByRoId = rawList.length > 0 ? await fetchCategoryMembership(payload, ctx) : new Map<string, string[]>();
+        const records = await recordOutlets(rawList, now, categoriesByRoId);
 
         const followups: WorkUnit[] = [];
         if (saturated) {

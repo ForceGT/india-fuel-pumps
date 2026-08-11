@@ -75,7 +75,8 @@ A few fields carry a decision worth knowing before looking at the table:
 | `hours` | `string` | Yes | Opening hours as free text, where the source has a structured field for it (HPCL/IOCL's JSON-LD, Shell's location detail). Always `null` for BPCL, JioBP, and Nayara — none of their APIs publish it. | `"Mon-Sat 06:00-22:00, Sun 08:00-20:00"` |
 | `contact` | `string` | Yes | Phone number as published, `tel:` prefix stripped. Always `null` for Nayara only. | `"05946-123456"` |
 | `mapsLink` | `string` | Yes | Google Maps directions URL, only when the source itself publishes one (HPCL/IOCL's JSON-LD `hasMap`). Always `null` for BPCL, JioBP, Nayara, and Shell. | `"https://maps.google.com/?q=29.2205,79.5186"` |
-| `products` | `RawProduct[]` | No | Every fuel product+price the source reported. Empty array if the source reported none. | See Step 2 |
+| `amenities` | `string[]` | Yes | Raw facility/service flags exactly as the source reports them (e.g. BPCL's `"ATM"`, `"Pure_Sure"`, `"TWO_FOUR_SEVEN"`). `null` for brands/records that don't report this at all — not the same as "checked, found none". | `["ATM", "Pure_Sure"]` |
+| `categories` | `string[]` | Yes | Ownership/format classification codes this repo actively checked for and confirmed — **not equally trustworthy across brands**, see [METHODOLOGY.md](./METHODOLOGY.md#why-categories-isnt-equally-trustworthy-across-brands). `[]` means "checked, matched none of the tracked categories"; `null` means "not checked at all" (no brand currently emits `null` at runtime). | `["Owned_Operated"]`, `["COCO"]`, `[]` |
 
 ---
 

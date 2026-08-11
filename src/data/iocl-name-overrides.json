@@ -1,0 +1,11 @@
+{
+  "_comment": "Deliberate, manually-verified overrides of locator.iocl.com's own reported outlet name — used ONLY when the live source name is confirmed wrong/stale by an outside source, not for cosmetic cleanup (see src/parsers/iocl.ts's doc comment). Every entry here is a genuine deviation from 'capture exactly as reported' and must be justified per-entry below.",
+  "overrides": {
+    "184493": {
+      "correctedName": "Shri Nidhi Petroleum",
+      "sourceReportedName": "Mundra",
+      "reason": "locator.iocl.com's alternateName for this outlet is literally 'Mundra' (the locality, not a business name) as of 2026-08-11 — confirmed live, title tag reads 'IndianOil - SWAGAT, Mundra, Mundra'. Corrected per manual verification against the swagat.iocxtrapower.com outlet list, which names this station 'SHRI NIDHI PETROLEUM'.",
+      "verifiedAt": "2026-08-11"
+    }
+  }
+}

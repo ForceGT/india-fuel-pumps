@@ -15,6 +15,7 @@
     "pricing:shell": "tsx src/scrape-shell-city-pricing.ts",
     "build-dataset": "tsx src/build-dataset.ts",
     "reconcile-raw-jsonl": "tsx src/reconcile-raw-jsonl.ts",
+    "join-community-coco": "tsx src/build-community-coco-list.ts",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"

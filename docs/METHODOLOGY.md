@@ -102,6 +102,43 @@ scheme fits their use case, instead of inheriting one baked in here.
 
 ---
 
+## Why `categories` isn't equally trustworthy across brands
+
+The grade-agnostic boundary above means this repo asserts **zero** opinion on
+product classification. `categories` (company-owned/company-operated status
+and similar outlet-format flags) is a different situation: this repo *does*
+assert something here, but at three genuinely different confidence levels
+depending on the brand, and a consumer that treats all of them as equally
+reliable will draw wrong conclusions.
+
+- **BPCL — closest to ground truth.** `fuelStationCategory` values (e.g.
+  `"Owned_Operated"`) come from re-querying BPCL's own live locator API
+  filtered to one category at a time — the same backend BPCL's own app uses.
+  It's reverse-engineered (no public docs), but it's BPCL's own system
+  classifying BPCL's own outlets.
+- **IOCL — a verified heuristic, not a live signal.** IOCL's API exposes no
+  ownership field at all. `"COCO"` is derived from a case-insensitive
+  substring match on the outlet's own name (verified against IOCL's own
+  naming convention, not fabricated), and `"Swagat"` from a static,
+  hand-verified list coordinate-joined against IOCL's official Swagat
+  program page (see `src/parsers/iocl.ts`). This has good precision but
+  incomplete recall — an IOCL outlet with neither signal is *unknown*, not
+  confirmed non-COCO.
+- **HPCL, Jio-bp, Nayara, Shell — a one-time community cross-reference.**
+  These four brands report no ownership signal of their own at all. Their
+  `categories` come entirely from a single coordinate-join against a
+  crowdsourced Google Maps list, run once by hand (see
+  `src/build-community-coco-list.ts`), not from anything the brand itself
+  publishes.
+
+The practical rule for any consumer: `categories` is a **whitelist of
+confirmed positives, not a complete classification**. An empty array means
+"not confirmed by whichever signal that brand has," never "confirmed not
+this category" — and the strength of a "confirmed" varies by exactly which
+brand and which signal produced it, per the tiers above.
+
+---
+
 ## How outlets are deduplicated (`stationId`)
 
 A single physical fuel station can appear more than once in a source's own data (a

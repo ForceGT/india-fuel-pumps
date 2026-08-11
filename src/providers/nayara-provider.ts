@@ -42,6 +42,7 @@ import { geohashEncode } from "../geo.js";
 import { sleep } from "../http.js";
 import { makeStationId } from "../id.js";
 import { buildRawRecord, type OutletMetadata } from "../lib/raw-record.js";
+import { isCommunityCoco } from "../lib/community-coco.js";
 import type { Provider, ProcessResult, ProviderContext, WorkUnit } from "../provider.js";
 import {
   NAYARA_RADIUS_ENDPOINT,
@@ -208,6 +209,8 @@ export function createNayaraProvider(config: NayaraProviderConfig = {}): Provide
             hours: null,
             contact: null,
             mapsLink: null,
+            amenities: null,
+            categories: isCommunityCoco(stationId) ? ["COCO"] : [],
           };
           records.push(buildRawRecord(metadata, s.products));
         }

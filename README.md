@@ -109,6 +109,7 @@ The short version — full reasoning for each point is in [docs/METHODOLOGY.md](
 - **Live source always wins.** If an OMC's static roster disagrees with that same OMC's live per-outlet page, the live page's data is what gets stored.
 - **No reconciliation.** `city`/`state` are the raw strings the source reported — not corrected, not canonicalized against any gazetteer.
 - **Deduplicated by `stationId`**, a stable hash of `{brand, outletId, lat, lng}` — the latest `capturedAt` wins per physical outlet.
+- **`categories` (ownership signals) aren't equally trustworthy across brands.** BPCL's comes from a live API filter, IOCL's from a verified name/list heuristic, and four brands' from a one-time community coordinate-join — treat it as a whitelist of confirmed positives, not a complete yes/no classification.
 
 ---
 

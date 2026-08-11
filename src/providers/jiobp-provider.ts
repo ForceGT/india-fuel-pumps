@@ -24,6 +24,7 @@ import { createHash } from "node:crypto";
 import { geohashEncode } from "../geo.js";
 import { makeStationId } from "../id.js";
 import { buildRawRecord, type OutletMetadata } from "../lib/raw-record.js";
+import { isCommunityCoco } from "../lib/community-coco.js";
 import type { Provider, ProcessResult, WorkUnit } from "../provider.js";
 import {
   JIOBP_ENDPOINT,
@@ -133,6 +134,8 @@ export function createJiobpProvider(config: JiobpProviderConfig = {}): Provider 
             hours: null,
             contact: s.contact,
             mapsLink: null,
+            amenities: null,
+            categories: isCommunityCoco(stationId) ? ["COCO"] : [],
           };
           records.push(buildRawRecord(metadata, s.products));
         }

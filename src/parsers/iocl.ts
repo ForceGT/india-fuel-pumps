@@ -16,6 +16,37 @@
  * No grade opinion anywhere in this module — every recognized icon's price
  * is captured, exactly as reported; classifying any of them (e.g. as
  * "ethanol-free") is a downstream consumer's job, not this repo's.
+ *
+ * `categories` (unlike BPCL's, which comes from a live filtered API query —
+ * see bpcl-provider.ts) is derived from two IOCL-specific, zero-extra-request
+ * signals, both computed inline here at parse time:
+ *  - "COCO": `name` contains "coco" (case-insensitive substring — verified
+ *    2026-08-11 against all 409 current IOCL matches with zero false
+ *    positives; a stricter all-caps-only or whole-word check both
+ *    undercounted, since locator.iocl.com itself title-cases names and some
+ *    genuinely COCO outlets have no space before the place name, e.g.
+ *    "Cocokakanad"). IOCL-specific — BPCL's equivalent name-substring check
+ *    was proven unreliable (4 name matches vs. 36 real COCO outlets from
+ *    BPCL's own API filter in Delhi alone), so this heuristic is NOT reused
+ *    for other brands.
+ *  - "Swagat": `outletId` is in `../data/iocl-swagat-outlet-ids.json`, a
+ *    static, hand-verified snapshot (184 outletIds) resolved by coordinate-
+ *    joining IOCL's official Swagat highway-format list
+ *    (swagat.iocxtrapower.com's `var locations` array, 188 entries) against
+ *    this dataset — <300m auto-match plus 5 manual corrections where the
+ *    coordinate join picked the wrong neighbour. Deliberately NOT fetched
+ *    live every run (no extra request, no dependency on a third-party site
+ *    staying up) — refresh the JSON file by hand if IOCL's Swagat count
+ *    drifts meaningfully from 188. Swagat and COCO are independent; an
+ *    outlet can be both, either, or neither.
+ *
+ * `name` is normally captured verbatim from the source, no exceptions — see
+ * `../data/iocl-name-overrides.json` for the one deliberate departure from
+ * that rule: a tiny, per-entry-justified table of outlets where
+ * locator.iocl.com's own reported name is confirmed wrong/stale by an
+ * outside source (NOT for cosmetic cleanup — that'd violate "capture
+ * exactly as reported"). Empty until a specific case is verified; check
+ * that file before adding to it.
  */
 import { geohashEncode } from "../geo.js";
 import { makeStationId } from "../id.js";
@@ -32,6 +63,11 @@ import {
   type GasStationLd,
 } from "../locator-platform.js";
 import type { OutletMetadata } from "../lib/raw-record.js";
+import swagatOutletIds from "../data/iocl-swagat-outlet-ids.json" with { type: "json" };
+import nameOverrides from "../data/iocl-name-overrides.json" with { type: "json" };
+
+const SWAGAT_OUTLET_ID_SET = new Set<string>(swagatOutletIds.outletIds);
+const NAME_OVERRIDES = nameOverrides.overrides as Record<string, { correctedName: string }>;
 
 // Re-exported so importers only need "./iocl.js" for both.
 export { extractMasterOutletId };
@@ -154,14 +190,20 @@ export async function parseOutletHtml(html: string, sourceUrl: string): Promise<
   const telephone = Array.isArray(gasStation.telephone) ? gasStation.telephone[0] : gasStation.telephone;
 
   const stationId = await makeStationId({ brand: "IOCL", outletId, lat, lng });
+  const resolvedOutletId = outletId ?? stationId;
+  const finalName = NAME_OVERRIDES[resolvedOutletId]?.correctedName ?? outletName;
+
+  const categories: string[] = [];
+  if (finalName.toLowerCase().includes("coco")) categories.push("COCO");
+  if (SWAGAT_OUTLET_ID_SET.has(resolvedOutletId)) categories.push("Swagat");
 
   return {
     brand: "IOCL",
-    outletId: outletId ?? stationId,
+    outletId: resolvedOutletId,
     stationId,
     sourceUrl,
     capturedAt: new Date().toISOString(),
-    name: outletName,
+    name: finalName,
     address: rawStreetAddress ? decodeHtmlEntities(rawStreetAddress) : null,
     city,
     state,
@@ -172,5 +214,7 @@ export async function parseOutletHtml(html: string, sourceUrl: string): Promise<
     hours: extractHours(findOpeningHoursSpec(ldItems)),
     contact: telephone?.trim() || null,
     mapsLink: gasStation.hasMap?.trim() || null,
+    amenities: null,
+    categories,
   };
 }

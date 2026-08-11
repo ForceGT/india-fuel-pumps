@@ -27,7 +27,12 @@ function samplePointOfService(roId: string, lat = 12.9716, lng = 77.5946) {
       { code: "DIESEL", displayName: "Diesel", price: 95.1 },
       { code: "SPEED100", displayName: "SPEED 100 BS VI", price: 168.2 },
     ],
+    amenities: ["Automation", "Pure_Sure", "Air_Filling"],
   };
+}
+
+function noDataFound() {
+  return { status: 404, body: { errors: [{ type: "NoDataFoundError" }] } };
 }
 
 interface MockCall {
@@ -245,5 +250,83 @@ describe("createBpclProvider().process", () => {
     const result = await provider.process({ id: cell.cellId, payload: { kind: "cell", cell } }, ctx);
     expect(result.status).toBe("errored");
     expect(result.detail).toContain("network exploded");
+  });
+
+  it("amenities: raw facility flags are captured as-is, no interpretation", async () => {
+    tmpDir = mkdtempSync(path.join(tmpdir(), "bpcl-provider-test-"));
+    const provider = createBpclProvider({});
+    const ctx = makeCtx((call) => {
+      if (call.url.includes("/oauth/token")) return { body: TOKEN_RESPONSE };
+      if (call.url.includes("fuelStationCategory=")) return noDataFound();
+      return { body: { pointOfServices: [samplePointOfService("RO1")] } };
+    });
+    await provider.init!(ctx);
+
+    const cell: Cell = { cellId: "d0:12.00000:77.00000:75000", lat: 12, lng: 77, radiusM: 75000, spacingKm: 100, depth: 0 };
+    const result = await provider.process({ id: cell.cellId, payload: { kind: "cell", cell } }, ctx);
+    expect(result.records[0]!.amenities).toEqual(["Automation", "Pure_Sure", "Air_Filling"]);
+  });
+
+  it("categories: derived from separate fuelStationCategory-filtered sweeps, tagging only outlets that matched — one call per BPCL_FUEL_STATION_CATEGORIES code, in addition to the base search", async () => {
+    tmpDir = mkdtempSync(path.join(tmpdir(), "bpcl-provider-test-"));
+    const provider = createBpclProvider({});
+    const calls: MockCall[] = [];
+    const ctx = makeCtx((call) => {
+      if (call.url.includes("/oauth/token")) return { body: TOKEN_RESPONSE };
+      if (call.url.includes("fuelStationCategory=Owned_Operated")) return { body: { pointOfServices: [samplePointOfService("RO1")] } };
+      if (call.url.includes("fuelStationCategory=Platinum")) return { body: { pointOfServices: [samplePointOfService("RO1")] } }; // RO1 matches two categories
+      if (call.url.includes("fuelStationCategory=")) return noDataFound(); // GHAR, Highway_Start, PFS_NEXTGEN: no matches here
+      return { body: { pointOfServices: [samplePointOfService("RO1"), samplePointOfService("RO2")] } }; // unfiltered base call
+    }, calls);
+    await provider.init!(ctx);
+
+    const cell: Cell = { cellId: "d0:12.00000:77.00000:75000", lat: 12, lng: 77, radiusM: 75000, spacingKm: 100, depth: 0 };
+    const result = await provider.process({ id: cell.cellId, payload: { kind: "cell", cell } }, ctx);
+
+    expect(result.status).toBe("ok");
+    const ro1 = result.records.find((r) => r.outletId === "RO1")!;
+    const ro2 = result.records.find((r) => r.outletId === "RO2")!;
+    expect(ro1.categories?.slice().sort()).toEqual(["Owned_Operated", "Platinum"]);
+    expect(ro2.categories).toEqual([]); // present in the base search, matched none of the filtered sweeps
+
+    // Base call + one call per category code = 6 total (token call excluded).
+    const nonTokenCalls = calls.filter((c) => !c.url.includes("/oauth/token"));
+    expect(nonTokenCalls).toHaveLength(6);
+  });
+
+  it("categories: a sweep call failing (non-404) is logged and skipped — the unit's base capture still succeeds", async () => {
+    tmpDir = mkdtempSync(path.join(tmpdir(), "bpcl-provider-test-"));
+    const provider = createBpclProvider({});
+    const ctx = makeCtx((call) => {
+      if (call.url.includes("/oauth/token")) return { body: TOKEN_RESPONSE };
+      if (call.url.includes("fuelStationCategory=")) return { status: 503, body: {} }; // every category sweep fails
+      return { body: { pointOfServices: [samplePointOfService("RO1")] } };
+    });
+    await provider.init!(ctx);
+
+    const cell: Cell = { cellId: "d0:12.00000:77.00000:75000", lat: 12, lng: 77, radiusM: 75000, spacingKm: 100, depth: 0 };
+    const result = await provider.process({ id: cell.cellId, payload: { kind: "cell", cell } }, ctx);
+
+    expect(result.status).toBe("ok");
+    expect(result.records).toHaveLength(1);
+    expect(result.records[0]!.categories).toEqual([]); // unknown for now, not a failure — retried on the next 3-day cycle
+  });
+
+  it("categories: skips the sweep entirely when the base search itself is empty (nothing to tag)", async () => {
+    tmpDir = mkdtempSync(path.join(tmpdir(), "bpcl-provider-test-"));
+    const provider = createBpclProvider({});
+    const calls: MockCall[] = [];
+    const ctx = makeCtx((call) => {
+      if (call.url.includes("/oauth/token")) return { body: TOKEN_RESPONSE };
+      return noDataFound();
+    }, calls);
+    await provider.init!(ctx);
+
+    const cell: Cell = { cellId: "d0:12.00000:77.00000:75000", lat: 12, lng: 77, radiusM: 75000, spacingKm: 100, depth: 0 };
+    const result = await provider.process({ id: cell.cellId, payload: { kind: "cell", cell } }, ctx);
+
+    expect(result.status).toBe("empty");
+    const nonTokenCalls = calls.filter((c) => !c.url.includes("/oauth/token"));
+    expect(nonTokenCalls).toHaveLength(1); // only the base call — no category sweeps fired
   });
 });

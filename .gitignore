@@ -1,6 +1,14 @@
 node_modules/
 dist/
 output/
+
+# Working artifacts from the community-COCO-list join (src/build-community-coco-list.ts).
+# The join's actual OUTPUT is committed (src/data/community-coco-station-ids.json) — these
+# are just its input snapshot and one-off analysis/deliverable files, never meant to be tracked.
+/coco-fuel-stations-raw.json
+/coco-list-feedback-report.json
+/coco-join-report.json
+/coco-community-anomalies.json
 *.log
 .DS_Store
 docs/EDGE-CASES.md

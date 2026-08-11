@@ -258,6 +258,8 @@ describe("runProvider (integration)", () => {
           hours: null,
           contact: null,
           mapsLink: null,
+          amenities: null,
+          categories: null,
           products: [],
         },
       ],
@@ -366,6 +368,8 @@ describe("runProvider (integration)", () => {
       hours: null,
       contact: null,
       mapsLink: null,
+      amenities: null,
+      categories: null,
       products: [],
     };
     const provider = makeFakeProvider([{ id: "u2", payload: "u2" }], () => ({
@@ -394,6 +398,8 @@ describe("runProvider (integration)", () => {
       hours: null,
       contact: null,
       mapsLink: null,
+      amenities: null,
+      categories: null,
       products: [],
     };
     const u1BaselineRecord: RawOutletRecord = {
@@ -414,6 +420,8 @@ describe("runProvider (integration)", () => {
       hours: null,
       contact: null,
       mapsLink: null,
+      amenities: null,
+      categories: null,
       products: [],
     };
     const rawPath = path.join(tmpDir, `${provider.slug}-raw.jsonl`);
@@ -481,6 +489,8 @@ describe("runProvider (integration)", () => {
       hours: null,
       contact: null,
       mapsLink: null,
+      amenities: null,
+      categories: null,
       products: [],
     };
     const recentRecord: RawOutletRecord = {
@@ -501,6 +511,8 @@ describe("runProvider (integration)", () => {
       hours: null,
       contact: null,
       mapsLink: null,
+      amenities: null,
+      categories: null,
       products: [],
     };
     const rawPath = path.join(tmpDir, `${provider.slug}-raw.jsonl`);

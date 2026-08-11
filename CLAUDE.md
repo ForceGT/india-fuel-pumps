@@ -115,6 +115,22 @@ shared budget).
     `npm run reconcile-raw-jsonl -- <side1> <side2> <output>` instead, which
     unions both by latest `capturedAt` per outlet. See `docs/EDGE-CASES.md`.
 
+15. **`categories` (ownership signals like COCO) has three different
+    confidence levels, not one.** BPCL's comes from a live API sweep
+    (`fetchCategoryMembership` in `bpcl-provider.ts`) filtered per
+    `fuelStationCategory`, re-run every census cycle — closest to ground
+    truth. IOCL's comes from a name-substring check plus a static Swagat
+    list (`iocl.ts`, `src/data/iocl-swagat-outlet-ids.json`) — a verified
+    heuristic, not a live signal, so it has good precision but incomplete
+    recall. HPCL/JioBP/Nayara/Shell have no native signal at all; their
+    `categories` come entirely from a one-time coordinate-join against a
+    crowdsourced Google Maps list (`src/build-community-coco-list.ts`,
+    `npm run join-community-coco`), hand-triggered, not part of any census.
+    Never treat `categories` as equally trustworthy across brands, and never
+    treat an empty array as "confirmed not this category" — see
+    `docs/METHODOLOGY.md`'s "Why `categories` isn't equally trustworthy
+    across brands".
+
 ## Repo map
 
 ```
@@ -125,6 +141,9 @@ src/providers/            Brand-specific Provider implementations
 src/parsers/              Per-brand HTML/JSON response parsers
 src/build-dataset.ts      Assembles raw JSONL -> geohash-sharded dataset
 src/reconcile-raw-jsonl.ts   Union-by-latest-capturedAt fix for raw JSONL merge conflicts (fact 14)
+src/build-community-coco-list.ts   Coordinate-join for the community COCO signal (fact 15)
+src/lib/community-coco.ts    Shared stationId lookup for the above, used by HPCL/JioBP/Nayara/Shell
+src/data/                    Static, hand-verified data files (Swagat, name overrides, community COCO)
 src/types.ts              RawOutletRecord, WorkLogRecord, Brand (no grades!)
 src/http.ts               fetchWithBackoff: retries 429/5xx + connection errors
 src/id.ts                 Stable stationId generation (brand + outletId + lat/lng)
@@ -146,6 +165,7 @@ npm run census:nayara     # Full Nayara national census
 npm run census:shell      # Full Shell national census
 npm run build-dataset     # Assemble raw JSONL -> sharded dataset + release notes
 npm run reconcile-raw-jsonl -- <a.jsonl.gz> <b.jsonl.gz> <out.jsonl.gz>   # fix a raw-file merge conflict (fact 14)
+npm run join-community-coco   # one-time community COCO coordinate-join, hand-triggered (fact 15)
 npm run test              # Vitest suite
 npm run typecheck         # tsc --noEmit
 ```

@@ -37,6 +37,22 @@ export interface RawOutletRecord {
   hours: string | null;
   contact: string | null;
   mapsLink: string | null;
+  /** Raw facility/service flags exactly as a source reports them (e.g. BPCL's `amenities`: "ATM", "Pure_Sure", "TWO_FOUR_SEVEN"). `null` for brands/records that don't report this — not the same as "checked, found none". */
+  amenities: string[] | null;
+  /**
+   * Raw outlet format/ownership classification codes this repo actively
+   * checked for and confirmed membership in (e.g. BPCL's
+   * `fuelStationCategory`: "Platinum", "Owned_Operated", "GHAR",
+   * "Highway_Start", "PFS_NEXTGEN" — see bpcl-provider.ts). The source
+   * doesn't echo this on every record; it's derived from separate filtered
+   * queries per outlet-search (BPCL) or a static coordinate-joined list
+   * (IOCL, HPCL, JioBP, Nayara, Shell — see src/lib/community-coco.ts and
+   * src/parsers/iocl.ts), so `[]` means "checked, matched none of the
+   * tracked categories" and `null` means "not checked at all". No brand
+   * currently emits `null` at runtime, but the union stays available for a
+   * future brand this repo hasn't wired a categories signal for yet.
+   */
+  categories: string[] | null;
   /** Every product+price seen at this outlet, exactly as reported. */
   products: RawProduct[];
 }

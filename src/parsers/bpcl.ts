@@ -63,17 +63,33 @@ export function parseAccessToken(json: unknown): string | null {
   return typeof token === "string" && token.length > 0 ? token : null;
 }
 
+/**
+ * The BPCL "Type" filter's non-"All" category codes, from
+ * `GET /retail/v2/bpcl/smartfleet/rodropdown?code=FuelStationCategory`
+ * (captured 2026-08-10, via the public `hellobpcl.in/rolocator/` web
+ * locator — same `api.cep.bpcl.in` host and `rolocators`/`rolocator/route`
+ * endpoints this repo already scrapes, just with a `fuelStationCategory`
+ * param neither endpoint's base call sends). "Pure_Sure" is deliberately
+ * excluded here — unlike these five, it's already present on every record
+ * via `amenities` with no extra request needed. "Highway_Start" (not
+ * "Highway_Star") is BPCL's own typo in the wire code, verified live against
+ * the real API — not a mistake in this repo, do not "fix" it.
+ */
+export const BPCL_FUEL_STATION_CATEGORIES = ["Platinum", "Owned_Operated", "GHAR", "Highway_Start", "PFS_NEXTGEN"] as const;
+
 export interface BpclLocatorParams {
   latitude: number;
   longitude: number;
   radius?: number;
   currentPage?: number;
   pageSize?: number;
+  /** One of BPCL_FUEL_STATION_CATEGORIES — filters server-side; omit for the normal unfiltered search. */
+  fuelStationCategory?: string;
 }
 
 /** Pure builder for the RO locator search URL. Doesn't fetch. */
 export function buildLocatorUrl(params: BpclLocatorParams): string {
-  const { latitude, longitude, radius = 20000, currentPage = 0, pageSize = 100 } = params;
+  const { latitude, longitude, radius = 20000, currentPage = 0, pageSize = 100, fuelStationCategory } = params;
   const qs = new URLSearchParams({
     latitude: String(latitude),
     longitude: String(longitude),
@@ -82,6 +98,7 @@ export function buildLocatorUrl(params: BpclLocatorParams): string {
     pageSize: String(pageSize),
     sort: "asc",
   });
+  if (fuelStationCategory) qs.set("fuelStationCategory", fuelStationCategory);
   return `${BPCL_API_HOST}${RO_LOCATORS_PATH}?${qs.toString()}`;
 }
 
@@ -104,6 +121,8 @@ export interface BpclRouteParams {
   steps: BpclRouteStep[];
   radius?: number;
   pageSize?: number;
+  /** One of BPCL_FUEL_STATION_CATEGORIES — filters server-side; omit for the normal unfiltered search. Verified this endpoint honors it as a body field, same as `rolocators` does as a query param. */
+  fuelStationCategory?: string;
 }
 
 export interface BpclRouteRequest {
@@ -122,7 +141,7 @@ export interface BpclRouteRequest {
  * this pure builder's).
  */
 export function buildRouteRequest(params: BpclRouteParams): BpclRouteRequest {
-  const { sourceLat, sourceLng, destLat, destLng, steps, radius = 25000, pageSize = 20 } = params;
+  const { sourceLat, sourceLng, destLat, destLng, steps, radius = 25000, pageSize = 20, fuelStationCategory } = params;
   const body = JSON.stringify({
     accuracy: 0,
     currentPage: 0,
@@ -134,6 +153,7 @@ export function buildRouteRequest(params: BpclRouteParams): BpclRouteRequest {
     tlongitude: destLng,
     sort: "asc",
     steps: steps.map((s) => ({ lat: s.lat, lng: s.lng })),
+    ...(fuelStationCategory ? { fuelStationCategory } : {}),
   });
   return {
     url: `${BPCL_API_HOST}${RO_ROUTE_PATH}`,
@@ -163,6 +183,8 @@ export interface BpclPointOfService {
     region?: { name?: string };
   };
   weekDayFuelPriceList?: BpclFuelPrice[];
+  /** Raw facility flags, e.g. ["Automation", "Pure_Sure", "Air_Filling", "TWO_FOUR_SEVEN"] — present on every rolocators/rolocator-route/rolocator-details response regardless of any filter param. */
+  amenities?: string[];
 }
 
 export interface BpclLocatorResponse {
@@ -207,6 +229,12 @@ function titleCase(s: string): string {
  * here — a caller reconstructs it straight from `weekDayFuelPriceList`
  * (every product+price, exactly as reported, no positivity filter — that's
  * a downstream classification concern, not this raw capture's).
+ *
+ * `amenities` is a direct pass-through of the raw `amenities` array (or
+ * `null` if absent). `categories` is always returned `null` here — a single
+ * `pointOfServices` entry never carries its own `fuelStationCategory`
+ * membership; a caller (bpcl-provider.ts) derives it from separate filtered
+ * queries and overwrites this field before building the final record.
  */
 export async function parseOutletMetadata(raw: BpclPointOfService, capturedAt: string): Promise<OutletMetadata | null> {
   const roId = raw.roId?.trim();
@@ -240,5 +268,7 @@ export async function parseOutletMetadata(raw: BpclPointOfService, capturedAt: s
     hours: null, // not present in this payload (unlike HPCL/IOCL's JSON-LD openingHoursSpecification)
     contact: raw.telephone?.trim() || null,
     mapsLink: null, // no field in this payload
+    amenities: raw.amenities ?? null,
+    categories: null, // overwritten by bpcl-provider.ts once category-sweep results are known
   };
 }
