@@ -9,7 +9,11 @@ name: Census
 #   cadence is cheap (most units are skipped as already-fresh) yet keeps
 #   freshness well within the 14-day stale threshold used by E0-Finder's
 #   frontend, and recovers from a failed run the next day instead of
-#   waiting for the next multi-day slot.
+#   waiting for the next multi-day slot. A manual workflow_dispatch run
+#   with `fresh: true` overrides MAX_AGE_DAYS to 0 for that run only,
+#   forcing every unit to reprocess (e.g. to backfill a new field across
+#   already-fresh data) — the raw baseline and worklog cache are left
+#   untouched, so a timed-out/partial fresh run still can't lose data.
 #
 # Partial-failure tolerant: if a brand fails, the publish job still runs for
 # the brands that succeeded. A GitHub issue is auto-filed for failed brands.
@@ -60,6 +64,16 @@ on:
         description: 'Commit dataset/ after census? Set false for calibration/dry runs.'
         required: false
         default: 'true'
+      fresh:
+        description: >-
+          Force every unit to reprocess by setting MAX_AGE_DAYS=0, instead of
+          the normal 3-day resumability window. Unlike the local FRESH=1
+          scripts, this does NOT delete the raw baseline or worklog cache —
+          a timed-out/partial run keeps whatever it hasn't reached yet
+          instead of losing it. Use for backfilling a new field (e.g.
+          categories) across already-fresh data, not for routine runs.
+        required: false
+        default: 'false'
 
 # Prevent overlapping runs — a schedule-triggered run queues behind an
 # in-progress one instead of running concurrently and racing on the commit.
@@ -113,7 +127,7 @@ jobs:
         env:
           HPCL_CENSUS_CONCURRENCY: ${{ inputs.concurrency || '12' }}
           HPCL_CENSUS_LIMIT: ${{ inputs.hpcl_limit }}
-          HPCL_CENSUS_MAX_AGE_DAYS: '3'
+          HPCL_CENSUS_MAX_AGE_DAYS: ${{ inputs.fresh == 'true' && '0' || '3' }}
           HPCL_CENSUS_STALE_AFTER_DAYS: '14'
         run: npm run census:hpcl
 
@@ -197,7 +211,7 @@ jobs:
         env:
           IOCL_CENSUS_CONCURRENCY: ${{ inputs.concurrency || '12' }}
           IOCL_CENSUS_LIMIT: ${{ inputs.iocl_limit }}
-          IOCL_CENSUS_MAX_AGE_DAYS: '3'
+          IOCL_CENSUS_MAX_AGE_DAYS: ${{ inputs.fresh == 'true' && '0' || '3' }}
           IOCL_CENSUS_STALE_AFTER_DAYS: '14'
         run: npm run census:iocl
 
@@ -277,7 +291,7 @@ jobs:
         env:
           BPCL_CENSUS_CONCURRENCY: ${{ inputs.concurrency || '10' }}
           BPCL_CENSUS_LIMIT: ${{ inputs.bpcl_limit }}
-          BPCL_CENSUS_MAX_AGE_DAYS: '3'
+          BPCL_CENSUS_MAX_AGE_DAYS: ${{ inputs.fresh == 'true' && '0' || '3' }}
           BPCL_CENSUS_STALE_AFTER_DAYS: '14'
         run: npm run census:bpcl
 
@@ -348,7 +362,7 @@ jobs:
         env:
           JIOBP_CENSUS_CONCURRENCY: ${{ inputs.concurrency || '2' }}
           JIOBP_CENSUS_LIMIT: ${{ inputs.jiobp_limit }}
-          JIOBP_CENSUS_MAX_AGE_DAYS: '3'
+          JIOBP_CENSUS_MAX_AGE_DAYS: ${{ inputs.fresh == 'true' && '0' || '3' }}
           JIOBP_CENSUS_STALE_AFTER_DAYS: '14'
         run: npm run census:jiobp
 
@@ -415,7 +429,7 @@ jobs:
         env:
           NAYARA_CENSUS_CONCURRENCY: ${{ inputs.concurrency || '1' }}
           NAYARA_CENSUS_LIMIT: ${{ inputs.nayara_limit }}
-          NAYARA_CENSUS_MAX_AGE_DAYS: '3'
+          NAYARA_CENSUS_MAX_AGE_DAYS: ${{ inputs.fresh == 'true' && '0' || '3' }}
           NAYARA_CENSUS_STALE_AFTER_DAYS: '14'
         run: npm run census:nayara
 
@@ -483,7 +497,7 @@ jobs:
         env:
           SHELL_CENSUS_CONCURRENCY: ${{ inputs.concurrency || '5' }}
           SHELL_CENSUS_LIMIT: ${{ inputs.shell_limit }}
-          SHELL_CENSUS_MAX_AGE_DAYS: '3'
+          SHELL_CENSUS_MAX_AGE_DAYS: ${{ inputs.fresh == 'true' && '0' || '3' }}
           SHELL_CENSUS_STALE_AFTER_DAYS: '14'
         run: npm run census:shell
 
