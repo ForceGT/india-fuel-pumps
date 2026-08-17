@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-17T03:11:17.630Z",
+  "generatedAt": "2026-08-17T07:36:01.010Z",
   "totalOutlets": 103219,
   "brands": {
     "hpcl": 23956,
@@ -113,7 +113,7 @@
     },
     {
       "prefix": "tdr",
-      "file": "shards/tdr.de821ab7e7d0a246.json",
+      "file": "shards/tdr.14eb121f8008f249.json",
       "count": 1821
     },
     {
@@ -163,7 +163,7 @@
     },
     {
       "prefix": "te7",
-      "file": "shards/te7.c155eb89cd7a8501.json",
+      "file": "shards/te7.8ddbe8e633995cf5.json",
       "count": 596
     },
     {
@@ -243,7 +243,7 @@
     },
     {
       "prefix": "tet",
-      "file": "shards/tet.212017bc1d55b796.json",
+      "file": "shards/tet.1d6345c028486a90.json",
       "count": 943
     },
     {
@@ -293,7 +293,7 @@
     },
     {
       "prefix": "tf3",
-      "file": "shards/tf3.e74fbb26453a16c3.json",
+      "file": "shards/tf3.690b85a501b4189f.json",
       "count": 546
     },
     {
@@ -453,7 +453,7 @@
     },
     {
       "prefix": "ts5",
-      "file": "shards/ts5.5c7ba4f03198dc5e.json",
+      "file": "shards/ts5.ad769a289521fa2d.json",
       "count": 1603
     },
     {
@@ -603,7 +603,7 @@
     },
     {
       "prefix": "ttn",
-      "file": "shards/ttn.fb14aa6dbeb2c834.json",
+      "file": "shards/ttn.7292adf26530a8d2.json",
       "count": 2441
     },
     {
