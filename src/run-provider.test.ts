@@ -110,6 +110,49 @@ describe("computeDoneWorkUnitIds", () => {
   it("returns an empty set for empty content", () => {
     expect(computeDoneWorkUnitIds("", MAX_AGE_MS, NOW).size).toBe(0);
   });
+
+  it("emptyMaxAgeMs (issue #10): a status:empty record past the shorter empty window is NOT done, even though it's within the longer ok maxAgeMs", () => {
+    const EMPTY_MAX_AGE_MS = DAY_MS; // 1 day, much shorter than MAX_AGE_MS (30 days)
+    const content = jsonl({
+      workUnitId: "transient-empty",
+      fetchedAt: new Date(NOW - 2 * DAY_MS).toISOString(), // 2 days old
+      status: "empty",
+    });
+    const done = computeDoneWorkUnitIds(content, MAX_AGE_MS, NOW, EMPTY_MAX_AGE_MS);
+    expect(done.has("transient-empty")).toBe(false);
+  });
+
+  it("emptyMaxAgeMs: a status:empty record within the shorter empty window is still done", () => {
+    const EMPTY_MAX_AGE_MS = DAY_MS;
+    const content = jsonl({
+      workUnitId: "fresh-empty",
+      fetchedAt: new Date(NOW - DAY_MS / 2).toISOString(),
+      status: "empty",
+    });
+    const done = computeDoneWorkUnitIds(content, MAX_AGE_MS, NOW, EMPTY_MAX_AGE_MS);
+    expect(done.has("fresh-empty")).toBe(true);
+  });
+
+  it("emptyMaxAgeMs: a status:ok record is unaffected by a shorter empty window — still uses maxAgeMs", () => {
+    const EMPTY_MAX_AGE_MS = DAY_MS;
+    const content = jsonl({
+      workUnitId: "still-fresh-ok",
+      fetchedAt: new Date(NOW - 2 * DAY_MS).toISOString(), // past emptyMaxAgeMs but well within maxAgeMs
+      status: "ok",
+    });
+    const done = computeDoneWorkUnitIds(content, MAX_AGE_MS, NOW, EMPTY_MAX_AGE_MS);
+    expect(done.has("still-fresh-ok")).toBe(true);
+  });
+
+  it("emptyMaxAgeMs defaults to maxAgeMs when omitted (BPCL and every other existing caller unaffected)", () => {
+    const content = jsonl({
+      workUnitId: "bpcl-empty-cell",
+      fetchedAt: new Date(NOW - DAY_MS).toISOString(),
+      status: "empty",
+    });
+    const done = computeDoneWorkUnitIds(content, MAX_AGE_MS, NOW);
+    expect(done.has("bpcl-empty-cell")).toBe(true);
+  });
 });
 
 describe("runDynamicQueue", () => {
@@ -321,6 +364,42 @@ describe("runProvider (integration)", () => {
     const failLines = lines.filter((l) => l.workUnitId === "will-fail-then-succeed");
     expect(failLines.some((l: { status: string }) => l.status === "httpFailed")).toBe(true);
     expect(failLines.some((l: { status: string }) => l.status === "ok")).toBe(true);
+  });
+
+  it("emptyMaxAgeDays (issue #10): a status:empty unit is retried sooner than maxAgeDays, while a status:ok unit at the same age is not", async () => {
+    tmpDir = mkdtempSync(path.join(tmpdir(), "run-provider-test-"));
+    const units: WorkUnit[] = [
+      { id: "empty-unit", payload: null },
+      { id: "ok-unit", payload: null },
+    ];
+    const provider: Provider = {
+      brand: "FAKE",
+      slug: "fake-empty-age",
+      async *discover() {
+        for (const u of units) yield u;
+      },
+      async process(unit) {
+        return { status: unit.id === "empty-unit" ? "empty" : "ok", records: [] };
+      },
+    };
+
+    const first = await runProvider(provider, {
+      outputDir: tmpDir,
+      maxAgeDays: 3,
+      emptyMaxAgeDays: 1,
+      now: () => "2026-07-18T00:00:00.000Z",
+    });
+    expect(first.processedThisRun).toBe(2);
+
+    // 2 days later: past emptyMaxAgeDays (1) but within maxAgeDays (3).
+    const second = await runProvider(provider, {
+      outputDir: tmpDir,
+      maxAgeDays: 3,
+      emptyMaxAgeDays: 1,
+      now: () => "2026-07-20T00:00:00.000Z",
+    });
+    expect(second.alreadyDone).toBe(1); // only ok-unit
+    expect(second.processedThisRun).toBe(1); // empty-unit retried
   });
 
   it("processes a followup emitted by a unit's ProcessResult (dynamic-queue growth reaches the output files)", async () => {

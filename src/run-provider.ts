@@ -53,15 +53,31 @@ import type { Provider, ProviderContext, WorkUnit } from "./provider.js";
  * docs/research/scraper-stability-analysis.md). The same `workUnitId` can
  * appear multiple times across retries; lines are processed in file order,
  * so a later ok/fresh line correctly overrides an earlier failed one.
+ *
+ * `emptyMaxAgeMs` (defaults to `maxAgeMs`, i.e. no distinction, matching
+ * every existing caller) lets `"empty"` use a SHORTER staleness window than
+ * `"ok"`. BPCL's `"empty"` is a legitimately-empty result (e.g. open ocean —
+ * see `bpcl-provider.ts`) that has no reason to differ from `"ok"`'s
+ * cadence. HPCL/IOCL's `"empty"` (see fact 11/issue #10) means the price
+ * AJAX call returned 200 with zero recognized product cards — usually a
+ * transient WAF/load hit, not a real state — so it should self-heal on the
+ * next run or two instead of sitting frozen for the full `maxAgeDays`.
  */
-export function computeDoneWorkUnitIds(jsonlContent: string, maxAgeMs: number, nowMs: number): Set<string> {
+export function computeDoneWorkUnitIds(
+  jsonlContent: string,
+  maxAgeMs: number,
+  nowMs: number,
+  emptyMaxAgeMs: number = maxAgeMs,
+): Set<string> {
   const done = new Set<string>();
   for (const line of jsonlContent.split("\n")) {
     if (!line.trim()) continue;
     try {
       const rec = JSON.parse(line) as WorkLogRecord;
       const fetchedAtMs = typeof rec.fetchedAt === "string" ? Date.parse(rec.fetchedAt) : NaN;
-      const fresh = Number.isFinite(fetchedAtMs) && nowMs - fetchedAtMs <= maxAgeMs;
+      const ageMs = nowMs - fetchedAtMs;
+      const fresh =
+        Number.isFinite(fetchedAtMs) && (rec.status === "empty" ? ageMs <= emptyMaxAgeMs : ageMs <= maxAgeMs);
       if ((rec.status === "ok" || rec.status === "empty") && fresh) done.add(rec.workUnitId);
     } catch {
       // Malformed line (e.g. a torn write from a kill -9 mid-write) — ignore
@@ -144,6 +160,8 @@ export interface RunProviderOptions {
   perLaneDelayMs?: number;
   /** A unit whose last "ok"/"empty" record is older than this many days is treated as NOT done and re-processed. Default 3. */
   maxAgeDays?: number;
+  /** Same as `maxAgeDays` but applies only to "empty" records, so a transient empty-result hit (e.g. HPCL/IOCL's price-fragment-parsed-zero-cards case, issue #10) self-heals faster than a genuine "ok". Defaults to `maxAgeDays` (no distinction) — set shorter for brands where "empty" is usually transient rather than a real state. */
+  emptyMaxAgeDays?: number;
   /** Baseline records whose `capturedAt` is older than this many days are PRUNED at seed time (dropped from the accumulated raw), so closed/removed stations age out instead of lingering forever. Must be safely larger than `maxAgeDays` so that live stations — refreshed every `maxAgeDays` — are never pruned. Default 14. */
   staleAfterDays?: number;
   /** Stop after processing roughly this many NEW units this run (smoke-test only). Under concurrency this is a soft cap. Default Infinity. */
@@ -193,10 +211,15 @@ function createWriter(rawPath: string, workLogPath: string, progressPath: string
   };
 }
 
-async function loadAlreadyDone(workLogPath: string, maxAgeMs: number, nowMs: number): Promise<Set<string>> {
+async function loadAlreadyDone(
+  workLogPath: string,
+  maxAgeMs: number,
+  nowMs: number,
+  emptyMaxAgeMs: number,
+): Promise<Set<string>> {
   if (!existsSync(workLogPath)) return new Set();
   const raw = await readFile(workLogPath, "utf-8");
-  return computeDoneWorkUnitIds(raw, maxAgeMs, nowMs);
+  return computeDoneWorkUnitIds(raw, maxAgeMs, nowMs, emptyMaxAgeMs);
 }
 
 /**
@@ -267,6 +290,7 @@ export async function runProvider(provider: Provider, opts: RunProviderOptions):
     concurrency = 1,
     perLaneDelayMs = 1200,
     maxAgeDays = 3,
+    emptyMaxAgeDays = maxAgeDays,
     staleAfterDays = 14,
     limit = Infinity,
     now = () => new Date().toISOString(),
@@ -274,6 +298,7 @@ export async function runProvider(provider: Provider, opts: RunProviderOptions):
     fetchImpl = fetchWithBackoff,
   } = opts;
   const maxAgeMs = maxAgeDays * 24 * 60 * 60 * 1000;
+  const emptyMaxAgeMs = emptyMaxAgeDays * 24 * 60 * 60 * 1000;
   const staleMs = staleAfterDays * 24 * 60 * 60 * 1000;
 
   await mkdir(outputDir, { recursive: true });
@@ -289,7 +314,7 @@ export async function runProvider(provider: Provider, opts: RunProviderOptions):
   for await (const unit of provider.discover(discoverOpts)) allUnits.push(unit);
 
   const nowMs = Date.parse(now());
-  const alreadyDone = await loadAlreadyDone(workLogPath, maxAgeMs, nowMs);
+  const alreadyDone = await loadAlreadyDone(workLogPath, maxAgeMs, nowMs, emptyMaxAgeMs);
   const queue = allUnits.filter((u) => !alreadyDone.has(u.id));
 
   // ── SEED baseline records from prior runs into the raw file ──

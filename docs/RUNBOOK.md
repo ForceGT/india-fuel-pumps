@@ -105,6 +105,7 @@ Once configured, the BPCL CI job connects via Tailscale and scrapes through the 
 | `HPCL_CENSUS_CONCURRENCY` | `12` | Concurrent lanes |
 | `HPCL_CENSUS_LIMIT` | (no limit) | Stop after N new units (smoke tests) |
 | `HPCL_CENSUS_MAX_AGE_DAYS` | `3` | Staleness threshold for resume |
+| `HPCL_CENSUS_EMPTY_MAX_AGE_DAYS` | `1` | Staleness threshold for `"empty"` results only (price fragment parsed zero product cards — issue #10 — usually transient, so it self-heals faster than a genuine `"ok"`) |
 | `HPCL_CENSUS_STATE_ALLOWLIST` | (all) | Comma-separated states to scope crawl |
 | `FRESH` | (unset) | Set to `1` to delete cache + worklog and restart from scratch |
 
@@ -115,6 +116,7 @@ Once configured, the BPCL CI job connects via Tailscale and scrapes through the 
 | `IOCL_CENSUS_CONCURRENCY` | `12` | Concurrent lanes (max safe = 12 from CI, 10 from residential) |
 | `IOCL_CENSUS_LIMIT` | (no limit) | Stop after N new units |
 | `IOCL_CENSUS_MAX_AGE_DAYS` | `3` | Staleness threshold |
+| `IOCL_CENSUS_EMPTY_MAX_AGE_DAYS` | `1` | Staleness threshold for `"empty"` results only — same rationale as HPCL's above; `locator.iocl.com`'s price AJAX call is the one documented as WAF/load-sensitive (CLAUDE.md fact 5) |
 | `FRESH` | (unset) | Set to `1` to restart from scratch |
 
 ### BPCL
@@ -161,7 +163,7 @@ Once configured, the BPCL CI job connects via Tailscale and scrapes through the 
 
 ## Resuming a killed run
 
-By default, every census resumes — it reads the existing worklog and skips units whose latest record is `"ok"` or `"empty"` and was fetched within `maxAgeDays` (default 3).
+By default, every census resumes — it reads the existing worklog and skips units whose latest record is `"ok"` or `"empty"` and was fetched within `maxAgeDays` (default 3). HPCL/IOCL use a separate, shorter `emptyMaxAgeDays` (default 1) for `"empty"` only, since that status there means "price fragment parsed zero product cards" — usually a transient WAF/load hit (issue #10), not a real state — so it's retried sooner than a genuine `"ok"` instead of sitting frozen for the full 3 days.
 
 Just re-run the same command:
 

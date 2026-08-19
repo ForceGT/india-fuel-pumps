@@ -9,8 +9,9 @@
  * runner, output files, resumability rules) — this is the IOCL twin.
  *
  * Env vars: IOCL_CENSUS_CONCURRENCY, IOCL_CENSUS_LIMIT,
- * IOCL_CENSUS_STATE_ALLOWLIST, IOCL_CENSUS_MAX_AGE_DAYS, IOCL_CENSUS_STALE_AFTER_DAYS — same meaning as
- * their HPCL_ counterparts.
+ * IOCL_CENSUS_STATE_ALLOWLIST, IOCL_CENSUS_MAX_AGE_DAYS,
+ * IOCL_CENSUS_EMPTY_MAX_AGE_DAYS, IOCL_CENSUS_STALE_AFTER_DAYS — same
+ * meaning as their HPCL_ counterparts.
  */
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -27,6 +28,11 @@ const stateAllowList = (process.env.IOCL_CENSUS_STATE_ALLOWLIST ?? "")
 const limit = process.env.IOCL_CENSUS_LIMIT ? Number(process.env.IOCL_CENSUS_LIMIT) : Infinity;
 const concurrency = Math.max(1, Number(process.env.IOCL_CENSUS_CONCURRENCY ?? 1));
 const maxAgeDays = process.env.IOCL_CENSUS_MAX_AGE_DAYS ? Number(process.env.IOCL_CENSUS_MAX_AGE_DAYS) : 3;
+// Shorter than maxAgeDays: a price-fragment-parsed-zero-cards "empty" (see
+// issue #10) is usually transient (locator.iocl.com's own WAF/load
+// sensitivity), so it self-heals in ~1 day instead of sitting frozen for
+// the full 3-day "ok" window.
+const emptyMaxAgeDays = process.env.IOCL_CENSUS_EMPTY_MAX_AGE_DAYS ? Number(process.env.IOCL_CENSUS_EMPTY_MAX_AGE_DAYS) : 1;
 const staleAfterDays = process.env.IOCL_CENSUS_STALE_AFTER_DAYS ? Number(process.env.IOCL_CENSUS_STALE_AFTER_DAYS) : 14;
 
 async function main(): Promise<void> {
@@ -40,6 +46,7 @@ async function main(): Promise<void> {
     outputDir: OUTPUT_DIR,
     concurrency,
     maxAgeDays,
+    emptyMaxAgeDays,
     staleAfterDays,
     limit,
   });
