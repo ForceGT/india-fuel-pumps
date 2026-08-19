@@ -80,7 +80,17 @@ shared budget).
 
 11. **Error logging pattern:** All providers log the first 3 occurrences of
     each error type (HTTP status + URL snippet). Connection exceptions are always
-    logged. Format: `[brand] error {n} — url`.
+    logged. Format: `[brand] error {n} — url`. HPCL/IOCL also return
+    `status: "empty"` (not `"ok"`) when the price-fragment AJAX call returns
+    200 but parses to zero recognized product cards — usually a transient
+    WAF/load hit (`locator.iocl.com`/HPCL's equivalent, fact 5), not a real
+    empty listing (issue #10). `runProvider`'s `computeDoneWorkUnitIds`
+    (fact 4) gives `"empty"` its own, shorter staleness window —
+    `emptyMaxAgeDays` (default 1 for HPCL/IOCL) vs. `maxAgeDays` (default 3)
+    for `"ok"` — so these self-heal in ~1 day instead of sitting frozen for
+    the full window. Every other caller (BPCL's genuinely-empty-cell
+    `"empty"`, etc.) is unaffected: `emptyMaxAgeDays` defaults to
+    `maxAgeDays` when unset.
 
 12. **Shell's locator is a third-party white-labelled SaaS (`geoapp.me`), not
     Shell's own infrastructure**, and reports no prices at all for India
