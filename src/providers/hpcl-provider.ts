@@ -169,8 +169,13 @@ export function createHpclProvider(config: HpclProviderConfig): Provider {
         }
         const priceHtml = await priceRes.text();
         const priceFragment = parseHpclPriceFragment(priceHtml);
+        const products = priceMapToProducts(priceFragment);
         const capturedAt = ctx.now();
-        const record = buildRawRecord({ ...metadata, capturedAt }, priceMapToProducts(priceFragment));
+        const record = buildRawRecord({ ...metadata, capturedAt }, products);
+        if (products.length === 0) {
+          logErr("empty", "priceFragment parsed zero product cards", sourceUrl);
+          return { status: "empty", records: [record] };
+        }
         return { status: "ok", records: [record] };
       } catch (err) {
         console.error(`[hpcl] connection error on ${sourceUrl}:`, String(err));

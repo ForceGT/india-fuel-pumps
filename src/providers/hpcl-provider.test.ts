@@ -95,6 +95,20 @@ describe("createHpclProvider().process", () => {
     expect(result.records[0]!.products.some((p) => p.name === "Power 100")).toBe(false);
   });
 
+  it("empty: page ok, price fragment returns 200 but zero recognized product cards (issue #10)", async () => {
+    tmpDir = mkdtempSync(path.join(tmpdir(), "hpcl-provider-test-"));
+    const provider = createHpclProvider({ outputDir: tmpDir });
+    const ctx = makeCtx({
+      [OUTLET_97365_URL]: { body: loadFixture("hpcl", "97365.html") },
+      [PRICE_97365_URL]: { body: "<html><body>no cards here</body></html>" },
+    });
+
+    const result = await provider.process({ id: OUTLET_97365_URL, payload: OUTLET_97365_URL }, ctx);
+    expect(result.status).toBe("empty");
+    expect(result.records).toHaveLength(1);
+    expect(result.records[0]!.products).toEqual([]);
+  });
+
   it("httpFailed: page fetch returns non-OK", async () => {
     tmpDir = mkdtempSync(path.join(tmpdir(), "hpcl-provider-test-"));
     const provider = createHpclProvider({ outputDir: tmpDir });

@@ -104,6 +104,20 @@ describe("createIoclProvider().process", () => {
     expect(result.records).toEqual([]);
   });
 
+  it("empty: page ok, price fragment returns 200 but zero recognized product cards (issue #10)", async () => {
+    tmpDir = mkdtempSync(path.join(tmpdir(), "iocl-provider-test-"));
+    const provider = createIoclProvider({ outputDir: tmpDir });
+    const ctx = makeCtx({
+      [OUTLET_102595_URL]: { body: loadFixture("102595.html") },
+      [PRICE_102595_URL]: { body: "<html><body>no cards here</body></html>" },
+    });
+
+    const result = await provider.process({ id: OUTLET_102595_URL, payload: OUTLET_102595_URL }, ctx);
+    expect(result.status).toBe("empty");
+    expect(result.records).toHaveLength(1);
+    expect(result.records[0]!.products).toEqual([]);
+  });
+
   it("errored (price fetch failed): page ok, price endpoint fails", async () => {
     tmpDir = mkdtempSync(path.join(tmpdir(), "iocl-provider-test-"));
     const provider = createIoclProvider({ outputDir: tmpDir });
