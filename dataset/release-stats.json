@@ -1,9 +1,9 @@
 {
   "previous": {
-    "generatedAt": "2026-08-26T03:22:09.646Z",
-    "totalOutlets": 103481,
+    "generatedAt": "2026-08-27T16:52:03.301Z",
+    "totalOutlets": 103488,
     "brands": {
-      "hpcl": 24060,
+      "hpcl": 24067,
       "iocl": 39757,
       "bpcl": 27964,
       "jiobp": 2303,
@@ -14,7 +14,7 @@
     "missingBrands": []
   },
   "current": {
-    "generatedAt": "2026-08-27T16:52:03.301Z",
+    "generatedAt": "2026-08-28T14:36:06.080Z",
     "totalOutlets": 103488,
     "brands": {
       "hpcl": 24067,
