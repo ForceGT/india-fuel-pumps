@@ -1,6 +1,6 @@
 {
   "previous": {
-    "generatedAt": "2026-10-22T10:52:17.491Z",
+    "generatedAt": "2026-10-23T09:35:29.640Z",
     "totalOutlets": 103763,
     "brands": {
       "hpcl": 24014,
@@ -14,12 +14,12 @@
     "missingBrands": []
   },
   "current": {
-    "generatedAt": "2026-10-23T09:35:29.640Z",
-    "totalOutlets": 103763,
+    "generatedAt": "2026-10-27T09:26:08.643Z",
+    "totalOutlets": 103755,
     "brands": {
-      "hpcl": 24014,
+      "hpcl": 24013,
       "iocl": 39912,
-      "bpcl": 28126,
+      "bpcl": 28119,
       "jiobp": 2314,
       "nayara": 9065,
       "shell": 332
