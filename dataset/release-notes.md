@@ -1,4 +1,4 @@
-## Census update — 2026-11-12
+## Census update — 2026-11-13
 
 ### Summary
 
@@ -19,4 +19,4 @@
 | SHELL | 333 | 333 | 0 — |
 
 ---
-*Generated: 2026-11-12T09:59:59.509Z*
+*Generated: 2026-11-13T10:44:15.878Z*
