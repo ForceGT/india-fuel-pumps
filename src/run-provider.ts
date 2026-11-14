@@ -28,7 +28,7 @@
  * `Provider` (via its `providers/{brand}-provider.ts` factory), read its own
  * env vars, and call `runProvider(provider, opts)`.
  */
-import { mkdir, appendFile, readFile, writeFile } from "node:fs/promises";
+import { mkdir, appendFile, readFile, rename, writeFile } from "node:fs/promises";
 import { createReadStream, existsSync } from "node:fs";
 import { createGunzip } from "node:zlib";
 import { createInterface } from "node:readline";
@@ -241,19 +241,24 @@ async function readBaselineRawJsonl(rawPath: string): Promise<RawOutletRecord[]>
   const paths = [gzPath, rawPath].filter((p) => existsSync(p));
 
   const records: RawOutletRecord[] = [];
-  for (const readPath of paths) {
-    const input = readPath.endsWith(".gz")
-      ? createReadStream(readPath).pipe(createGunzip())
-      : createReadStream(readPath);
-    const rl = createInterface({ input, crlfDelay: Infinity });
-    for await (const line of rl) {
-      const trimmed = line.trim();
-      if (!trimmed) continue;
-      try {
-        records.push(JSON.parse(trimmed) as RawOutletRecord);
-      } catch {
-        // Skip malformed/torn lines (e.g. from kill -9 mid-write).
-      }
+  for (const readPath of paths) records.push(...(await readJsonlRecords(readPath)));
+  return records;
+}
+
+/** Stream one JSONL file (gzip if the name ends in `.gz`), skipping blank/malformed lines. */
+async function readJsonlRecords(readPath: string): Promise<RawOutletRecord[]> {
+  const input = readPath.endsWith(".gz")
+    ? createReadStream(readPath).pipe(createGunzip())
+    : createReadStream(readPath);
+  const rl = createInterface({ input, crlfDelay: Infinity });
+  const records: RawOutletRecord[] = [];
+  for await (const line of rl) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    try {
+      records.push(JSON.parse(trimmed) as RawOutletRecord);
+    } catch {
+      // Skip malformed/torn lines (e.g. from kill -9 mid-write).
     }
   }
   return records;
@@ -275,6 +280,28 @@ function dedupeByStationId(records: RawOutletRecord[]): RawOutletRecord[] {
     }
   }
   return [...byId.values()];
+}
+
+/**
+ * Rewrite `rawPath` with one record per `stationId` (the freshest
+ * `capturedAt`), via a temp file + rename so a crash never leaves a torn
+ * file. The raw file is append-only while a run is in flight, and an outlet
+ * returned by several overlapping work units (BPCL's route chunks and grid
+ * cells) is appended once per unit, so a run that re-crawls everything
+ * (e.g. the first run after a >14-day gap) would otherwise commit ~5-6
+ * lines per outlet. Consumers already dedupe by `stationId` with this same
+ * rule, so compaction changes no downstream result — it only keeps the
+ * committed file small. Returns `{ before, after }` line counts.
+ */
+export async function compactRawFile(rawPath: string): Promise<{ before: number; after: number }> {
+  if (!existsSync(rawPath)) return { before: 0, after: 0 };
+  const records = await readJsonlRecords(rawPath);
+  const deduped = dedupeByStationId(records);
+  if (deduped.length === records.length) return { before: records.length, after: deduped.length };
+  const tmpPath = `${rawPath}.compact.tmp`;
+  await writeFile(tmpPath, deduped.map((r) => JSON.stringify(r)).join("\n") + "\n", "utf-8");
+  await rename(tmpPath, rawPath);
+  return { before: records.length, after: deduped.length };
 }
 
 /**
@@ -398,6 +425,10 @@ export async function runProvider(provider: Provider, opts: RunProviderOptions):
   console.log(
     `[${provider.slug}-provider] run segment done. processed=${processed} ok=${okCount} records=${recordsWritten}`,
   );
+  const compacted = await compactRawFile(rawPath);
+  if (compacted.after < compacted.before) {
+    console.log(`[${provider.slug}-provider] compacted raw: ${compacted.before} -> ${compacted.after} records (one per stationId)`);
+  }
   console.log(`[${provider.slug}-provider] raw: ${rawPath}`);
   console.log(`[${provider.slug}-provider] worklog: ${workLogPath}`);
 
