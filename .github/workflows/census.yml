@@ -280,7 +280,15 @@ jobs:
           # The action's own step reports success even when `tailscale up`
           # exhausts its retries (the 2026-10 expired-key outage went
           # unnoticed for weeks), so fail loudly here instead.
-          if ! tailscale status --json | jq -e '.ExitNodeStatus.Online == true' >/dev/null; then
+          # Retry briefly: ExitNodeStatus.Online can lag `tailscale up` returning.
+          ok=0
+          for i in $(seq 1 10); do
+            if tailscale status --json | jq -e '.ExitNodeStatus.Online == true' >/dev/null; then
+              ok=1; break
+            fi
+            sleep 3
+          done
+          if [ "$ok" != 1 ]; then
             echo "::error::Tailscale exit node is not connected; BPCL would be crawled from a blocked datacenter IP"
             exit 1
           fi
