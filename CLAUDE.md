@@ -31,8 +31,10 @@ shared budget).
 2. **BPCL must be run from a residential IP.** `api.cep.bpcl.in` returns HTTP 403
    from GH Actions datacenter IPs. The CI workflow routes BPCL traffic through a
    Tailscale exit node (Raspberry Pi at a residential location). Requires
-   `TAILSCALE_AUTH_KEY` (GitHub secret) and `TAILSCALE_EXIT_NODE` (GitHub
-   variable). Without these, BPCL is skipped and the publish step uses the last
+   `TS_OAUTH_CLIENT_ID` + `TS_OAUTH_SECRET` (GitHub secrets, a Tailscale OAuth
+   client owning `tag:ci`) and `TAILSCALE_EXIT_NODE` (GitHub variable). If the
+   variable is empty, BPCL is skipped; if the exit node is unreachable the BPCL
+   job fails (an issue is filed). Either way the publish step uses the last
    committed `bpcl-raw.jsonl.gz`. — BPCL takes ~25 min at concurrency 4.
 
 3. **Raw JSONL files are gzip-compressed before commit** (92 MB -> 13 MB).
