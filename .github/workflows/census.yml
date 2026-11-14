@@ -247,7 +247,7 @@ jobs:
     runs-on: ubuntu-latest
     # BPCL requires a residential IP — api.cep.bpcl.in blocks datacenter IPs.
     # We route through a Tailscale exit node (Raspberry Pi at a residential
-    # location). If TAILSCALE_AUTH_KEY is not set, this job is skipped and the
+    # location). If vars.TAILSCALE_EXIT_NODE is not set, this job is skipped and the
     # publish step uses the last committed bpcl-raw.jsonl.gz instead.
     # ~25 min at concurrency 10 from a residential IP.
     timeout-minutes: 90
@@ -268,11 +268,22 @@ jobs:
       - name: Connect to Tailscale (residential IP via exit node)
         uses: tailscale/github-action@v3
         with:
-          authkey: ${{ secrets.TAILSCALE_AUTH_KEY }}
+          # OAuth client (never expires, unlike auth keys' 90-day max). Needs
+          # the `auth_keys` write scope and ownership of tag:ci.
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
           args: --exit-node=${{ vars.TAILSCALE_EXIT_NODE }} --exit-node-allow-lan-access=false
 
       - name: Verify exit node (traffic now routes through residential IP)
         run: |
+          # The action's own step reports success even when `tailscale up`
+          # exhausts its retries (the 2026-10 expired-key outage went
+          # unnoticed for weeks), so fail loudly here instead.
+          if ! tailscale status --json | jq -e '.ExitNodeStatus.Online == true' >/dev/null; then
+            echo "::error::Tailscale exit node is not connected; BPCL would be crawled from a blocked datacenter IP"
+            exit 1
+          fi
           echo "Tailscale connected. Public IP: $(curl -s https://api.ipify.org)"
           echo "Exit node: ${{ vars.TAILSCALE_EXIT_NODE }}"
 

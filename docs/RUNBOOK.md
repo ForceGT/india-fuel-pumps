@@ -59,7 +59,7 @@ The BPCL API (`api.cep.bpcl.in`) blocks datacenter IPs. BPCL census in CI routes
 
 **Prerequisites:**
 - A Raspberry Pi running Tailscale, configured as an exit node
-- `TAILSCALE_AUTH_KEY` (GitHub secret — an ephemeral or tagged auth key)
+- `TS_OAUTH_CLIENT_ID` + `TS_OAUTH_SECRET` (GitHub secrets — a Tailscale OAuth client with the `auth_keys` write scope, owning `tag:ci`; unlike auth keys it does not expire)
 - `TAILSCALE_EXIT_NODE` (GitHub variable — the RPi's Tailscale hostname)
 
 **How it works:** The BPCL CI job connects to Tailscale, routes all traffic through the RPi exit node, and scrapes from a residential IP. If the secrets aren't configured, the BPCL job is skipped and the publish step uses the last committed `bpcl-raw.jsonl.gz`.
@@ -88,8 +88,8 @@ sudo tailscale up --advertise-exit-node
 ```
 
 **On GitHub** (repo settings):
-1. Generate an auth key at [admin.tailscale.com](https://admin.tailscale.com) → Settings → Keys → Generate auth key (ephemeral or tagged)
-2. Add `TAILSCALE_AUTH_KEY` as a repository secret
+1. Create an OAuth client at [admin.tailscale.com](https://admin.tailscale.com) → Settings → OAuth clients, scope `auth_keys` (write), tag `tag:ci` (the tag must exist in the tailnet policy's `tagOwners`, and its ACL must allow using the exit node)
+2. Add `TS_OAUTH_CLIENT_ID` and `TS_OAUTH_SECRET` as repository secrets
 3. Add `TAILSCALE_EXIT_NODE` as a repository variable (the RPi's Tailscale hostname, e.g. `raspberrypi`)
 
 Once configured, the BPCL CI job connects via Tailscale and scrapes through the residential IP. If either value is missing, the BPCL job is skipped and the publish step uses the last committed `bpcl-raw.jsonl.gz`.
