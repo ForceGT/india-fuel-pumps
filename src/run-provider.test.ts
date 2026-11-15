@@ -329,6 +329,53 @@ describe("runProvider (integration)", () => {
     expect(second.processedThisRun).toBe(0);
   });
 
+  it("compacts the raw file to one record per stationId (freshest capturedAt) after a run", async () => {
+    tmpDir = mkdtempSync(path.join(tmpdir(), "run-provider-test-"));
+    const units: WorkUnit[] = [
+      { id: "u1", payload: "u1" },
+      { id: "u2", payload: "u2" },
+      { id: "u3", payload: "u3" },
+    ];
+    const rec = (stationId: string, capturedAt: string, name: string): RawOutletRecord => ({
+      schemaVersion: 1, brand: "HPCL", outletId: stationId, stationId, sourceUrl: null, capturedAt, name,
+      address: null, city: null, state: null, pincode: null, lat: 0, lng: 0, geohash: "x", hours: null,
+      contact: null, mapsLink: null, amenities: null, categories: null, products: [],
+    });
+    // Overlapping units: station "a" is returned by all three, "b" by two.
+    const byUnit: Record<string, RawOutletRecord[]> = {
+      u1: [rec("a", "2026-07-18T00:00:01.000Z", "a-old"), rec("b", "2026-07-18T00:00:01.000Z", "b-old")],
+      u2: [rec("a", "2026-07-18T00:00:03.000Z", "a-new")],
+      u3: [rec("a", "2026-07-18T00:00:02.000Z", "a-mid"), rec("b", "2026-07-18T00:00:04.000Z", "b-new")],
+    };
+    const provider = makeFakeProvider(units, (unit) => ({ status: "ok", records: byUnit[unit.id]! }));
+
+    const result = await runProvider(provider, { outputDir: tmpDir, now: () => "2026-07-18T00:00:05.000Z" });
+    expect(result.recordsWritten).toBe(5);
+
+    const lines = (await readFile(result.rawPath, "utf-8")).trim().split("\n").map((l) => JSON.parse(l));
+    expect(lines).toHaveLength(2);
+    const byId = Object.fromEntries(lines.map((r) => [r.stationId, r.name]));
+    expect(byId).toEqual({ a: "a-new", b: "b-new" });
+    expect(existsSync(`${result.rawPath}.compact.tmp`)).toBe(false);
+  });
+
+  it("seeds from a baseline with >150k lines without overflowing the stack (regression: push(...bigArray))", async () => {
+    tmpDir = mkdtempSync(path.join(tmpdir(), "run-provider-test-"));
+    const provider = makeFakeProvider([], () => ({ status: "ok", records: [] }));
+    // 170k duplicate-heavy minimal lines: spreading an array this large into
+    // push() arguments throws RangeError, which a re-crawled BPCL baseline
+    // (160k lines before compaction) would hit on the next run's seed step.
+    const line = (i: number) =>
+      JSON.stringify({ stationId: `s${i % 10}`, capturedAt: "2026-07-17T00:00:00.000Z", brand: "HPCL", products: [] });
+    const rawPath = path.join(tmpDir, `${provider.slug}-raw.jsonl`);
+    writeFileSync(rawPath, Array.from({ length: 170_000 }, (_, i) => line(i)).join("\n") + "\n", "utf-8");
+
+    await runProvider(provider, { outputDir: tmpDir, now: () => "2026-07-18T00:00:00.000Z" });
+
+    const lines = (await readFile(rawPath, "utf-8")).trim().split("\n");
+    expect(lines).toHaveLength(10);
+  });
+
   it("retries a unit whose latest record was a failure, does not retry a stale-but-ok unit incorrectly, and honors limit", async () => {
     tmpDir = mkdtempSync(path.join(tmpdir(), "run-provider-test-"));
     const units: WorkUnit[] = [
@@ -511,24 +558,25 @@ describe("runProvider (integration)", () => {
     expect(result.recordsWritten).toBe(1); // only the new u2 record from processing
     expect(existsSync(rawPath)).toBe(true);
 
-    // Parse the resulting raw file: should contain u1 (from baseline) and TWO
-    // u2 records (one old from baseline, one new from processing) — raw files
-    // contain all records, deduplication happens later in build-dataset.ts.
+    // Parse the resulting raw file: u1 is preserved from the baseline, and u2
+    // appears ONCE, as its fresher record from processing (the older baseline
+    // u2 record is superseded; the raw file is compacted to one record per
+    // stationId after every run).
     const rawContent = await readFile(rawPath, "utf-8");
     const records = rawContent.trim().split("\n").map((l) => JSON.parse(l) as RawOutletRecord);
     const uniqueStationIds = [...new Set(records.map((r) => r.stationId))].sort();
     expect(uniqueStationIds).toEqual(["u1", "u2"]);
+    expect(records).toHaveLength(2);
 
     // Verify u1 is present (preserved from baseline).
     const u1Records = records.filter((r) => r.stationId === "u1");
     expect(u1Records).toHaveLength(1);
     expect(u1Records[0]!.name).toBe("Station u1");
 
-    // Verify u2 has both old (from baseline) and new (from processing) records.
+    // Verify u2 kept only the newest capture.
     const u2Records = records.filter((r) => r.stationId === "u2");
-    expect(u2Records).toHaveLength(2);
-    const u2Timestamps = u2Records.map((r) => r.capturedAt).sort();
-    expect(u2Timestamps).toEqual(["2026-07-17T00:00:00.000Z", "2026-07-18T00:00:00.000Z"]);
+    expect(u2Records).toHaveLength(1);
+    expect(u2Records[0]!.capturedAt).toBe("2026-07-18T00:00:00.000Z");
   });
 
   it("prunes baseline records older than staleAfterDays so closed/removed stations age out", async () => {
