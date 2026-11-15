@@ -359,6 +359,23 @@ describe("runProvider (integration)", () => {
     expect(existsSync(`${result.rawPath}.compact.tmp`)).toBe(false);
   });
 
+  it("seeds from a baseline with >150k lines without overflowing the stack (regression: push(...bigArray))", async () => {
+    tmpDir = mkdtempSync(path.join(tmpdir(), "run-provider-test-"));
+    const provider = makeFakeProvider([], () => ({ status: "ok", records: [] }));
+    // 170k duplicate-heavy minimal lines: spreading an array this large into
+    // push() arguments throws RangeError, which a re-crawled BPCL baseline
+    // (160k lines before compaction) would hit on the next run's seed step.
+    const line = (i: number) =>
+      JSON.stringify({ stationId: `s${i % 10}`, capturedAt: "2026-07-17T00:00:00.000Z", brand: "HPCL", products: [] });
+    const rawPath = path.join(tmpDir, `${provider.slug}-raw.jsonl`);
+    writeFileSync(rawPath, Array.from({ length: 170_000 }, (_, i) => line(i)).join("\n") + "\n", "utf-8");
+
+    await runProvider(provider, { outputDir: tmpDir, now: () => "2026-07-18T00:00:00.000Z" });
+
+    const lines = (await readFile(rawPath, "utf-8")).trim().split("\n");
+    expect(lines).toHaveLength(10);
+  });
+
   it("retries a unit whose latest record was a failure, does not retry a stale-but-ok unit incorrectly, and honors limit", async () => {
     tmpDir = mkdtempSync(path.join(tmpdir(), "run-provider-test-"));
     const units: WorkUnit[] = [

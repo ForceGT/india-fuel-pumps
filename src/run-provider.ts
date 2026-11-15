@@ -241,7 +241,11 @@ async function readBaselineRawJsonl(rawPath: string): Promise<RawOutletRecord[]>
   const paths = [gzPath, rawPath].filter((p) => existsSync(p));
 
   const records: RawOutletRecord[] = [];
-  for (const readPath of paths) records.push(...(await readJsonlRecords(readPath)));
+  for (const readPath of paths) {
+    // Loop, never `records.push(...bigArray)`: spreading >~150k elements into
+    // call arguments throws RangeError (stack overflow).
+    for (const rec of await readJsonlRecords(readPath)) records.push(rec);
+  }
   return records;
 }
 
